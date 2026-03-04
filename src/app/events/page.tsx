@@ -137,11 +137,8 @@ export default async function EventsPage({
                 <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
                     <div>
                         <h1 className="text-5xl text-heading uppercase tracking-tighter text-white">
-                            Data <span className="text-accent underline decoration-1 underline-offset-8">Events</span>
+                            Data <span className="text-white decoration-1 underline-offset-8">Events</span>
                         </h1>
-                        <p className="text-[10px] text-muted-foreground uppercase tracking-[0.2em] mt-3 max-w-lg">
-                            Real-time structural intelligence feed. Protocol interactions and state changes.
-                        </p>
                     </div>
 
                     <div className="flex bg-white/5 border border-white/10 p-4 rounded-none">

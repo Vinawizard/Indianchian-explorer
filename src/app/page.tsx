@@ -101,19 +101,9 @@ export default async function Home() {
 
         <div className="relative">
           <h1 className="text-6xl md:text-7xl text-heading mb-4 uppercase">
-            India<span className="text-accent underline decoration-2 underline-offset-8">Chain </span>
+            India<span className="text-white decoration-2">Chain </span>
             EXPLORER
           </h1>
-          <div className="flex items-center gap-4 mb-8">
-            <span className="h-px w-12 bg-accent"></span>
-            <p className="text-muted-foreground text-sm uppercase tracking-[0.2em] font-medium">
-              Next-Gen Blockchain Data Studio
-            </p>
-          </div>
-          <p className="text-lg text-foreground/80 max-w-2xl leading-relaxed">
-            Unleashing real-time intelligence for the decentralized economy.
-            High-fidelity explorer designed for builders.
-          </p>
         </div>
       </section>
 
