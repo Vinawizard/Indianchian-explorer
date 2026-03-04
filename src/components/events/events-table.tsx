@@ -1,0 +1,395 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence, Variants } from "framer-motion";
+import {
+    ChevronRight, ChevronDown, ChevronLeft, CheckCircle2,
+    Clock, XCircle, Box, Globe, FileText
+} from "lucide-react";
+
+type RecordTypeEntry = {
+    payload_id: string;
+    record_type: string;
+    type: string | null;
+    tx_hash: string | null;
+    block_hash: string | null;
+    signer_address: string | null;
+    tx_fee: number | null;
+    tx_index: number | null;
+    timestamp: string | null;
+    confirmed_at: string | null;
+    entity_id: string | null;
+    farmer_id: string | null;
+    record_id: string | null;
+    version: number | null;
+    payload_hash: string | null;
+};
+
+type BlockRow = {
+    block_number: number;
+    submission_status: string;
+    chain: string;
+    record_types: RecordTypeEntry[];
+};
+
+const PAGE_SIZE = 20;
+
+const rowVariants: Variants = {
+    hidden: { opacity: 0, y: 8 },
+    show: (i: number) => ({
+        opacity: 1,
+        y: 0,
+        transition: { delay: i * 0.018, type: "spring", stiffness: 300, damping: 28 },
+    }),
+};
+
+/* ── Status badge ────────────────────────────────────── */
+function StatusBadge({ status }: { status: string }) {
+    const s = status?.toUpperCase();
+    if (s === "CONFIRMED")
+        return (
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-heading px-3 py-1 rounded-none bg-white/5 text-accent border border-accent/30 uppercase tracking-widest">
+                <CheckCircle2 className="w-3 h-3" /> Confirmed
+            </span>
+        );
+    if (s === "PENDING")
+        return (
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-heading px-3 py-1 rounded-none bg-white/5 text-muted-foreground border border-white/20 uppercase tracking-widest">
+                <Clock className="w-3 h-3" /> Pending
+            </span>
+        );
+    if (s === "FAILED")
+        return (
+            <span className="inline-flex items-center gap-1.5 text-[10px] font-heading px-3 py-1 rounded-none bg-white/5 text-destructive border border-destructive/30 uppercase tracking-widest">
+                <XCircle className="w-3 h-3" /> Failed
+            </span>
+        );
+    return (
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-heading px-3 py-1 rounded-none bg-white/5 text-muted-foreground border border-white/20 uppercase tracking-widest">
+            {status ?? "—"}
+        </span>
+    );
+}
+
+/* ── JSON syntax highlighter ─────────────────────────── */
+function JsonHighlight({ value }: { value: unknown }) {
+    const lines = JSON.stringify(value, null, 2).split("\n");
+    return (
+        <pre className="text-[11px] leading-6 font-mono whitespace-pre-wrap overflow-x-auto opacity-80">
+            {lines.map((line, i) => {
+                const colored = line
+                    .replace(/(".*?")(\s*:)/g, '<span style="color:#ffffff">$1</span>$2')
+                    .replace(/:\s*(".*?")/g, ': <span style="color:#0018fe">$1</span>')
+                    .replace(/:\s*(\d+\.?\d*)/g, ': <span style="color:#ffffff">$1</span>')
+                    .replace(/:\s*(true|false)/g, ': <span style="color:#0018fe">$1</span>')
+                    .replace(/:\s*(null)/g, ': <span style="color:#666666">$1</span>');
+                return <span key={i} dangerouslySetInnerHTML={{ __html: colored + "\n" }} />;
+            })}
+        </pre>
+    );
+}
+
+/* ── Build record-type-specific payload ──────────────── */
+function buildPayload(rt: RecordTypeEntry, chain: string): Record<string, unknown> {
+    const rtype = rt.record_type?.toLowerCase();
+
+    // agri_record → include record_id
+    if (rtype === "agri_record") {
+        return {
+            chain,
+            type: rt.type,
+            payload_hash: rt.payload_hash,
+            version: rt.version,
+            timestamp: rt.timestamp,
+            farmer_id: rt.farmer_id,
+            record_id: rt.record_id,
+        };
+    }
+
+    // credit_app → include application_id (entity_id)
+    if (rtype === "credit_app") {
+        return {
+            chain,
+            type: rt.type,
+            payload_hash: rt.payload_hash,
+            version: rt.version,
+            timestamp: rt.timestamp,
+            farmer_id: rt.farmer_id,
+            application_id: rt.entity_id,
+        };
+    }
+
+    // default: farmer (and any other types)
+    return {
+        chain,
+        type: rt.type,
+        payload_hash: rt.payload_hash,
+        version: rt.version,
+        timestamp: rt.timestamp,
+        farmer_id: rt.farmer_id,
+    };
+}
+
+/* ── Expanded panel ──────────────────────────────────── */
+function ExpandedPanel({ block }: { block: BlockRow }) {
+    const [tab, setTab] = useState<"table" | "json">("table");
+
+    // One payload per record_type entry
+    const payloads = block.record_types.map((rt) => ({
+        label: rt.record_type?.replace(/_/g, " ") ?? "record",
+        payload: buildPayload(rt, block.chain),
+    }));
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.22, ease: "easeInOut" }}
+            className="overflow-hidden"
+        >
+            <div className="px-6 pb-8 pt-4 border-t border-white/5 bg-white/[0.02]">
+                {/* Tab switcher */}
+                <div className="flex items-center gap-3 mb-6">
+                    <button
+                        onClick={() => setTab("table")}
+                        className={`px-4 py-1.5 text-[10px] font-heading uppercase tracking-widest transition-all ${tab === "table"
+                            ? "bg-white text-black"
+                            : "bg-white/5 text-muted-foreground hover:text-white border border-white/10"
+                            }`}
+                    >
+                        TABLE_VIEW
+                    </button>
+                    <button
+                        onClick={() => setTab("json")}
+                        className={`px-4 py-1.5 text-[10px] font-heading uppercase tracking-widest transition-all ${tab === "json"
+                            ? "bg-accent text-white"
+                            : "bg-white/5 text-muted-foreground hover:text-white border border-white/10"
+                            }`}
+                    >
+                        JSON_EXPORT
+                    </button>
+                </div>
+
+                {/* TABLE view */}
+                {tab === "table" && (
+                    <div className="flex flex-col gap-6">
+                        {payloads.map(({ label, payload }, idx) => (
+                            <div key={idx} className="border border-white/10 bg-black overflow-hidden rounded-none">
+                                {/* Record label header */}
+                                <div className="px-5 py-3 bg-white/5 border-b border-white/10">
+                                    <span className="text-[10px] font-heading text-white uppercase tracking-[0.2em]">
+                                        {label.replace(/ /g, "_")}
+                                    </span>
+                                </div>
+                                {/* Key-value rows */}
+                                {Object.entries(payload).map(([key, val]) => (
+                                    <div
+                                        key={key}
+                                        className="grid grid-cols-12 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"
+                                    >
+                                        <div className="col-span-3 px-5 py-3 text-[10px] font-heading text-muted-foreground uppercase tracking-widest bg-white/[0.02] border-r border-white/5 flex items-center">
+                                            {key.replace(/_/g, " ")}
+                                        </div>
+                                        <div className="col-span-9 px-5 py-3 text-[11px] font-mono text-white/80 break-all flex items-center">
+                                            {val != null ? String(val) : <span className="opacity-30">—</span>}
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* JSON view */}
+                {tab === "json" && (
+                    <div className="flex flex-col gap-6">
+                        {payloads.map(({ label, payload }, idx) => (
+                            <div key={idx}>
+                                {/* Record label */}
+                                <p className="text-[10px] font-heading text-muted-foreground uppercase tracking-[0.2em] mb-3">
+                                    {label.replace(/ /g, "_")}
+                                </p>
+                                <div className="border border-white/10 bg-black px-6 py-5 rounded-none">
+                                    <JsonHighlight value={payload} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
+}
+
+/* ── Main table ─────────────────────────────────────── */
+export function EventsTable({ events }: { events: BlockRow[] }) {
+    const [page, setPage] = useState(1);
+    const [expandedBlock, setExpandedBlock] = useState<number | null>(null);
+
+    const totalPages = useMemo(() => Math.ceil(events.length / PAGE_SIZE), [events.length]);
+    const pageData = useMemo(
+        () => events.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+        [events, page]
+    );
+
+    const goTo = (p: number) => {
+        setPage(Math.max(1, Math.min(p, totalPages)));
+        setExpandedBlock(null);
+    };
+
+    const toggle = (blockNum: number) =>
+        setExpandedBlock((prev) => (prev === blockNum ? null : blockNum));
+
+    return (
+        <div className="w-full mt-8 flex flex-col gap-6 relative z-10">
+            <div className="card-premium overflow-hidden">
+                {/* Header */}
+                <div
+                    className="px-8 py-5 bg-white/5 border-b border-white/10 text-[10px] font-heading text-muted-foreground tracking-[0.2em] uppercase"
+                    style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 2fr auto" }}
+                >
+                    <div className="flex items-center gap-3"><Box className="w-3.5 h-3.5 text-accent" /> Block</div>
+                    <div className="flex items-center gap-3"><CheckCircle2 className="w-3.5 h-3.5 text-accent" /> Status</div>
+                    <div className="flex items-center gap-3"><Globe className="w-3.5 h-3.5 text-accent" /> Chain</div>
+                    <div className="flex items-center gap-3"><FileText className="w-3.5 h-3.5 text-accent" /> Sector</div>
+                    <div />
+                </div>
+
+                {/* Rows */}
+                <div className="flex flex-col divide-y divide-white/5 text-white">
+                    {pageData.length === 0 ? (
+                        <div className="px-8 py-20 text-center text-muted-foreground text-[10px] font-heading uppercase tracking-widest opacity-50">NO_DATA_AVAILABLE</div>
+                    ) : (
+                        pageData.map((block, i) => {
+                            const isOpen = expandedBlock === block.block_number;
+                            return (
+                                <motion.div
+                                    key={block.block_number}
+                                    custom={i}
+                                    variants={rowVariants}
+                                    initial="hidden"
+                                    animate="show"
+                                    className="flex flex-col"
+                                >
+                                    {/* Main row */}
+                                    <div
+                                        className={`px-8 py-5 items-center hover:bg-white/5 transition-colors ${isOpen ? 'bg-white/[0.02]' : ''}`}
+                                        style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 2fr auto", gap: "1rem" }}
+                                    >
+                                        {/* Block */}
+                                        <div>
+                                            <Link
+                                                href={`/event/${block.block_number}`}
+                                                className="inline-flex items-center gap-2 text-sm font-heading text-white hover:text-accent transition-colors"
+                                            >
+                                                <span className="text-muted-foreground font-mono text-[10px]">#</span>
+                                                {block.block_number ?? "—"}
+                                            </Link>
+                                        </div>
+
+                                        {/* Status */}
+                                        <div><StatusBadge status={block.submission_status} /></div>
+
+                                        {/* Chain */}
+                                        <div>
+                                            <span className="text-[10px] font-heading text-white uppercase tracking-wider opacity-80">
+                                                {block.chain ?? "—"}
+                                            </span>
+                                        </div>
+
+                                        {/* Record type badges */}
+                                        <div className="flex flex-wrap gap-2">
+                                            {block.record_types.map((rt) => (
+                                                <span
+                                                    key={rt.payload_id}
+                                                    className="inline-flex items-center text-[10px] font-heading px-3 py-1 bg-white/5 text-accent border border-white/10 uppercase tracking-widest"
+                                                >
+                                                    {rt.record_type?.replace(/_/g, " ") ?? "—"}
+                                                </span>
+                                            ))}
+                                        </div>
+
+                                        {/* Expand button */}
+                                        <div className="flex justify-end">
+                                            <button
+                                                onClick={() => toggle(block.block_number)}
+                                                aria-label={isOpen ? "Collapse" : "Expand"}
+                                                className={`w-8 h-8 flex items-center justify-center border transition-all duration-200 rounded-none ${isOpen
+                                                    ? "bg-accent border-accent text-white"
+                                                    : "bg-white/5 border-white/10 text-muted-foreground hover:border-accent hover:text-accent"
+                                                    }`}
+                                            >
+                                                {isOpen
+                                                    ? <ChevronDown className="w-4 h-4" />
+                                                    : <ChevronRight className="w-4 h-4" />
+                                                }
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {/* Expanded panel */}
+                                    <AnimatePresence>
+                                        {isOpen && <ExpandedPanel block={block} />}
+                                    </AnimatePresence>
+                                </motion.div>
+                            );
+                        })
+                    )}
+                </div>
+            </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="flex items-center justify-between px-2">
+                    <p className="text-[10px] text-muted-foreground uppercase font-mono tracking-widest">
+                        FEED_SEGMENT{" "}
+                        <span className="text-white font-bold">
+                            {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, events.length)}
+                        </span>{" "}
+                        / <span className="text-white font-bold">{events.length.toLocaleString()}</span> RECORDS
+                    </p>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => goTo(page - 1)}
+                            disabled={page === 1}
+                            className="w-10 h-10 flex items-center justify-center border border-white/10 text-muted-foreground hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed transition-colors rounded-none"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+
+                        {Array.from({ length: Math.min(totalPages, 5) }, (_, idx) => {
+                            let p: number;
+                            if (totalPages <= 5) p = idx + 1;
+                            else if (page <= 3) p = idx + 1;
+                            else if (page >= totalPages - 2) p = totalPages - 4 + idx;
+                            else p = page - 2 + idx;
+                            return (
+                                <button
+                                    key={p}
+                                    onClick={() => goTo(p)}
+                                    className={`w-10 h-10 text-[10px] font-heading transition-all rounded-none ${p === page
+                                        ? "bg-white text-black font-bold"
+                                        : "border border-white/10 text-muted-foreground hover:text-white"
+                                        }`}
+                                >
+                                    {p.toString().padStart(2, '0')}
+                                </button>
+                            );
+                        })}
+
+                        <button
+                            onClick={() => goTo(page + 1)}
+                            disabled={page === totalPages}
+                            className="w-10 h-10 flex items-center justify-center border border-white/10 text-muted-foreground hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed transition-colors rounded-none"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+}
+
