@@ -18,41 +18,41 @@ export default async function EventsPage({
     const filterEnd = typeof params.end === "string" ? parseInt(params.end, 10) : NaN;
 
     const PAGE_SIZE = 1000;
-    let allEvents: {
-        payload_id: string;
-        block_number: number;
-        submission_status: string;
-        chain: string;
-        record_type: string;
-        type: string | null;
-        tx_hash: string | null;
-        block_hash: string | null;
-        signer_address: string | null;
-        tx_fee: number | null;
-        tx_index: number | null;
-        timestamp: string | null;
-        confirmed_at: string | null;
-        entity_id: string | null;
-        farmer_id: string | null;
-        record_id: string | null;
-        version: number | null;
-        payload_hash: string | null;
-    }[] = [];
+    let allEvents: any[] = [];
     let from = 0;
-    let fetchError = null;
+
+    // Determine block range correctly
+    let minBlock = !isNaN(filterStart) ? filterStart : null;
+    let maxBlock = !isNaN(filterEnd) ? filterEnd : null;
+
+    // If both are provided, ensure min is actually smaller
+    if (minBlock !== null && maxBlock !== null) {
+        const actualMin = Math.min(minBlock, maxBlock);
+        const actualMax = Math.max(minBlock, maxBlock);
+        minBlock = actualMin;
+        maxBlock = actualMax;
+    }
 
     while (true) {
-        const { data, error } = await supabase
+        let query = supabase
             .from("event_payload_data")
             .select(
                 "payload_id, block_number, submission_status, chain, record_type, type, tx_hash, block_hash, signer_address, tx_fee, tx_index, timestamp, confirmed_at, entity_id, farmer_id, record_id, version, payload_hash"
-            )
+            );
+
+        // Apply filters at DB level
+        if (filterChain) query = query.eq("chain", filterChain);
+        if (filterRecordType) query = query.eq("record_type", filterRecordType.toLowerCase());
+        if (filterStatus) query = query.eq("submission_status", filterStatus.toLowerCase());
+        if (minBlock !== null) query = query.gte("block_number", minBlock);
+        if (maxBlock !== null) query = query.lte("block_number", maxBlock);
+
+        const { data, error } = await query
             .order("block_number", { ascending: false })
             .range(from, from + PAGE_SIZE - 1);
 
         if (error) {
             console.error("Error fetching events:", error);
-            fetchError = error;
             break;
         }
 
@@ -64,15 +64,7 @@ export default async function EventsPage({
         from += PAGE_SIZE;
     }
 
-    // Apply Filters before grouping
-    const filteredEvents = allEvents.filter(event => {
-        if (filterChain && event.chain !== filterChain) return false;
-        if (filterRecordType && event.record_type?.toLowerCase() !== filterRecordType.toLowerCase()) return false;
-        if (filterStatus && event.submission_status?.toLowerCase() !== filterStatus.toLowerCase()) return false;
-        if (!isNaN(filterStart) && event.block_number < filterStart) return false;
-        if (!isNaN(filterEnd) && event.block_number > filterEnd) return false;
-        return true;
-    });
+    const filteredEvents = allEvents;
 
     // Group by block_number — preserve DB insertion order
     const blockMap = new Map<

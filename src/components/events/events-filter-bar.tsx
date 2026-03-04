@@ -62,7 +62,7 @@ export function EventsFilterBar() {
                 <div className="relative">
                     <select value={chain} onChange={(e) => setChain(e.target.value)} className={selectClass}>
                         <option value="">ALL_CHAINS</option>
-                        <option value="indianchain">INDIANCHAIN</option>
+                        <option value="indiachain">INDIACHAIN</option>
                     </select>
                     <ChevronIcon />
                 </div>
