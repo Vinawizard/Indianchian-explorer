@@ -37,45 +37,60 @@ export default async function Home() {
   const txHashes = new Set(allEvents.map(e => e.tx_hash).filter(Boolean));
   const totalTransactions = txHashes.size;
 
-  // Process Chart Data (Last 7 Days)
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const date = dayjs().subtract(6 - i, 'day').format('YYYY-MM-DD');
-    return {
-      date,
-      day: dayjs().subtract(6 - i, 'day').format('ddd'),
-      events: 0,
-      transactions: new Set<string>(),
-      farmer: 0,
-      agri: 0,
-      credit: 0,
-      fullDate: dayjs().subtract(6 - i, 'day').format('MMM DD, YYYY')
-    };
-  });
+  // Process Chart Data: Extract distinct dates from database
+  const dateMap = new Map<string, {
+    date: string,
+    day: string,
+    events: number,
+    transactions: Set<string>,
+    farmer: number,
+    agri: number,
+    credit: number,
+    fullDate: string
+  }>();
 
   allEvents.forEach(event => {
-    const eventDate = dayjs(event.timestamp).format('YYYY-MM-DD');
-    const dayData = last7Days.find(d => d.date === eventDate);
-    if (dayData) {
-      dayData.events++;
-      if (event.tx_hash) {
-        dayData.transactions.add(event.tx_hash);
-      }
+    if (!event.timestamp) return;
+    const eventDate = dayjs(event.timestamp);
+    const dateStr = eventDate.format('YYYY-MM-DD');
 
-      const type = event.record_type?.toLowerCase() || '';
-      if (type.includes('farmer')) dayData.farmer++;
-      else if (type.includes('agri')) dayData.agri++;
-      else if (type.includes('credit')) dayData.credit++;
+    if (!dateMap.has(dateStr)) {
+      dateMap.set(dateStr, {
+        date: dateStr,
+        day: eventDate.format('MMM DD'),
+        events: 0,
+        transactions: new Set<string>(),
+        farmer: 0,
+        agri: 0,
+        credit: 0,
+        fullDate: eventDate.format('MMM DD, YYYY')
+      });
     }
+
+    const dayData = dateMap.get(dateStr)!;
+    dayData.events++;
+    if (event.tx_hash) {
+      dayData.transactions.add(event.tx_hash);
+    }
+
+    const type = event.record_type?.toLowerCase() || '';
+    if (type.includes('farmer')) dayData.farmer++;
+    else if (type.includes('agri')) dayData.agri++;
+    else if (type.includes('credit')) dayData.credit++;
   });
 
-  const transactionChartData = last7Days.map(d => ({
+  // Sort dates chronologically and take up to the last 7 distinct dates
+  const sortedDates = Array.from(dateMap.keys()).sort();
+  const last7DistinctDates = sortedDates.slice(-7).map(date => dateMap.get(date)!);
+
+  const transactionChartData = last7DistinctDates.map(d => ({
     day: d.day,
     events: d.events,
     transactions: d.transactions.size,
     fullDate: d.fullDate
   }));
 
-  const distributionChartData = last7Days.map(d => ({
+  const distributionChartData = last7DistinctDates.map(d => ({
     day: d.day,
     farmer: d.farmer,
     agri: d.agri,

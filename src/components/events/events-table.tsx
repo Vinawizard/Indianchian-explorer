@@ -187,12 +187,12 @@ function ExpandedPanel({ block }: { block: BlockRow }) {
                                 {Object.entries(payload).map(([key, val]) => (
                                     <div
                                         key={key}
-                                        className="grid grid-cols-12 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"
+                                        className="flex flex-col sm:grid sm:grid-cols-12 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors"
                                     >
-                                        <div className="col-span-3 px-5 py-3 text-[10px] font-heading text-muted-foreground uppercase tracking-widest bg-white/[0.02] border-r border-white/5 flex items-center">
+                                        <div className="sm:col-span-3 px-5 py-2 sm:py-3 text-[10px] font-heading text-muted-foreground uppercase tracking-widest bg-white/[0.02] sm:border-r border-white/5 flex items-center">
                                             {key.replace(/_/g, " ")}
                                         </div>
-                                        <div className="col-span-9 px-5 py-3 text-[11px] font-mono text-white/80 break-all flex items-center">
+                                        <div className="sm:col-span-9 px-5 py-3 text-[11px] font-mono text-white/80 break-all flex items-center">
                                             {val != null ? String(val) : <span className="opacity-30">—</span>}
                                         </div>
                                     </div>
@@ -245,10 +245,8 @@ export function EventsTable({ events }: { events: BlockRow[] }) {
     return (
         <div className="w-full mt-8 flex flex-col gap-6 relative z-10">
             <div className="card-premium overflow-hidden">
-                {/* Header */}
                 <div
-                    className="px-8 py-5 bg-white/5 border-b border-white/10 text-[10px] font-heading text-muted-foreground tracking-[0.2em] uppercase"
-                    style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 2fr auto" }}
+                    className="hidden lg:grid px-8 py-5 bg-white/5 border-b border-white/10 text-[10px] font-heading text-muted-foreground tracking-[0.2em] uppercase grid-cols-[1.2fr_1fr_1fr_2fr_auto] gap-4"
                 >
                     <div className="flex items-center gap-3"><Box className="w-3.5 h-3.5 text-accent" /> Block</div>
                     <div className="flex items-center gap-3"><CheckCircle2 className="w-3.5 h-3.5 text-accent" /> Status</div>
@@ -275,14 +273,37 @@ export function EventsTable({ events }: { events: BlockRow[] }) {
                                 >
                                     {/* Main row */}
                                     <div
-                                        className={`px-8 py-5 items-center hover:bg-white/5 transition-colors ${isOpen ? 'bg-white/[0.02]' : ''}`}
-                                        style={{ display: "grid", gridTemplateColumns: "1.2fr 1fr 1fr 2fr auto", gap: "1rem" }}
+                                        className={`px-4 lg:px-8 py-4 lg:py-5 flex flex-col lg:grid lg:grid-cols-[1.2fr_1fr_1fr_2fr_auto] lg:gap-4 hover:bg-white/5 transition-colors relative ${isOpen ? 'bg-white/[0.02]' : ''}`}
                                     >
+                                        {/* Mobile Header (Hidden on Desktop) */}
+                                        <div className="flex lg:hidden items-center justify-between mb-3 pb-3 border-b border-white/5">
+                                            <div className="flex items-center gap-2">
+                                                <Box className="w-3 h-3 text-accent" />
+                                                <span className="text-[10px] font-heading text-muted-foreground uppercase tracking-widest">Block Data</span>
+                                            </div>
+                                            <div className="flex justify-end">
+                                                <button
+                                                    onClick={() => toggle(block.block_number)}
+                                                    aria-label={isOpen ? "Collapse" : "Expand"}
+                                                    className={`w-7 h-7 flex items-center justify-center border transition-all duration-200 rounded-none ${isOpen
+                                                        ? "bg-accent border-accent text-white"
+                                                        : "bg-white/5 border-white/10 text-muted-foreground hover:border-accent hover:text-accent"
+                                                        }`}
+                                                >
+                                                    {isOpen
+                                                        ? <ChevronDown className="w-3 h-3" />
+                                                        : <ChevronRight className="w-3 h-3" />
+                                                    }
+                                                </button>
+                                            </div>
+                                        </div>
+
                                         {/* Block */}
-                                        <div>
+                                        <div className="flex flex-col lg:block mb-4 lg:mb-0">
+                                            <span className="lg:hidden text-[9px] text-muted-foreground uppercase tracking-widest mb-1">Height</span>
                                             <Link
                                                 href={`/event/${block.block_number}`}
-                                                className="inline-flex items-center gap-2 text-sm font-heading text-white hover:text-accent transition-colors"
+                                                className="inline-flex items-center gap-2 text-sm lg:text-sm font-heading text-white hover:text-accent transition-colors"
                                             >
                                                 <span className="text-muted-foreground font-mono text-[10px]">#</span>
                                                 {block.block_number ?? "—"}
@@ -290,29 +311,36 @@ export function EventsTable({ events }: { events: BlockRow[] }) {
                                         </div>
 
                                         {/* Status */}
-                                        <div><StatusBadge status={block.submission_status} /></div>
+                                        <div className="flex flex-col lg:block mb-4 lg:mb-0">
+                                            <span className="lg:hidden text-[9px] text-muted-foreground uppercase tracking-widest mb-1">Network Status</span>
+                                            <div className="flex lg:block"><StatusBadge status={block.submission_status} /></div>
+                                        </div>
 
                                         {/* Chain */}
-                                        <div>
+                                        <div className="flex flex-col lg:block mb-4 lg:mb-0">
+                                            <span className="lg:hidden text-[9px] text-muted-foreground uppercase tracking-widest mb-1">Source Chain</span>
                                             <span className="text-[10px] font-heading text-white uppercase tracking-wider opacity-80">
                                                 {block.chain ?? "—"}
                                             </span>
                                         </div>
 
                                         {/* Record type badges */}
-                                        <div className="flex flex-wrap gap-2">
-                                            {block.record_types.map((rt) => (
-                                                <span
-                                                    key={rt.payload_id}
-                                                    className="inline-flex items-center text-[10px] font-heading px-3 py-1 bg-white/5 text-accent border border-white/10 uppercase tracking-widest"
-                                                >
-                                                    {rt.record_type?.replace(/_/g, " ") ?? "—"}
-                                                </span>
-                                            ))}
+                                        <div className="flex flex-col lg:block mb-2 lg:mb-0">
+                                            <span className="lg:hidden text-[9px] text-muted-foreground uppercase tracking-widest mb-2">Sectors / Events</span>
+                                            <div className="flex flex-wrap gap-2 lg:gap-1.5">
+                                                {block.record_types.map((rt) => (
+                                                    <span
+                                                        key={rt.payload_id}
+                                                        className="inline-flex items-center text-[9px] lg:text-[10px] font-heading px-2.5 lg:px-3 py-1 bg-white/5 text-accent border border-white/10 uppercase tracking-widest"
+                                                    >
+                                                        {rt.record_type?.replace(/_/g, " ") ?? "—"}
+                                                    </span>
+                                                ))}
+                                            </div>
                                         </div>
 
-                                        {/* Expand button */}
-                                        <div className="flex justify-end">
+                                        {/* Expand button (Desktop only) */}
+                                        <div className="hidden lg:flex justify-end">
                                             <button
                                                 onClick={() => toggle(block.block_number)}
                                                 aria-label={isOpen ? "Collapse" : "Expand"}
@@ -342,47 +370,49 @@ export function EventsTable({ events }: { events: BlockRow[] }) {
 
             {/* Pagination */}
             {totalPages > 1 && (
-                <div className="flex items-center justify-between px-2">
-                    <p className="text-[10px] text-muted-foreground uppercase font-mono tracking-widest">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-6 px-2">
+                    <p className="text-[10px] text-muted-foreground uppercase font-heading tracking-widest text-center sm:text-left">
                         FEED_SEGMENT{" "}
                         <span className="text-white font-bold">
                             {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, events.length)}
                         </span>{" "}
                         / <span className="text-white font-bold">{events.length.toLocaleString()}</span> RECORDS
                     </p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1.5 sm:gap-2">
                         <button
                             onClick={() => goTo(page - 1)}
                             disabled={page === 1}
-                            className="w-10 h-10 flex items-center justify-center border border-white/10 text-muted-foreground hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed transition-colors rounded-none"
+                            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center border border-white/10 text-muted-foreground hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed transition-colors rounded-none"
                         >
                             <ChevronLeft className="w-4 h-4" />
                         </button>
 
-                        {Array.from({ length: Math.min(totalPages, 5) }, (_, idx) => {
-                            let p: number;
-                            if (totalPages <= 5) p = idx + 1;
-                            else if (page <= 3) p = idx + 1;
-                            else if (page >= totalPages - 2) p = totalPages - 4 + idx;
-                            else p = page - 2 + idx;
-                            return (
-                                <button
-                                    key={p}
-                                    onClick={() => goTo(p)}
-                                    className={`w-10 h-10 text-[10px] font-heading transition-all rounded-none ${p === page
-                                        ? "bg-white text-black font-bold"
-                                        : "border border-white/10 text-muted-foreground hover:text-white"
-                                        }`}
-                                >
-                                    {p.toString().padStart(2, '0')}
-                                </button>
-                            );
-                        })}
+                        <div className="flex items-center gap-1.5 sm:gap-2">
+                            {Array.from({ length: Math.min(totalPages, 5) }, (_, idx) => {
+                                let p: number;
+                                if (totalPages <= 5) p = idx + 1;
+                                else if (page <= 3) p = idx + 1;
+                                else if (page >= totalPages - 2) p = totalPages - 4 + idx;
+                                else p = page - 2 + idx;
+                                return (
+                                    <button
+                                        key={p}
+                                        onClick={() => goTo(p)}
+                                        className={`w-9 h-9 sm:w-10 sm:h-10 text-[10px] font-heading transition-all rounded-none ${p === page
+                                            ? "bg-white text-black font-bold"
+                                            : "border border-white/10 text-muted-foreground hover:text-white"
+                                            }`}
+                                    >
+                                        {p.toString().padStart(2, '0')}
+                                    </button>
+                                );
+                            })}
+                        </div>
 
                         <button
                             onClick={() => goTo(page + 1)}
                             disabled={page === totalPages}
-                            className="w-10 h-10 flex items-center justify-center border border-white/10 text-muted-foreground hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed transition-colors rounded-none"
+                            className="w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center border border-white/10 text-muted-foreground hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed transition-colors rounded-none"
                         >
                             <ChevronRight className="w-4 h-4" />
                         </button>
