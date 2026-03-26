@@ -95,7 +95,7 @@ export default async function EventPage({ params }: { params: Promise<{ hash: st
 
                             <Row label="EVENT_SIGNATURE" value={
                                 <span className="inline-flex items-center px-4 py-1.5 bg-white/5 text-accent border border-accent/20 text-[10px] font-heading uppercase tracking-[0.2em] rounded-none">
-                                    {event.type?.replace(/_/g, " ") ?? "—"}
+                                    {(event.type || event.record_type)?.replace(/_/g, " ") ?? "—"}
                                 </span>
                             } />
                         </div>

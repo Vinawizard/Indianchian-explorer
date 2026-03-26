@@ -27,7 +27,7 @@ export function buildPayload(rt: any, chain: string): Record<string, unknown> {
     if (rtype === "agri_record") {
         return {
             chain,
-            type: rt.type,
+            type: rt.type || rt.record_type,
             payload_hash: rt.payload_hash,
             version: rt.version,
             timestamp: rt.timestamp,
@@ -40,7 +40,7 @@ export function buildPayload(rt: any, chain: string): Record<string, unknown> {
     if (rtype === "credit_app") {
         return {
             chain,
-            type: rt.type,
+            type: rt.type || rt.record_type,
             payload_hash: rt.payload_hash,
             version: rt.version,
             timestamp: rt.timestamp,
@@ -49,10 +49,9 @@ export function buildPayload(rt: any, chain: string): Record<string, unknown> {
         };
     }
 
-    // default: farmer (and any other types)
     return {
         chain,
-        type: rt.type,
+        type: rt.type || rt.record_type,
         payload_hash: rt.payload_hash,
         version: rt.version,
         timestamp: rt.timestamp,
