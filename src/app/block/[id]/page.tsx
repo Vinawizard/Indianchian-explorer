@@ -1,4 +1,5 @@
 "use client";
+import React from "react";
 
 import { use, useEffect, useState } from "react";
 import { Copy, Check, Hash, CheckCircle2, Table, Code2, Box, ChevronRight } from "lucide-react";
@@ -27,34 +28,54 @@ interface BlockData {
 function CallDataViewer({ args }: { args: any }) {
     const [view, setView] = useState<"TABLE" | "JSON">("TABLE");
 
-    const renderTableArgs = (argData: any, prefix = "") => {
-        if (!argData) return <div className="p-4 text-white/50 font-mono text-sm">null</div>;
-        
-        // Handle direct string/number
+    const isIdLike = (v: string) => v.length > 20 || /^[0-9a-f-]{8,}$/i.test(v);
+
+    const renderTableArgs = (argData: any, prefix = ""): React.ReactNode => {
+        if (argData === null || argData === undefined)
+            return <div className="p-4 text-white/50 font-mono text-sm">null</div>;
+
+        // Handle direct primitive
         if (typeof argData !== "object") {
+            const str = String(argData);
             return (
                 <div className="flex border-t border-white/5 py-4 px-6 items-center hover:bg-white/[0.02]">
                     <div className="w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-widest pl-6">
                         {prefix || "VALUE"}
                     </div>
-                    <div className="w-2/3 text-sm font-mono text-white/80 break-all">
-                        {String(argData)}
+                    <div className={`w-2/3 text-sm font-mono break-all ${
+                        isIdLike(str) ? "text-accent" : "text-white/80"
+                    }`}>
+                        {str}
                     </div>
                 </div>
             );
         }
 
-        // Handle Array / Object
-        return Object.entries(argData).map(([k, v], i) => (
-            <div key={`${prefix}-${k}-${i}`} className="flex border-t border-white/5 py-4 px-6 items-center hover:bg-white/[0.02]">
-                <div className="w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-widest pl-6">
-                    {prefix ? `${prefix}.${k}` : k}
-                </div>
-                <div className="w-2/3 text-sm font-mono text-white/80 break-all">
-                    {typeof v === "object" ? JSON.stringify(v) : String(v)}
-                </div>
-            </div>
-        ));
+        // Recursively flatten arrays / objects
+        return (
+            <>
+                {Object.entries(argData).map(([k, v], i) => {
+                    const fullKey = prefix ? `${prefix}.${k}` : k;
+                    if (v !== null && typeof v === "object" && !Array.isArray(v)) {
+                        // Recurse into nested object
+                        return <React.Fragment key={`${fullKey}-${i}`}>{renderTableArgs(v, fullKey)}</React.Fragment>;
+                    }
+                    const str = v === null || v === undefined ? null : String(v);
+                    return (
+                        <div key={`${fullKey}-${i}`} className="flex border-t border-white/5 py-4 px-6 items-center hover:bg-white/[0.02]">
+                            <div className="w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-widest pl-6">
+                                {fullKey}
+                            </div>
+                            <div className={`w-2/3 text-sm font-mono break-all ${
+                                str && isIdLike(str) ? "text-accent" : "text-white/80"
+                            }`}>
+                                {str !== null ? str : <span className="opacity-30">—</span>}
+                            </div>
+                        </div>
+                    );
+                })}
+            </>
+        );
     };
 
     return (
@@ -250,6 +271,7 @@ export default function BlockPage({ params }: { params: Promise<{ id: string }> 
 
                                 {/* Extrinsic Content */}
                                 <div className="flex flex-col">
+                                    {/* HASH row */}
                                     <div className="flex border-b border-white/5 py-5 px-6 items-center">
                                         <div className="w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
                                             <Hash className="w-3 h-3 text-white/30" /> HASH
@@ -261,7 +283,22 @@ export default function BlockPage({ params }: { params: Promise<{ id: string }> 
                                             </button>
                                         </div>
                                     </div>
-                                    
+
+                                    {/* SIGNER row */}
+                                    {ext.signer && (
+                                        <div className="flex border-b border-white/5 py-5 px-6 items-center">
+                                            <div className="w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
+                                                <Hash className="w-3 h-3 text-white/30" /> SIGNER
+                                            </div>
+                                            <div className="w-2/3 flex items-center gap-4">
+                                                <span className="font-mono text-sm text-white/70 break-all">{ext.signer}</span>
+                                                <button onClick={() => copyToClipboard(ext.signer!)} className="p-1 text-white/30 hover:text-white transition-colors">
+                                                    {copiedHash === ext.signer ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Interactive CALL_DATA viewer */}
                                     <CallDataViewer args={ext.args} />
                                 </div>
