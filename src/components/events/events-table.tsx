@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence, Variants } from "framer-motion";
 import {
     ChevronRight, ChevronDown, ChevronLeft, CheckCircle2,
-    Clock, XCircle, Box, Globe, FileText
+    Clock, XCircle, Box, Globe, FileText, Search
 } from "lucide-react";
+import { useSearch } from "@/components/providers/search-provider";
 
 type RecordTypeEntry = {
     payload_id: string;
@@ -227,11 +228,48 @@ function ExpandedPanel({ block }: { block: BlockRow }) {
 export function EventsTable({ events }: { events: BlockRow[] }) {
     const [page, setPage] = useState(1);
     const [expandedBlock, setExpandedBlock] = useState<number | null>(null);
+    const { query } = useSearch();
 
-    const totalPages = useMemo(() => Math.ceil(events.length / PAGE_SIZE), [events.length]);
+    // Efficient client-side search filter — runs only when query or events change
+    const filteredEvents = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return events;
+
+        return events.filter((block) => {
+            // Block number match
+            if (String(block.block_number).startsWith(q)) return true;
+
+            // Chain match
+            if (block.chain?.toLowerCase().includes(q)) return true;
+
+            // Status match
+            if (block.submission_status?.toLowerCase().includes(q)) return true;
+
+            // Match against any record_type entry
+            return block.record_types.some((rt) => {
+                if (rt.tx_hash?.toLowerCase().includes(q)) return true;
+                if (rt.signer_address?.toLowerCase().includes(q)) return true;
+                if (rt.record_type?.toLowerCase().includes(q)) return true;
+                if (rt.payload_id?.toLowerCase().startsWith(q)) return true;
+                if (rt.farmer_id?.toLowerCase().includes(q)) return true;
+                if (rt.entity_id?.toLowerCase().includes(q)) return true;
+                return false;
+            });
+        });
+    }, [events, query]);
+
+    const isSearchActive = query.trim().length > 0;
+
+    // Reset to page 1 whenever the search query changes
+    useEffect(() => {
+        setPage(1);
+        setExpandedBlock(null);
+    }, [query]);
+
+    const totalPages = useMemo(() => Math.ceil(filteredEvents.length / PAGE_SIZE), [filteredEvents.length]);
     const pageData = useMemo(
-        () => events.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-        [events, page]
+        () => filteredEvents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+        [filteredEvents, page]
     );
 
     const goTo = (p: number) => {
@@ -244,6 +282,23 @@ export function EventsTable({ events }: { events: BlockRow[] }) {
 
     return (
         <div className="w-full mt-8 flex flex-col gap-6 relative z-10">
+            {/* Search result count */}
+            {isSearchActive && (
+                <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="flex items-center gap-3 px-4 py-3 bg-accent/5 border border-accent/20 text-[10px] font-heading uppercase tracking-widest"
+                >
+                    <Search className="w-3.5 h-3.5 text-accent flex-shrink-0" />
+                    <span className="text-muted-foreground">
+                        SHOWING{" "}
+                        <span className="text-accent font-bold">{filteredEvents.length.toLocaleString()}</span>
+                        {" "}OF{" "}
+                        <span className="text-white font-bold">{events.length.toLocaleString()}</span>{" "}
+                        BLOCKS MATCHING &quot;{query.trim()}&quot;
+                    </span>
+                </motion.div>
+            )}
             <div className="card-premium overflow-hidden">
                 <div
                     className="hidden lg:grid px-8 py-5 bg-white/5 border-b border-white/10 text-[10px] font-heading text-muted-foreground tracking-[0.2em] uppercase grid-cols-[1.2fr_1fr_1fr_2fr_auto] gap-4"
@@ -374,9 +429,9 @@ export function EventsTable({ events }: { events: BlockRow[] }) {
                     <p className="text-[10px] text-muted-foreground uppercase font-heading tracking-widest text-center sm:text-left">
                         FEED_SEGMENT{" "}
                         <span className="text-white font-bold">
-                            {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, events.length)}
+                            {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredEvents.length)}
                         </span>{" "}
-                        / <span className="text-white font-bold">{events.length.toLocaleString()}</span> RECORDS
+                        / <span className="text-white font-bold">{filteredEvents.length.toLocaleString()}</span> RECORDS
                     </p>
                     <div className="flex items-center gap-1.5 sm:gap-2">
                         <button

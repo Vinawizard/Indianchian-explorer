@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Box, Hash, Copy, ChevronRight, Layers, CheckCircle2, Server } from "lucide-react";
+import { Activity, Box, Hash, Copy, ChevronRight, Layers, CheckCircle2, Server, Search } from "lucide-react";
 import Link from "next/link";
+import { useSearch } from "@/components/providers/search-provider";
 
 interface Block {
     number: number;
@@ -34,6 +35,7 @@ export function LiveNetworkFeed() {
     const [blocks, setBlocks] = useState<Block[]>([]);
     const [stats, setStats] = useState<ChainStats | null>(null);
     const [isPolling, setIsPolling] = useState(true);
+    const { query } = useSearch();
 
     const fetchData = async () => {
         try {
@@ -78,6 +80,28 @@ export function LiveNetworkFeed() {
         // Could add a toast notification here
     };
 
+    // Efficient client-side search filtering — runs only when query or blocks change
+    const filteredBlocks = useMemo(() => {
+        const q = query.trim().toLowerCase();
+        if (!q) return blocks;
+
+        return blocks.filter((block) => {
+            // Match by exact block number prefix or full number
+            const blockNumStr = String(block.number);
+            if (blockNumStr.startsWith(q)) return true;
+
+            // Match by hash (partial prefix match)
+            if (block.hash.toLowerCase().startsWith(q)) return true;
+
+            // Also allow substring match on hash for broader search
+            if (block.hash.toLowerCase().includes(q)) return true;
+
+            return false;
+        });
+    }, [blocks, query]);
+
+    const isSearchActive = query.trim().length > 0;
+
     return (
         <div className="mt-12 space-y-12">
             {/* LIVE BLOCK FEED */}
@@ -91,15 +115,35 @@ export function LiveNetworkFeed() {
                             UPDATES EVERY ~6 SECONDS WITH NETWORK CONSENSUS
                         </p>
                     </div>
-                    <div className="mt-4 sm:mt-0 flex items-center justify-center gap-2 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full">
-                        <motion.div
-                            animate={{ opacity: [1, 0.5, 1] }}
-                            transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                            className="w-2 h-2 rounded-full bg-accent"
-                        />
-                        <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
-                            SYNCING
-                        </span>
+                    <div className="mt-4 sm:mt-0 flex items-center gap-3">
+                        {/* Search result count badge */}
+                        {isSearchActive && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="flex items-center gap-2 px-4 py-1.5 bg-accent/10 border border-accent/30 rounded-full"
+                            >
+                                <Search className="w-3 h-3 text-accent" />
+                                <span className="text-[10px] font-mono text-accent uppercase tracking-widest">
+                                    {filteredBlocks.length} / {blocks.length} BLOCKS
+                                </span>
+                            </motion.div>
+                        )}
+
+                        {/* Syncing indicator — hidden during active search */}
+                        {!isSearchActive && (
+                            <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full">
+                                <motion.div
+                                    animate={{ opacity: [1, 0.5, 1] }}
+                                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+                                    className="w-2 h-2 rounded-full bg-accent"
+                                />
+                                <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+                                    SYNCING
+                                </span>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -120,11 +164,12 @@ export function LiveNetworkFeed() {
                     {/* Feed Rows */}
                     <div className="flex flex-col">
                         <AnimatePresence initial={false}>
-                            {blocks.map((block, i) => (
+                            {filteredBlocks.map((block) => (
                                 <motion.div
                                     key={block.number}
                                     initial={{ opacity: 0, y: -20 }}
                                     animate={{ opacity: 1, y: 0 }}
+                                    exit={{ opacity: 0, y: 10 }}
                                     transition={{ duration: 0.3 }}
                                     className="grid grid-cols-12 gap-4 p-4 border-b border-white/5 hover:bg-white/5 transition-colors group items-center"
                                 >
@@ -135,7 +180,7 @@ export function LiveNetworkFeed() {
                                     </div>
                                     <div className="col-span-6 flex items-center gap-2 font-mono text-sm text-white/60">
                                         <span className="truncate max-w-[80%]">{block.hash}</span>
-                                        <button 
+                                        <button
                                             onClick={() => copyToClipboard(block.hash)}
                                             className="text-white/40 hover:text-white transition-colors p-1"
                                         >
@@ -153,10 +198,29 @@ export function LiveNetworkFeed() {
                                 </motion.div>
                             ))}
                         </AnimatePresence>
+
+                        {/* Empty state: loading */}
                         {blocks.length === 0 && (
                             <div className="p-12 text-center text-muted-foreground font-mono text-sm uppercase">
                                 Loading blocks...
                             </div>
+                        )}
+
+                        {/* Empty state: no search results */}
+                        {blocks.length > 0 && filteredBlocks.length === 0 && isSearchActive && (
+                            <motion.div
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                className="p-12 text-center"
+                            >
+                                <Search className="w-8 h-8 text-muted-foreground/30 mx-auto mb-4" />
+                                <p className="text-muted-foreground font-mono text-xs uppercase tracking-widest">
+                                    NO BLOCKS MATCH &quot;{query.trim()}&quot;
+                                </p>
+                                <p className="text-muted-foreground/40 font-mono text-[10px] uppercase tracking-widest mt-2">
+                                    TRY A BLOCK NUMBER OR PARTIAL HASH
+                                </p>
+                            </motion.div>
                         )}
                     </div>
                 </div>
@@ -167,10 +231,10 @@ export function LiveNetworkFeed() {
                 <h2 className="text-xl text-heading uppercase tracking-tighter flex items-center gap-3 mb-6">
                     <Server className="w-5 h-5 text-white/50" /> VALIDATOR NODE HEALTH
                 </h2>
-                
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                     {stats?.network?.nodes ? stats.network.nodes.map((node) => (
-                        <motion.div 
+                        <motion.div
                             key={node.id}
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
@@ -180,21 +244,21 @@ export function LiveNetworkFeed() {
                                 <span className="font-mono text-xs text-white/60 font-bold">NODE_{node.id}</span>
                                 <div className={`w-2.5 h-2.5 rounded-full ${node.status === 'up' ? 'bg-[#ff5500] shadow-[0_0_10px_#ff5500]' : 'bg-red-600 shadow-[0_0_10px_#dc2626]'}`} />
                             </div>
-                            
+
                             <div>
                                 <p className="text-[9px] text-white/40 uppercase tracking-widest mb-1.5 font-bold">CONNECTION STATE</p>
                                 <p className="text-sm font-bold text-white uppercase tracking-wider">
                                     {node.status === 'up' ? 'STABLE / SYNCHED' : 'OFFLINE'}
                                 </p>
                             </div>
-                            
+
                             {/* Subtle hover effect light */}
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/[0.02] rounded-full blur-2xl group-hover:bg-white/[0.04] transition-colors pointer-events-none -mr-16 -mt-16" />
                         </motion.div>
                     )) : (
                         // Skeleton loading state
                         Array.from({ length: 5 }).map((_, i) => (
-                             <div key={i} className="bg-white/5 border border-white/10 rounded-2xl h-32 animate-pulse" />
+                            <div key={i} className="bg-white/5 border border-white/10 rounded-2xl h-32 animate-pulse" />
                         ))
                     )}
                 </div>
