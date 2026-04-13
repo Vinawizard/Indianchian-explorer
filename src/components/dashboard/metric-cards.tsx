@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion, Variants } from "framer-motion";
 import { Box, Activity, Zap, Shield } from "lucide-react";
 
@@ -24,10 +25,28 @@ const item: Variants = {
 };
 
 export function MetricCards({ stats }: { stats: MetricStats }) {
+    const [realtimeBlock, setRealtimeBlock] = useState(stats.latestBlock);
+
+    useEffect(() => {
+        const fetchLatest = async () => {
+            try {
+                const res = await fetch("/api/chain/stats");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data?.stats?.latestBlock) {
+                        setRealtimeBlock(data.stats.latestBlock);
+                    }
+                }
+            } catch (e) {}
+        };
+        const interval = setInterval(fetchLatest, 6000);
+        return () => clearInterval(interval);
+    }, []);
+
     const cards = [
         {
             label: "Latest Block",
-            value: stats.latestBlock,
+            value: realtimeBlock,
             icon: Box,
             accent: "#06b6d4",
             glow: "rgba(6,182,212,0.15)",

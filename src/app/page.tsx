@@ -1,5 +1,6 @@
 import { MetricCards } from "@/components/dashboard/metric-cards";
 import { NetworkCharts } from "@/components/dashboard/network-charts";
+import { LiveNetworkFeed } from "@/components/dashboard/live-feed";
 import { supabase } from "@/lib/supabase";
 import dayjs from "dayjs";
 
@@ -124,6 +125,9 @@ export default async function Home() {
 
       {/* Network Stats Cards */}
       <MetricCards stats={stats} />
+
+      {/* Live Network Feed */}
+      <LiveNetworkFeed />
 
       {/* Network Charts */}
       <div className="mt-8">
