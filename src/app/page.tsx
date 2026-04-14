@@ -2,6 +2,7 @@ import { MetricCards } from "@/components/dashboard/metric-cards";
 import { NetworkCharts } from "@/components/dashboard/network-charts";
 import { LiveNetworkFeed } from "@/components/dashboard/live-feed";
 import { supabase } from "@/lib/supabase";
+import { getApi } from "@/lib/polkadot";
 import dayjs from "dayjs";
 
 export const revalidate = 0;
@@ -32,11 +33,35 @@ export default async function Home() {
 
   // Calculate Metrics
   const totalEvents = allEvents.length;
-  const latestBlock = allEvents.length > 0 ? allEvents[0].block_number : 0;
 
   // Calculate distinctive transactions
   const txHashes = new Set(allEvents.map(e => e.tx_hash).filter(Boolean));
   const totalTransactions = txHashes.size;
+
+  // Fetch live block height + initial 10 blocks from the chain node server-side
+  // so MetricCards shows the correct value immediately and the live feed has
+  // data ready before the client even mounts (no loading flash).
+  let latestBlock = 0;
+  let initialBlocks: { number: number; hash: string; extrinsicsCount: number }[] = [];
+
+  try {
+    const api = await getApi();
+    const latestHeader = await api.rpc.chain.getHeader();
+    const latestNum = latestHeader.number.toNumber();
+    latestBlock = latestNum;
+
+    // Fetch the 10 most recent blocks in parallel
+    const blockFetches = Array.from({ length: 10 }, (_, idx) => latestNum - idx).filter(n => n > 0).map(async (n) => {
+      const hash = await api.rpc.chain.getBlockHash(n);
+      const signedBlock = await api.rpc.chain.getBlock(hash);
+      return { number: n, hash: hash.toHex(), extrinsicsCount: signedBlock.block.extrinsics.length };
+    });
+    initialBlocks = await Promise.all(blockFetches);
+  } catch (e) {
+    console.error("[page] Failed to fetch live chain data:", e);
+    // Fall back to the highest block seen in Supabase
+    latestBlock = allEvents.length > 0 ? allEvents[0].block_number : 0;
+  }
 
   // Process Chart Data: Extract distinct dates from database
   const dateMap = new Map<string, {
@@ -127,7 +152,7 @@ export default async function Home() {
       <MetricCards stats={stats} />
 
       {/* Live Network Feed */}
-      <LiveNetworkFeed />
+      <LiveNetworkFeed initialBlocks={initialBlocks} />
 
       {/* Network Charts */}
       <div className="mt-8">

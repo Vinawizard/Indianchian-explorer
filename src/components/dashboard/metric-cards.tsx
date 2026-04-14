@@ -39,6 +39,8 @@ export function MetricCards({ stats }: { stats: MetricStats }) {
                 }
             } catch (e) {}
         };
+        // Sync immediately — so the card shows the live value without waiting 6s
+        fetchLatest();
         const interval = setInterval(fetchLatest, 6000);
         return () => clearInterval(interval);
     }, []);

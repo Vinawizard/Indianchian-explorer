@@ -31,8 +31,12 @@ interface ChainStats {
     };
 }
 
-export function LiveNetworkFeed() {
-    const [blocks, setBlocks] = useState<Block[]>([]);
+interface LiveFeedProps {
+    initialBlocks?: Block[];
+}
+
+export function LiveNetworkFeed({ initialBlocks = [] }: LiveFeedProps) {
+    const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
     const [stats, setStats] = useState<ChainStats | null>(null);
     const [isPolling, setIsPolling] = useState(true);
     const { query } = useSearch();
@@ -64,7 +68,7 @@ export function LiveNetworkFeed() {
     };
 
     useEffect(() => {
-        // Initial fetch
+        // Initial fetch immediately — keeps block count / stats in sync right away
         fetchData();
 
         // 6 second polling interval matches block time
@@ -116,13 +120,13 @@ export function LiveNetworkFeed() {
                         </p>
                     </div>
                     <div className="mt-4 sm:mt-0 flex items-center gap-3">
-                        {/* Search result count badge */}
+                        {/* Search result count badge — sharp corners */}
                         {isSearchActive && (
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                className="flex items-center gap-2 px-4 py-1.5 bg-accent/10 border border-accent/30 rounded-full"
+                                initial={{ opacity: 0, x: 8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: 8 }}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-accent/10 border border-accent/40"
                             >
                                 <Search className="w-3 h-3 text-accent" />
                                 <span className="text-[10px] font-mono text-accent uppercase tracking-widest">
@@ -131,13 +135,13 @@ export function LiveNetworkFeed() {
                             </motion.div>
                         )}
 
-                        {/* Syncing indicator — hidden during active search */}
+                        {/* Syncing indicator — sharp corners */}
                         {!isSearchActive && (
-                            <div className="flex items-center justify-center gap-2 px-4 py-1.5 bg-white/5 border border-white/10 rounded-full">
+                            <div className="flex items-center justify-center gap-2 px-3 py-1.5 bg-white/5 border border-white/10">
                                 <motion.div
-                                    animate={{ opacity: [1, 0.5, 1] }}
-                                    transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                                    className="w-2 h-2 rounded-full bg-accent"
+                                    animate={{ opacity: [1, 0.3, 1] }}
+                                    transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
+                                    className="w-1.5 h-1.5 bg-accent"
                                 />
                                 <span className="text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
                                     SYNCING
@@ -147,51 +151,72 @@ export function LiveNetworkFeed() {
                     </div>
                 </div>
 
-                <div className="card-premium overflow-hidden">
-                    {/* Header */}
-                    <div className="grid grid-cols-12 gap-4 p-4 border-b border-white/5 bg-white/[0.02]">
-                        <div className="col-span-3 flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-widest">
-                            <Box className="w-3 h-3" /> BLOCK NUMBER
+                <div className="overflow-hidden border border-white/10">
+                    {/* Header row */}
+                    <div className="grid grid-cols-12 bg-white/[0.03] border-b border-white/10">
+                        <div className="col-span-3 flex items-center gap-2 px-5 py-3 text-[10px] text-muted-foreground uppercase tracking-widest border-r border-white/10">
+                            <Box className="w-3 h-3 shrink-0" /> BLOCK
                         </div>
-                        <div className="col-span-6 flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-widest">
-                            <Hash className="w-3 h-3" /> BLOCK HASH
+                        <div className="col-span-6 flex items-center gap-2 px-5 py-3 text-[10px] text-muted-foreground uppercase tracking-widest border-r border-white/10">
+                            <Hash className="w-3 h-3 shrink-0" /> HASH
                         </div>
-                        <div className="col-span-3 flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-widest">
-                            <Layers className="w-3 h-3" /> LOAD / ACTIVITY
+                        <div className="col-span-3 flex items-center gap-2 px-5 py-3 text-[10px] text-muted-foreground uppercase tracking-widest">
+                            <Layers className="w-3 h-3 shrink-0" /> EXTRINSICS
                         </div>
                     </div>
 
                     {/* Feed Rows */}
                     <div className="flex flex-col">
                         <AnimatePresence initial={false}>
-                            {filteredBlocks.map((block) => (
+                            {filteredBlocks.map((block, idx) => (
                                 <motion.div
                                     key={block.number}
-                                    initial={{ opacity: 0, y: -20 }}
+                                    initial={{ opacity: 0, y: -16 }}
                                     animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0, y: 10 }}
-                                    transition={{ duration: 0.3 }}
-                                    className="grid grid-cols-12 gap-4 p-4 border-b border-white/5 hover:bg-white/5 transition-colors group items-center"
+                                    exit={{ opacity: 0 }}
+                                    transition={{ duration: 0.25 }}
+                                    className="grid grid-cols-12 border-b border-white/5 hover:bg-white/[0.04] transition-colors group items-stretch relative"
                                 >
-                                    <div className="col-span-3 font-mono text-white/80">
-                                        <Link href={`/block/${block.number}`} className="hover:text-accent transition-colors">
+                                    {/* Accent left bar on hover */}
+                                    <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                                    {/* Block number */}
+                                    <div className="col-span-3 flex items-center px-5 py-4 border-r border-white/5 font-mono">
+                                        <Link
+                                            href={`/block/${block.number}`}
+                                            className="inline-flex items-center gap-2 text-white/90 hover:text-accent transition-colors text-sm font-semibold"
+                                        >
+                                            {idx === 0 && (
+                                                <span className="text-[8px] font-mono bg-accent text-white px-1.5 py-0.5 uppercase tracking-wider leading-none">
+                                                    LATEST
+                                                </span>
+                                            )}
                                             #{block.number}
                                         </Link>
                                     </div>
-                                    <div className="col-span-6 flex items-center gap-2 font-mono text-sm text-white/60">
-                                        <span className="truncate max-w-[80%]">{block.hash}</span>
+
+                                    {/* Hash */}
+                                    <div className="col-span-6 flex items-center gap-2 px-5 py-4 border-r border-white/5 font-mono text-xs text-white/50">
+                                        <span className="truncate">{block.hash}</span>
                                         <button
                                             onClick={() => copyToClipboard(block.hash)}
-                                            className="text-white/40 hover:text-white transition-colors p-1"
+                                            className="shrink-0 text-white/30 hover:text-white/80 transition-colors"
+                                            title="Copy hash"
                                         >
-                                            <Copy className="w-3.5 h-3.5" />
+                                            <Copy className="w-3 h-3" />
                                         </button>
                                     </div>
-                                    <div className="col-span-3 flex items-center justify-between font-heading uppercase text-xs">
-                                        <span className="text-white/80">
-                                            <span className="text-white font-bold">{block.extrinsicsCount}</span> EXTRINSICS
-                                        </span>
-                                        <Link href={`/block/${block.number}`} className="flex items-center justify-center w-9 h-9 border border-white/10 hover:border-accent transition-colors text-white/40">
+
+                                    {/* Extrinsics + link */}
+                                    <div className="col-span-3 flex items-center justify-between px-5 py-4">
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-heading text-lg text-white font-bold leading-none">{block.extrinsicsCount}</span>
+                                            <span className="text-[9px] text-white/40 uppercase tracking-widest font-mono leading-none">EXT</span>
+                                        </div>
+                                        <Link
+                                            href={`/block/${block.number}`}
+                                            className="flex items-center justify-center w-8 h-8 border border-white/10 hover:border-accent hover:text-accent transition-colors text-white/30"
+                                        >
                                             <ChevronRight className="w-4 h-4" />
                                         </Link>
                                     </div>
@@ -238,7 +263,7 @@ export function LiveNetworkFeed() {
                             key={node.id}
                             initial={{ opacity: 0, scale: 0.95 }}
                             animate={{ opacity: 1, scale: 1 }}
-                            className="bg-[#0a0a0a] border border-white/10 rounded-2xl p-5 hover:border-white/20 transition-all relative overflow-hidden group"
+                            className="bg-[#0a0a0a] border border-white/10 p-5 hover:border-white/25 transition-all relative overflow-hidden group"
                         >
                             <div className="flex items-center justify-between mb-8">
                                 <span className="font-mono text-xs text-white/60 font-bold">NODE_{node.id}</span>
