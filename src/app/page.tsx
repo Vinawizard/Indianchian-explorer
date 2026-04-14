@@ -142,7 +142,7 @@ export default async function Home() {
 
         <div className="relative">
           <h1 className="text-6xl md:text-7xl text-heading mb-4 uppercase">
-            India<span className="text-white decoration-2">Chain </span>
+            Indian<span className="text-white decoration-2">Chain </span>
             EXPLORER
           </h1>
         </div>

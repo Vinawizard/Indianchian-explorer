@@ -167,7 +167,7 @@ export default function BlockPage({ params }: { params: Promise<{ id: string }> 
                 
                 {/* Breadcrumb section */}
                 <div className="flex items-center gap-2 mb-10 text-[11px] font-bold uppercase tracking-widest">
-                    <Link href="/" className="text-accent hover:text-white transition-colors px-2 py-0.5">INDIACHAIN</Link>
+                    <Link href="/" className="text-accent hover:text-white transition-colors px-2 py-0.5">INDIANCHAIN</Link>
                     <div className="text-white/30 px-2 py-0.5">/</div>
                     <Link href="/" className="text-accent hover:text-white transition-colors px-2 py-0.5">BLOCKS</Link>
                     <div className="text-white/30 px-2 py-0.5">/</div>

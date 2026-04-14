@@ -129,7 +129,7 @@ export default async function EventsPage({
 
             <div className="mb-8 relative z-10">
                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground uppercase tracking-widest mb-6">
-                    <Link href="/" className="hover:text-white transition-colors">IndiaChain</Link>
+                    <Link href="/" className="hover:text-white transition-colors">IndianChain</Link>
                     <span className="opacity-30">/</span>
                     <span className="text-white">Network Events</span>
                 </div>

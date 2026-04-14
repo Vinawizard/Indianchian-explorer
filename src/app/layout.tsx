@@ -23,7 +23,7 @@ const silkscreen = Silkscreen({
 });
 
 export const metadata: Metadata = {
-  title: "IndiaChain Explorer - Trivolve Tech",
+  title: "IndianChain Explorer - Trivolve Tech",
   description: "A premium, fast, and modern blockchain explorer.",
 };
 
