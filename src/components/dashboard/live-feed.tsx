@@ -33,11 +33,12 @@ interface ChainStats {
 
 interface LiveFeedProps {
     initialBlocks?: Block[];
+    initialStats?: ChainStats | null;
 }
 
-export function LiveNetworkFeed({ initialBlocks = [] }: LiveFeedProps) {
+export function LiveNetworkFeed({ initialBlocks = [], initialStats = null }: LiveFeedProps) {
     const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
-    const [stats, setStats] = useState<ChainStats | null>(null);
+    const [stats, setStats] = useState<ChainStats | null>(initialStats);
     const [isPolling, setIsPolling] = useState(true);
     const { query } = useSearch();
 

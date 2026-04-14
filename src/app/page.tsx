@@ -3,6 +3,8 @@ import { NetworkCharts } from "@/components/dashboard/network-charts";
 import { LiveNetworkFeed } from "@/components/dashboard/live-feed";
 import { supabase } from "@/lib/supabase";
 import { getApi } from "@/lib/polkadot";
+import { scrapePrometheusMetrics } from "@/lib/prometheus";
+import type { NetworkMetrics } from "@/lib/prometheus";
 import dayjs from "dayjs";
 
 export const revalidate = 0;
@@ -43,12 +45,29 @@ export default async function Home() {
   // data ready before the client even mounts (no loading flash).
   let latestBlock = 0;
   let initialBlocks: { number: number; hash: string; extrinsicsCount: number }[] = [];
+  let initialStats: { latestBlock: number; finalizedBlock: number; chainName: string; network: NetworkMetrics } | null = null;
 
   try {
     const api = await getApi();
-    const latestHeader = await api.rpc.chain.getHeader();
+
+    // Fetch header, finalized header, chain name, and node metrics all at once
+    const [latestHeader, finalizedHash, chainName, networkMetrics] = await Promise.all([
+      api.rpc.chain.getHeader(),
+      api.rpc.chain.getFinalizedHead(),
+      api.rpc.system.chain(),
+      scrapePrometheusMetrics(),
+    ]);
+    const finalizedHeader = await api.rpc.chain.getHeader(finalizedHash);
+
     const latestNum = latestHeader.number.toNumber();
     latestBlock = latestNum;
+
+    initialStats = {
+      latestBlock: latestNum,
+      finalizedBlock: finalizedHeader.number.toNumber(),
+      chainName: chainName.toString(),
+      network: networkMetrics,
+    };
 
     // Fetch the 10 most recent blocks in parallel
     const blockFetches = Array.from({ length: 10 }, (_, idx) => latestNum - idx).filter(n => n > 0).map(async (n) => {
@@ -152,7 +171,7 @@ export default async function Home() {
       <MetricCards stats={stats} />
 
       {/* Live Network Feed */}
-      <LiveNetworkFeed initialBlocks={initialBlocks} />
+      <LiveNetworkFeed initialBlocks={initialBlocks} initialStats={initialStats} />
 
       {/* Network Charts */}
       <div className="mt-8">
