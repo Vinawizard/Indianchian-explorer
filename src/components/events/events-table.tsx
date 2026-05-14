@@ -255,8 +255,20 @@ function ExpandedPanel({ block }: { block: BlockRow }) {
                                     <div className="sm:col-span-3 px-5 py-2 sm:py-3 text-[10px] font-heading text-muted-foreground uppercase tracking-widest bg-white/[0.02] sm:border-r border-white/5 flex items-center">
                                         CARDANO TX HASH
                                     </div>
-                                    <div className="sm:col-span-9 px-5 py-3 text-[11px] font-mono text-[#4d9fff] break-all flex items-center">
-                                        {rt.cardano_tx_hash ? String(rt.cardano_tx_hash) : <span className="opacity-30">—</span>}
+                                    <div className="sm:col-span-9 px-5 py-3 text-[11px] font-mono break-all flex items-center">
+                                        {rt.cardano_tx_hash ? (
+                                            <a
+                                                href={`https://preprod.cardanoscan.io/transaction/${rt.cardano_tx_hash}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[#4d9fff] hover:text-white transition-colors duration-200 cursor-pointer"
+                                                title="View on CardanoScan"
+                                            >
+                                                {String(rt.cardano_tx_hash)}
+                                            </a>
+                                        ) : (
+                                            <span className="opacity-30">—</span>
+                                        )}
                                     </div>
                                 </div>
                             </div>

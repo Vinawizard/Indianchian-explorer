@@ -152,8 +152,20 @@ export function EventAttributes({ event }: { event: any }) {
                             <div className="col-span-12 md:col-span-3 px-8 py-5 text-[10px] font-heading text-muted-foreground uppercase tracking-[0.2em] md:border-r border-white/5 flex items-center">
                                 CARDANO TX HASH
                             </div>
-                            <div className="col-span-12 md:col-span-9 px-8 py-5 text-[13px] font-mono text-[#4d9fff] break-all flex items-center leading-loose">
-                                {event.cardano_tx_hash ? String(event.cardano_tx_hash) : <span className="opacity-30 tracking-widest">—</span>}
+                            <div className="col-span-12 md:col-span-9 px-8 py-5 text-[13px] font-mono break-all flex items-center leading-loose">
+                                {event.cardano_tx_hash ? (
+                                    <a
+                                        href={`https://preprod.cardanoscan.io/transaction/${event.cardano_tx_hash}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-[#4d9fff] hover:text-white transition-colors duration-200 cursor-pointer"
+                                        title="View on CardanoScan"
+                                    >
+                                        {String(event.cardano_tx_hash)}
+                                    </a>
+                                ) : (
+                                    <span className="opacity-30 tracking-widest">—</span>
+                                )}
                             </div>
                         </div>
                     </div>
