@@ -25,6 +25,8 @@ type RecordTypeEntry = {
     record_id: string | null;
     version: number | null;
     payload_hash: string | null;
+    merkle_root: string | null;
+    cardano_tx_hash: string | null;
 };
 
 type BlockRow = {
@@ -134,7 +136,7 @@ function buildPayload(rt: RecordTypeEntry, chain: string): Record<string, unknow
 
 /* ── Expanded panel ──────────────────────────────────── */
 function ExpandedPanel({ block }: { block: BlockRow }) {
-    const [tab, setTab] = useState<"table" | "json">("table");
+    const [tab, setTab] = useState<"table" | "json" | "cardano">("table");
 
     // One payload per record_type entry
     const payloads = block.record_types.map((rt) => ({
@@ -170,6 +172,15 @@ function ExpandedPanel({ block }: { block: BlockRow }) {
                             }`}
                     >
                         JSON_EXPORT
+                    </button>
+                    <button
+                        onClick={() => setTab("cardano")}
+                        className={`px-4 py-1.5 text-[10px] font-heading uppercase tracking-widest transition-all ${tab === "cardano"
+                            ? "bg-[#0033ad] text-white border border-[#0033ad]"
+                            : "bg-white/5 text-muted-foreground hover:text-white border border-white/10"
+                            }`}
+                    >
+                        CARDANO
                     </button>
                 </div>
 
@@ -214,6 +225,39 @@ function ExpandedPanel({ block }: { block: BlockRow }) {
                                 </p>
                                 <div className="border border-white/10 bg-black px-6 py-5 rounded-none">
                                     <JsonHighlight value={payload} />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+
+                {/* CARDANO view */}
+                {tab === "cardano" && (
+                    <div className="flex flex-col gap-6">
+                        {block.record_types.map((rt, idx) => (
+                            <div key={idx} className="border border-white/10 bg-black overflow-hidden rounded-none">
+                                {/* Record label header */}
+                                <div className="px-5 py-3 bg-white/5 border-b border-white/10">
+                                    <span className="text-[10px] font-heading text-white uppercase tracking-[0.2em]">
+                                        {rt.record_type ? rt.record_type.replace(/_/g, "_").toUpperCase() : "RECORD"}
+                                    </span>
+                                </div>
+                                {/* Key-value rows */}
+                                <div className="flex flex-col sm:grid sm:grid-cols-12 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
+                                    <div className="sm:col-span-3 px-5 py-2 sm:py-3 text-[10px] font-heading text-muted-foreground uppercase tracking-widest bg-white/[0.02] sm:border-r border-white/5 flex items-center">
+                                        MERKLE ROOT
+                                    </div>
+                                    <div className="sm:col-span-9 px-5 py-3 text-[11px] font-mono text-white/80 break-all flex items-center">
+                                        {rt.merkle_root ? String(rt.merkle_root) : <span className="opacity-30">—</span>}
+                                    </div>
+                                </div>
+                                <div className="flex flex-col sm:grid sm:grid-cols-12 border-b border-white/5 last:border-0 hover:bg-white/5 transition-colors">
+                                    <div className="sm:col-span-3 px-5 py-2 sm:py-3 text-[10px] font-heading text-muted-foreground uppercase tracking-widest bg-white/[0.02] sm:border-r border-white/5 flex items-center">
+                                        CARDANO TX HASH
+                                    </div>
+                                    <div className="sm:col-span-9 px-5 py-3 text-[11px] font-mono text-[#4d9fff] break-all flex items-center">
+                                        {rt.cardano_tx_hash ? String(rt.cardano_tx_hash) : <span className="opacity-30">—</span>}
+                                    </div>
                                 </div>
                             </div>
                         ))}

@@ -37,7 +37,7 @@ export default async function EventsPage({
         let query = supabase
             .from("event_payload_data")
             .select(
-                "payload_id, block_number, submission_status, chain, record_type, type, tx_hash, block_hash, signer_address, tx_fee, tx_index, timestamp, confirmed_at, entity_id, farmer_id, record_id, version, payload_hash"
+                "payload_id, block_number, submission_status, chain, record_type, type, tx_hash, block_hash, signer_address, tx_fee, tx_index, timestamp, confirmed_at, entity_id, farmer_id, record_id, version, payload_hash, merkle_root, cardano_tx_hash"
             );
 
         // Apply filters at DB level
@@ -89,6 +89,8 @@ export default async function EventsPage({
                 record_id: string | null;
                 version: number | null;
                 payload_hash: string | null;
+                merkle_root: string | null;
+                cardano_tx_hash: string | null;
             }[];
         }
     >();
@@ -118,6 +120,8 @@ export default async function EventsPage({
             record_id: row.record_id,
             version: row.version,
             payload_hash: row.payload_hash,
+            merkle_root: row.merkle_root ?? null,
+            cardano_tx_hash: row.cardano_tx_hash ?? null,
         });
     }
 
