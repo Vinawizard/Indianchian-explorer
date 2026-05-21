@@ -1,4 +1,5 @@
 import { unstable_cache } from "next/cache";
+import { CARDANO_PROOF_OR_FILTER, hasCardanoProof } from "@/lib/cardano-proof";
 import { supabase } from "@/lib/supabase";
 
 export type EventRecord = {
@@ -32,6 +33,7 @@ async function fetchEventByHash(hash: string): Promise<{
               .from("event_payload_data")
               .select("*")
               .eq("block_number", parseInt(hash, 10))
+              .or(CARDANO_PROOF_OR_FILTER)
               .limit(1)
               .single()
         : supabase
@@ -42,9 +44,18 @@ async function fetchEventByHash(hash: string): Promise<{
               .single();
 
     const { data: event, error } = await matchQuery;
+    const record = event as EventRecord | null;
+
+    if (record && !hasCardanoProof(record)) {
+        return {
+            event: null,
+            error: { message: "Event has no Cardano proof" },
+            isBlockNumber,
+        };
+    }
 
     return {
-        event: event as EventRecord | null,
+        event: record,
         error: error ? { message: error.message } : null,
         isBlockNumber,
     };
@@ -53,7 +64,7 @@ async function fetchEventByHash(hash: string): Promise<{
 export function getCachedEvent(hash: string) {
     return unstable_cache(
         () => fetchEventByHash(hash),
-        ["indiachain-event", hash],
+        ["indiachain-event-v2", hash],
         { revalidate: 60 }
     )();
 }

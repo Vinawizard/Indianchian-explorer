@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { EventsFilterBar } from "@/components/events/events-filter-bar";
 import { EventsTable } from "@/components/events/events-table";
+import { CARDANO_PROOF_OR_FILTER, hasCardanoProof } from "@/lib/cardano-proof";
 import { supabase } from "@/lib/supabase";
 
 export const revalidate = 0;
@@ -38,7 +39,8 @@ export default async function EventsPage({
             .from("event_payload_data")
             .select(
                 "payload_id, block_number, submission_status, chain, record_type, type, tx_hash, block_hash, signer_address, tx_fee, tx_index, timestamp, confirmed_at, entity_id, farmer_id, record_id, version, payload_hash, merkle_root, cardano_tx_hash"
-            );
+            )
+            .or(CARDANO_PROOF_OR_FILTER);
 
         // Apply filters at DB level
         if (filterChain) query = query.eq("chain", filterChain);
@@ -64,7 +66,7 @@ export default async function EventsPage({
         from += PAGE_SIZE;
     }
 
-    const filteredEvents = allEvents;
+    const filteredEvents = allEvents.filter(hasCardanoProof);
 
     // Group by block_number — preserve DB insertion order
     const blockMap = new Map<
@@ -125,7 +127,9 @@ export default async function EventsPage({
         });
     }
 
-    const groupedEvents = Array.from(blockMap.values());
+    const groupedEvents = Array.from(blockMap.values()).filter(
+        (block) => block.record_types.length > 0
+    );
 
     return (
         <div className="container mx-auto px-4 lg:px-8 py-12 relative overflow-hidden">
@@ -149,7 +153,9 @@ export default async function EventsPage({
                         <div className="flex flex-col gap-1">
                             <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Network Activity</span>
                             <div className="flex items-center gap-3">
-                                <span className="text-xl font-heading text-white">{filteredEvents.length.toLocaleString()} <span className="text-[10px] text-accent">RECORDS</span></span>
+                                <span className="text-xl font-heading text-white">{groupedEvents.length.toLocaleString()} <span className="text-[10px] text-accent">TRANSACTIONS</span></span>
+                                <span className="h-3 w-px bg-white/10"></span>
+                                <span className="text-xl font-heading text-white">{groupedEvents.length.toLocaleString()} <span className="text-[10px] text-accent">EVENTS</span></span>
                                 <span className="h-3 w-px bg-white/10"></span>
                                 <span className="text-xl font-heading text-white">{groupedEvents.length.toLocaleString()} <span className="text-[10px] text-accent">BLOCKS</span></span>
                             </div>
