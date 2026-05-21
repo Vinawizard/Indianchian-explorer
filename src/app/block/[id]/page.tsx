@@ -30,49 +30,72 @@ function CallDataViewer({ args }: { args: any }) {
 
     const isIdLike = (v: string) => v.length > 20 || /^[0-9a-f-]{8,}$/i.test(v);
 
-    const renderTableArgs = (argData: any, prefix = ""): React.ReactNode => {
-        if (argData === null || argData === undefined)
-            return <div className="p-4 text-white/50 font-mono text-sm">null</div>;
+    const renderValueRow = (label: string, value: unknown, rowKey: string) => {
+        const str = value === null || value === undefined ? null : String(value);
+        return (
+            <div
+                key={rowKey}
+                className="flex border-t border-white/5 py-4 px-6 items-center hover:bg-white/[0.02]"
+            >
+                <div className="w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-widest pl-6">
+                    {label}
+                </div>
+                <div
+                    className={`w-2/3 text-sm font-mono break-all ${
+                        str && isIdLike(str) ? "text-accent" : "text-white/80"
+                    }`}
+                >
+                    {str !== null ? str : <span className="opacity-30">—</span>}
+                </div>
+            </div>
+        );
+    };
 
-        // Handle direct primitive
-        if (typeof argData !== "object") {
-            const str = String(argData);
+    const renderTableArgs = (argData: any, prefix = "", keyPath = "root"): React.ReactNode => {
+        if (argData === null || argData === undefined) {
             return (
-                <div className="flex border-t border-white/5 py-4 px-6 items-center hover:bg-white/[0.02]">
-                    <div className="w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-widest pl-6">
-                        {prefix || "VALUE"}
-                    </div>
-                    <div className={`w-2/3 text-sm font-mono break-all ${
-                        isIdLike(str) ? "text-accent" : "text-white/80"
-                    }`}>
-                        {str}
-                    </div>
+                <div key={keyPath} className="p-4 text-white/50 font-mono text-sm">
+                    null
                 </div>
             );
         }
 
-        // Recursively flatten arrays / objects
+        if (typeof argData !== "object") {
+            return renderValueRow(prefix || "VALUE", argData, keyPath);
+        }
+
+        if (Array.isArray(argData)) {
+            return (
+                <>
+                    {argData.map((item, i) => {
+                        const label = prefix ? `${prefix}[${i}]` : `[${i}]`;
+                        const itemKey = `${keyPath}[${i}]`;
+                        if (item !== null && typeof item === "object") {
+                            return (
+                                <React.Fragment key={itemKey}>
+                                    {renderTableArgs(item, label, itemKey)}
+                                </React.Fragment>
+                            );
+                        }
+                        return renderValueRow(label, item, itemKey);
+                    })}
+                </>
+            );
+        }
+
         return (
             <>
                 {Object.entries(argData).map(([k, v], i) => {
                     const fullKey = prefix ? `${prefix}.${k}` : k;
-                    if (v !== null && typeof v === "object" && !Array.isArray(v)) {
-                        // Recurse into nested object
-                        return <React.Fragment key={`${fullKey}-${i}`}>{renderTableArgs(v, fullKey)}</React.Fragment>;
+                    const itemKey = `${keyPath}.${k}-${i}`;
+                    if (v !== null && typeof v === "object") {
+                        return (
+                            <React.Fragment key={itemKey}>
+                                {renderTableArgs(v, fullKey, itemKey)}
+                            </React.Fragment>
+                        );
                     }
-                    const str = v === null || v === undefined ? null : String(v);
-                    return (
-                        <div key={`${fullKey}-${i}`} className="flex border-t border-white/5 py-4 px-6 items-center hover:bg-white/[0.02]">
-                            <div className="w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-widest pl-6">
-                                {fullKey}
-                            </div>
-                            <div className={`w-2/3 text-sm font-mono break-all ${
-                                str && isIdLike(str) ? "text-accent" : "text-white/80"
-                            }`}>
-                                {str !== null ? str : <span className="opacity-30">—</span>}
-                            </div>
-                        </div>
-                    );
+                    return renderValueRow(fullKey, v, itemKey);
                 })}
             </>
         );
@@ -106,10 +129,19 @@ function CallDataViewer({ args }: { args: any }) {
                 {view === "TABLE" ? (
                     <div>
                         {Array.isArray(args) ? (
-                            args.length > 0 ? args.map((arg, idx) => renderTableArgs(arg, `${idx}`))
-                            : <div className="p-6 text-white/40 text-sm font-mono border-t border-white/5">No arguments</div>
+                            args.length > 0 ? (
+                                args.map((arg, idx) => (
+                                    <React.Fragment key={`arg-${idx}`}>
+                                        {renderTableArgs(arg, String(idx), `arg-${idx}`)}
+                                    </React.Fragment>
+                                ))
+                            ) : (
+                                <div className="p-6 text-white/40 text-sm font-mono border-t border-white/5">
+                                    No arguments
+                                </div>
+                            )
                         ) : (
-                            renderTableArgs(args)
+                            renderTableArgs(args, "", "args")
                         )}
                     </div>
                 ) : (
