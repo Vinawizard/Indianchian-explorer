@@ -258,7 +258,7 @@ function ExpandedPanel({ block }: { block: BlockRow }) {
                                     <div className="sm:col-span-9 px-5 py-3 text-[11px] font-mono break-all flex items-center">
                                         {rt.cardano_tx_hash ? (
                                             <a
-                                                href={`https://preprod.cardanoscan.io/transaction/${rt.cardano_tx_hash}`}
+                                                href={`https://preview.cardanoscan.io/transaction/${rt.cardano_tx_hash}`}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-[#4d9fff] hover:text-white transition-colors duration-200 cursor-pointer"
@@ -414,6 +414,7 @@ export function EventsTable({ events }: { events: BlockRow[] }) {
                                             <span className="lg:hidden text-[9px] text-muted-foreground uppercase tracking-widest mb-1">Height</span>
                                             <Link
                                                 href={`/event/${block.block_number}`}
+                                                prefetch
                                                 className="inline-flex items-center gap-2 text-sm lg:text-sm font-heading text-white hover:text-accent transition-colors"
                                             >
                                                 <span className="text-muted-foreground font-mono text-[10px]">#</span>

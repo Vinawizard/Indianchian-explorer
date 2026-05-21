@@ -1,186 +1,29 @@
-import { MetricCards } from "@/components/dashboard/metric-cards";
-import { NetworkCharts } from "@/components/dashboard/network-charts";
-import { LiveNetworkFeed } from "@/components/dashboard/live-feed";
-import { supabase } from "@/lib/supabase";
-import { getApi } from "@/lib/polkadot";
-import { scrapePrometheusMetrics } from "@/lib/prometheus";
-import type { NetworkMetrics } from "@/lib/prometheus";
-import dayjs from "dayjs";
+import { Suspense } from "react";
+import { HomeDashboard } from "@/components/dashboard/home-dashboard";
+import { HomeDashboardSkeleton } from "@/components/dashboard/home-dashboard-skeleton";
 
-export const revalidate = 0;
+export const revalidate = 30;
 
-export default async function Home() {
-  // Fetch ALL records to get accurate totals (handling the 1000 limit)
-  let allEvents: any[] = [];
-  let from = 0;
-  const PAGE_SIZE = 1000;
+export default function Home() {
+    return (
+        <div className="container mx-auto px-4 lg:px-8 py-8 relative">
+            <div className="grid-pattern" />
 
-  while (true) {
-    const { data, error } = await supabase
-      .from("event_payload_data")
-      .select("block_number, tx_hash, timestamp, record_type")
-      .order("block_number", { ascending: false })
-      .range(from, from + PAGE_SIZE - 1);
+            <section className="mb-12 relative pt-8">
+                <div className="absolute -top-20 -left-20 w-96 h-96 glow-blue pointer-events-none opacity-50" />
+                <div className="absolute top-10 right-0 w-80 h-80 glow-red pointer-events-none opacity-30" />
 
-    if (error) {
-      console.error("Error fetching event_payload_data:", error);
-      break;
-    }
-    if (!data || data.length === 0) break;
+                <div className="relative">
+                    <h1 className="text-6xl md:text-7xl text-heading mb-4 uppercase">
+                        Indian<span className="text-white decoration-2">Chain </span>
+                        EXPLORER
+                    </h1>
+                </div>
+            </section>
 
-    allEvents = [...allEvents, ...data];
-    if (data.length < PAGE_SIZE) break;
-    from += PAGE_SIZE;
-  }
-
-  // Calculate Metrics
-  const totalEvents = allEvents.length;
-
-  // Calculate distinctive transactions
-  const txHashes = new Set(allEvents.map(e => e.tx_hash).filter(Boolean));
-  const totalTransactions = txHashes.size;
-
-  // Fetch live block height + initial 10 blocks from the chain node server-side
-  // so MetricCards shows the correct value immediately and the live feed has
-  // data ready before the client even mounts (no loading flash).
-  let latestBlock = 0;
-  let initialBlocks: { number: number; hash: string; extrinsicsCount: number }[] = [];
-  let initialStats: { latestBlock: number; finalizedBlock: number; chainName: string; network: NetworkMetrics } | null = null;
-
-  try {
-    const api = await getApi();
-
-    // Fetch header, finalized header, chain name, and node metrics all at once
-    const [latestHeader, finalizedHash, chainName, networkMetrics] = await Promise.all([
-      api.rpc.chain.getHeader(),
-      api.rpc.chain.getFinalizedHead(),
-      api.rpc.system.chain(),
-      scrapePrometheusMetrics(),
-    ]);
-    const finalizedHeader = await api.rpc.chain.getHeader(finalizedHash);
-
-    const latestNum = latestHeader.number.toNumber();
-    latestBlock = latestNum;
-
-    initialStats = {
-      latestBlock: latestNum,
-      finalizedBlock: finalizedHeader.number.toNumber(),
-      chainName: chainName.toString(),
-      network: networkMetrics,
-    };
-
-    // Fetch the 10 most recent blocks in parallel
-    const blockFetches = Array.from({ length: 10 }, (_, idx) => latestNum - idx).filter(n => n > 0).map(async (n) => {
-      const hash = await api.rpc.chain.getBlockHash(n);
-      const signedBlock = await api.rpc.chain.getBlock(hash);
-      return { number: n, hash: hash.toHex(), extrinsicsCount: signedBlock.block.extrinsics.length };
-    });
-    initialBlocks = await Promise.all(blockFetches);
-  } catch (e) {
-    console.error("[page] Failed to fetch live chain data:", e);
-    // Fall back to the highest block seen in Supabase
-    latestBlock = allEvents.length > 0 ? allEvents[0].block_number : 0;
-  }
-
-  // Process Chart Data: Extract distinct dates from database
-  const dateMap = new Map<string, {
-    date: string,
-    day: string,
-    events: number,
-    transactions: Set<string>,
-    farmer: number,
-    agri: number,
-    credit: number,
-    fullDate: string
-  }>();
-
-  allEvents.forEach(event => {
-    if (!event.timestamp) return;
-    const eventDate = dayjs(event.timestamp);
-    const dateStr = eventDate.format('YYYY-MM-DD');
-
-    if (!dateMap.has(dateStr)) {
-      dateMap.set(dateStr, {
-        date: dateStr,
-        day: eventDate.format('MMM DD'),
-        events: 0,
-        transactions: new Set<string>(),
-        farmer: 0,
-        agri: 0,
-        credit: 0,
-        fullDate: eventDate.format('MMM DD, YYYY')
-      });
-    }
-
-    const dayData = dateMap.get(dateStr)!;
-    dayData.events++;
-    if (event.tx_hash) {
-      dayData.transactions.add(event.tx_hash);
-    }
-
-    const type = event.record_type?.toLowerCase() || '';
-    if (type.includes('farmer')) dayData.farmer++;
-    else if (type.includes('agri')) dayData.agri++;
-    else if (type.includes('credit')) dayData.credit++;
-  });
-
-  // Sort dates chronologically and take up to the last 7 distinct dates
-  const sortedDates = Array.from(dateMap.keys()).sort();
-  const last7DistinctDates = sortedDates.slice(-7).map(date => dateMap.get(date)!);
-
-  const transactionChartData = last7DistinctDates.map(d => ({
-    day: d.day,
-    events: d.events,
-    transactions: d.transactions.size,
-    fullDate: d.fullDate
-  }));
-
-  const distributionChartData = last7DistinctDates.map(d => ({
-    day: d.day,
-    farmer: d.farmer,
-    agri: d.agri,
-    credit: d.credit,
-    fullDate: d.fullDate
-  }));
-
-  const stats = {
-    latestBlock,
-    totalTransactions,
-    totalEvents,
-    validators: 5
-  };
-
-  return (
-    <div className="container mx-auto px-4 lg:px-8 py-8 relative">
-      <div className="grid-pattern" />
-
-      {/* Hero Section */}
-      <section className="mb-12 relative pt-8">
-        <div className="absolute -top-20 -left-20 w-96 h-96 glow-blue pointer-events-none opacity-50" />
-        <div className="absolute top-10 right-0 w-80 h-80 glow-red pointer-events-none opacity-30" />
-
-        <div className="relative">
-          <h1 className="text-6xl md:text-7xl text-heading mb-4 uppercase">
-            Indian<span className="text-white decoration-2">Chain </span>
-            EXPLORER
-          </h1>
+            <Suspense fallback={<HomeDashboardSkeleton />}>
+                <HomeDashboard />
+            </Suspense>
         </div>
-      </section>
-
-      {/* Network Stats Cards */}
-      <MetricCards stats={stats} />
-
-      {/* Live Network Feed */}
-      <LiveNetworkFeed initialBlocks={initialBlocks} initialStats={initialStats} />
-
-      {/* Network Charts */}
-      <div className="mt-8">
-        <NetworkCharts
-          transactionData={transactionChartData}
-          distributionData={distributionChartData}
-        />
-      </div>
-    </div>
-  );
+    );
 }
-
