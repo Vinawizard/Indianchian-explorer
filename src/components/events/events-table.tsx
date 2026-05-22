@@ -36,7 +36,18 @@ type BlockRow = {
     record_types: RecordTypeEntry[];
 };
 
+type FlatEventRow = {
+    block: BlockRow;
+    record: RecordTypeEntry;
+};
+
 const PAGE_SIZE = 20;
+
+function flattenEvents(events: BlockRow[]): FlatEventRow[] {
+    return events.flatMap((block) =>
+        block.record_types.map((record) => ({ block, record }))
+    );
+}
 
 const rowVariants: Variants = {
     hidden: { opacity: 0, y: 8 },
@@ -281,60 +292,60 @@ function ExpandedPanel({ block }: { block: BlockRow }) {
 }
 
 /* ── Main table ─────────────────────────────────────── */
-export function EventsTable({ events }: { events: BlockRow[] }) {
+export function EventsTable({
+    events,
+    totalRecords,
+}: {
+    events: BlockRow[];
+    totalRecords: number;
+}) {
     const [page, setPage] = useState(1);
-    const [expandedBlock, setExpandedBlock] = useState<number | null>(null);
+    const [expandedPayloadId, setExpandedPayloadId] = useState<string | null>(null);
     const { query } = useSearch();
 
-    // Efficient client-side search filter — runs only when query or events change
-    const filteredEvents = useMemo(() => {
+    const flatRows = useMemo(() => flattenEvents(events), [events]);
+
+    const filteredRows = useMemo(() => {
         const q = query.trim().toLowerCase();
-        if (!q) return events;
+        if (!q) return flatRows;
 
-        return events.filter((block) => {
-            // Block number match
+        return flatRows.filter(({ block, record: rt }) => {
             if (String(block.block_number).startsWith(q)) return true;
-
-            // Chain match
             if (block.chain?.toLowerCase().includes(q)) return true;
-
-            // Status match
             if (block.submission_status?.toLowerCase().includes(q)) return true;
-
-            // Match against any record_type entry
-            return block.record_types.some((rt) => {
-                if (rt.tx_hash?.toLowerCase().includes(q)) return true;
-                if (rt.signer_address?.toLowerCase().includes(q)) return true;
-                if (rt.record_type?.toLowerCase().includes(q)) return true;
-                if (rt.payload_id?.toLowerCase().startsWith(q)) return true;
-                if (rt.farmer_id?.toLowerCase().includes(q)) return true;
-                if (rt.entity_id?.toLowerCase().includes(q)) return true;
-                return false;
-            });
+            if (rt.tx_hash?.toLowerCase().includes(q)) return true;
+            if (rt.signer_address?.toLowerCase().includes(q)) return true;
+            if (rt.record_type?.toLowerCase().includes(q)) return true;
+            if (rt.payload_id?.toLowerCase().startsWith(q)) return true;
+            if (rt.farmer_id?.toLowerCase().includes(q)) return true;
+            if (rt.entity_id?.toLowerCase().includes(q)) return true;
+            return false;
         });
-    }, [events, query]);
+    }, [flatRows, query]);
 
     const isSearchActive = query.trim().length > 0;
 
-    // Reset to page 1 whenever the search query changes
     useEffect(() => {
         setPage(1);
-        setExpandedBlock(null);
+        setExpandedPayloadId(null);
     }, [query]);
 
-    const totalPages = useMemo(() => Math.ceil(filteredEvents.length / PAGE_SIZE), [filteredEvents.length]);
+    const totalPages = useMemo(
+        () => Math.ceil(filteredRows.length / PAGE_SIZE),
+        [filteredRows.length]
+    );
     const pageData = useMemo(
-        () => filteredEvents.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
-        [filteredEvents, page]
+        () => filteredRows.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+        [filteredRows, page]
     );
 
     const goTo = (p: number) => {
         setPage(Math.max(1, Math.min(p, totalPages)));
-        setExpandedBlock(null);
+        setExpandedPayloadId(null);
     };
 
-    const toggle = (blockNum: number) =>
-        setExpandedBlock((prev) => (prev === blockNum ? null : blockNum));
+    const toggle = (payloadId: string) =>
+        setExpandedPayloadId((prev) => (prev === payloadId ? null : payloadId));
 
     return (
         <div className="w-full mt-8 flex flex-col gap-6 relative z-10">
@@ -348,10 +359,10 @@ export function EventsTable({ events }: { events: BlockRow[] }) {
                     <Search className="w-3.5 h-3.5 text-accent flex-shrink-0" />
                     <span className="text-muted-foreground">
                         SHOWING{" "}
-                        <span className="text-accent font-bold">{filteredEvents.length.toLocaleString()}</span>
+                        <span className="text-accent font-bold">{filteredRows.length.toLocaleString()}</span>
                         {" "}OF{" "}
-                        <span className="text-white font-bold">{events.length.toLocaleString()}</span>{" "}
-                        BLOCKS MATCHING &quot;{query.trim()}&quot;
+                        <span className="text-white font-bold">{totalRecords.toLocaleString()}</span>{" "}
+                        RECORDS MATCHING &quot;{query.trim()}&quot;
                     </span>
                 </motion.div>
             )}
@@ -371,11 +382,15 @@ export function EventsTable({ events }: { events: BlockRow[] }) {
                     {pageData.length === 0 ? (
                         <div className="px-8 py-20 text-center text-muted-foreground text-[10px] font-heading uppercase tracking-widest opacity-50">NO_DATA_AVAILABLE</div>
                     ) : (
-                        pageData.map((block, i) => {
-                            const isOpen = expandedBlock === block.block_number;
+                        pageData.map(({ block, record }, i) => {
+                            const isOpen = expandedPayloadId === record.payload_id;
+                            const panelBlock: BlockRow = {
+                                ...block,
+                                record_types: [record],
+                            };
                             return (
                                 <motion.div
-                                    key={block.block_number}
+                                    key={record.payload_id}
                                     custom={i}
                                     variants={rowVariants}
                                     initial="hidden"
@@ -394,7 +409,7 @@ export function EventsTable({ events }: { events: BlockRow[] }) {
                                             </div>
                                             <div className="flex justify-end">
                                                 <button
-                                                    onClick={() => toggle(block.block_number)}
+                                                    onClick={() => toggle(record.payload_id)}
                                                     aria-label={isOpen ? "Collapse" : "Expand"}
                                                     className={`w-7 h-7 flex items-center justify-center border transition-all duration-200 rounded-none ${isOpen
                                                         ? "bg-accent border-accent text-white"
@@ -440,21 +455,16 @@ export function EventsTable({ events }: { events: BlockRow[] }) {
                                         <div className="flex flex-col lg:block mb-2 lg:mb-0">
                                             <span className="lg:hidden text-[9px] text-muted-foreground uppercase tracking-widest mb-2">Sectors / Events</span>
                                             <div className="flex flex-wrap gap-2 lg:gap-1.5">
-                                                {block.record_types.map((rt) => (
-                                                    <span
-                                                        key={rt.payload_id}
-                                                        className="inline-flex items-center text-[9px] lg:text-[10px] font-heading px-2.5 lg:px-3 py-1 bg-white/5 text-accent border border-white/10 uppercase tracking-widest"
-                                                    >
-                                                        {rt.record_type?.replace(/_/g, " ") ?? "—"}
-                                                    </span>
-                                                ))}
+                                                <span className="inline-flex items-center text-[9px] lg:text-[10px] font-heading px-2.5 lg:px-3 py-1 bg-white/5 text-accent border border-white/10 uppercase tracking-widest">
+                                                    {record.record_type?.replace(/_/g, " ") ?? "—"}
+                                                </span>
                                             </div>
                                         </div>
 
                                         {/* Expand button (Desktop only) */}
                                         <div className="hidden lg:flex justify-end">
                                             <button
-                                                onClick={() => toggle(block.block_number)}
+                                                onClick={() => toggle(record.payload_id)}
                                                 aria-label={isOpen ? "Collapse" : "Expand"}
                                                 className={`w-8 h-8 flex items-center justify-center border transition-all duration-200 rounded-none ${isOpen
                                                     ? "bg-accent border-accent text-white"
@@ -471,7 +481,7 @@ export function EventsTable({ events }: { events: BlockRow[] }) {
 
                                     {/* Expanded panel */}
                                     <AnimatePresence>
-                                        {isOpen && <ExpandedPanel block={block} />}
+                                        {isOpen && <ExpandedPanel block={panelBlock} />}
                                     </AnimatePresence>
                                 </motion.div>
                             );
@@ -486,9 +496,13 @@ export function EventsTable({ events }: { events: BlockRow[] }) {
                     <p className="text-[10px] text-muted-foreground uppercase font-heading tracking-widest text-center sm:text-left">
                         FEED_SEGMENT{" "}
                         <span className="text-white font-bold">
-                            {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredEvents.length)}
+                            {(page - 1) * PAGE_SIZE + 1}–{Math.min(page * PAGE_SIZE, filteredRows.length)}
                         </span>{" "}
-                        / <span className="text-white font-bold">{filteredEvents.length.toLocaleString()}</span> RECORDS
+                        /{" "}
+                        <span className="text-white font-bold">
+                            {(isSearchActive ? filteredRows.length : totalRecords).toLocaleString()}
+                        </span>{" "}
+                        RECORDS
                     </p>
                     <div className="flex items-center gap-1.5 sm:gap-2">
                         <button

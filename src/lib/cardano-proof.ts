@@ -21,3 +21,9 @@ export function countUniqueBlocks(
     }
     return blocks.size;
 }
+
+export function countRecordTypes(
+    blocks: { record_types: unknown[] }[]
+): number {
+    return blocks.reduce((sum, block) => sum + block.record_types.length, 0);
+}

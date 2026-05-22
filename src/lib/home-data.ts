@@ -63,13 +63,13 @@ export const getCachedHomeMetrics = unstable_cache(
         return {
             allEvents,
             totalBlocks,
-            totalEvents: totalBlocks,
-            totalTransactions: totalBlocks,
+            totalEvents: allEvents.length,
+            totalTransactions: allEvents.length,
             transactionChartData,
             distributionChartData,
             fallbackLatestBlock: allEvents.length > 0 ? allEvents[0].block_number : 0,
         };
     },
-    ["indiachain-home-metrics-v2"],
+    ["indiachain-home-metrics-v3"],
     { revalidate: 30 }
 );

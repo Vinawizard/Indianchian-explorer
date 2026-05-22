@@ -130,6 +130,8 @@ export default async function EventsPage({
     const groupedEvents = Array.from(blockMap.values()).filter(
         (block) => block.record_types.length > 0
     );
+    const totalRecords = filteredEvents.length;
+    const totalBlocks = groupedEvents.length;
 
     return (
         <div className="container mx-auto px-4 lg:px-8 py-12 relative overflow-hidden">
@@ -153,11 +155,9 @@ export default async function EventsPage({
                         <div className="flex flex-col gap-1">
                             <span className="text-[10px] text-muted-foreground uppercase tracking-widest">Network Activity</span>
                             <div className="flex items-center gap-3">
-                                <span className="text-xl font-heading text-white">{groupedEvents.length.toLocaleString()} <span className="text-[10px] text-accent">TRANSACTIONS</span></span>
+                                <span className="text-xl font-heading text-white">{totalRecords.toLocaleString()} <span className="text-[10px] text-accent">RECORDS</span></span>
                                 <span className="h-3 w-px bg-white/10"></span>
-                                <span className="text-xl font-heading text-white">{groupedEvents.length.toLocaleString()} <span className="text-[10px] text-accent">EVENTS</span></span>
-                                <span className="h-3 w-px bg-white/10"></span>
-                                <span className="text-xl font-heading text-white">{groupedEvents.length.toLocaleString()} <span className="text-[10px] text-accent">BLOCKS</span></span>
+                                <span className="text-xl font-heading text-white">{totalBlocks.toLocaleString()} <span className="text-[10px] text-accent">BLOCKS</span></span>
                             </div>
                         </div>
                     </div>
@@ -165,7 +165,7 @@ export default async function EventsPage({
             </div>
 
             <EventsFilterBar />
-            <EventsTable events={groupedEvents} />
+            <EventsTable events={groupedEvents} totalRecords={totalRecords} />
         </div>
     );
 }

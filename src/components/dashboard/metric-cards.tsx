@@ -62,7 +62,7 @@ export function MetricCards({ stats }: { stats: MetricStats }) {
             accent: "#22c55e",
             glow: "rgba(34,197,94,0.15)",
             border: "rgba(34,197,94,0.25)",
-            sub: "Confirmed blocks",
+            sub: "Cardano-proof records",
         },
         {
             label: "Total Events",
@@ -71,7 +71,7 @@ export function MetricCards({ stats }: { stats: MetricStats }) {
             accent: "#f59e0b",
             glow: "rgba(245,158,11,0.15)",
             border: "rgba(245,158,11,0.25)",
-            sub: "Confirmed blocks",
+            sub: "Cardano-proof records",
         },
         {
             label: "Validators",
