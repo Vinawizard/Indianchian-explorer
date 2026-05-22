@@ -1,4 +1,5 @@
 export default function EventLoading() {
+    /*test*/
     return (
         <div className="min-h-screen bg-black relative py-8 w-full overflow-hidden">
             <div className="absolute inset-0 grid-pattern opacity-20 pointer-events-none" />
