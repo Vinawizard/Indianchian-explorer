@@ -6,7 +6,9 @@ const ENDPOINTS: Record<ChainNetwork, string> = {
         process.env.PREVIEW_WS_ENDPOINT ||
         process.env.CHAIN_WS_ENDPOINT ||
         "ws://localhost:9944",
-    mainnet: process.env.MAINNET_WS_ENDPOINT || "ws://localhost:9967",
+    // Default is the guarded public path on the node host, so a deployment with
+    // no MAINNET_WS_ENDPOINT configured (e.g. Vercel) still reaches mainnet.
+    mainnet: process.env.MAINNET_WS_ENDPOINT || "ws://139.59.11.86/mainnet-rpc",
 };
 
 const apiInstance: Partial<Record<ChainNetwork, ApiPromise | null>> = {};
