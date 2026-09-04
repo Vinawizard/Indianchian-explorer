@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { getApi, hexToString, tryParseJson } from "@/lib/polkadot";
+import { resolveNetwork } from "@/lib/network";
 
 export async function GET(
     request: Request,
@@ -15,7 +16,7 @@ export async function GET(
             return NextResponse.json({ status: "error", message: "Invalid block number" }, { status: 400 });
         }
 
-        const api = await getApi();
+        const api = await getApi(resolveNetwork(request));
         const hash = await api.rpc.chain.getBlockHash(blockNum);
 
         if (hash.isEmpty) {

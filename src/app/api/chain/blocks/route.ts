@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import { NextResponse } from "next/server";
 import { getApi } from "@/lib/polkadot";
+import { resolveNetwork } from "@/lib/network";
 
 export async function GET(request: Request) {
     try {
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
         if (isNaN(count) || count < 1) count = 10;
         if (count > 50) count = 50;
 
-        const api = await getApi();
+        const api = await getApi(resolveNetwork(request));
 
         // Get the latest header first
         const latestHeader = await api.rpc.chain.getHeader();

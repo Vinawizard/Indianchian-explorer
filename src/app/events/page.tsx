@@ -3,6 +3,8 @@ import { EventsFilterBar } from "@/components/events/events-filter-bar";
 import { EventsTable } from "@/components/events/events-table";
 import { CARDANO_PROOF_OR_FILTER, hasCardanoProof } from "@/lib/cardano-proof";
 import { supabase } from "@/lib/supabase";
+import { SUPABASE_CHAIN } from "@/lib/network";
+import { resolveNetworkFromCookies } from "@/lib/network-server";
 
 export const revalidate = 0;
 
@@ -12,7 +14,9 @@ export default async function EventsPage({
     searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
     const params = await searchParams;
-    const filterChain = typeof params.chain === "string" ? params.chain : "";
+    const network = await resolveNetworkFromCookies();
+    // explicit ?chain= wins; otherwise the events list follows the network switch
+    const filterChain = typeof params.chain === "string" && params.chain ? params.chain : SUPABASE_CHAIN[network];
     const filterRecordType = typeof params.record_type === "string" ? params.record_type : "";
     const filterStatus = typeof params.status === "string" ? params.status : "";
     const filterStart = typeof params.start === "string" ? parseInt(params.start, 10) : NaN;

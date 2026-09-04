@@ -6,6 +6,7 @@ import {
 } from "@/lib/cardano-proof";
 import { supabase } from "@/lib/supabase";
 import { buildChartSeries } from "@/lib/chart-series";
+import { DEFAULT_NETWORK, SUPABASE_CHAIN, type ChainNetwork } from "@/lib/network";
 
 export type HomeEventRow = {
     block_number: number;
@@ -26,7 +27,7 @@ export type HomeMetrics = {
     fallbackLatestBlock: number;
 };
 
-async function fetchAllEventSummaries(): Promise<HomeEventRow[]> {
+async function fetchAllEventSummaries(network: ChainNetwork): Promise<HomeEventRow[]> {
     const PAGE_SIZE = 1000;
     let allEvents: HomeEventRow[] = [];
     let from = 0;
@@ -35,6 +36,7 @@ async function fetchAllEventSummaries(): Promise<HomeEventRow[]> {
         const { data, error } = await supabase
             .from("event_payload_data")
             .select("block_number, tx_hash, timestamp, record_type, merkle_root, cardano_tx_hash")
+            .eq("chain", SUPABASE_CHAIN[network])
             .or(CARDANO_PROOF_OR_FILTER)
             .order("block_number", { ascending: false })
             .range(from, from + PAGE_SIZE - 1);
@@ -54,8 +56,9 @@ async function fetchAllEventSummaries(): Promise<HomeEventRow[]> {
 }
 
 export const getCachedHomeMetrics = unstable_cache(
-    async (): Promise<HomeMetrics> => {
-        const rawEvents = await fetchAllEventSummaries();
+    // network is part of the cache key: preview and mainnet totals never mix
+    async (network: ChainNetwork = DEFAULT_NETWORK): Promise<HomeMetrics> => {
+        const rawEvents = await fetchAllEventSummaries(network);
         const allEvents = rawEvents.filter(hasCardanoProof);
         const totalBlocks = countUniqueBlocks(allEvents);
         const { transactionChartData, distributionChartData } = buildChartSeries(allEvents, 7);
@@ -70,6 +73,6 @@ export const getCachedHomeMetrics = unstable_cache(
             fallbackLatestBlock: allEvents.length > 0 ? allEvents[0].block_number : 0,
         };
     },
-    ["indiachain-home-metrics-v3"],
+    ["indiachain-home-metrics-v4"],
     { revalidate: 30 }
 );

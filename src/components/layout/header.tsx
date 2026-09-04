@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Layers, Activity, Zap, Menu, X } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SearchBar } from "./search-bar";
+import { NetworkSwitcher } from "./network-switcher";
 import { useState } from "react";
 
 const NAV_ITEMS = [
@@ -82,6 +83,7 @@ export function Header() {
 
                     {/* Right side actions */}
                     <div className="flex items-center gap-3">
+                        <NetworkSwitcher />
                         {/* Hamburger/Close — visible below lg */}
                         <button
                             className={`lg:hidden flex items-center justify-center w-10 h-10 rounded-none border transition-all ${mobileOpen

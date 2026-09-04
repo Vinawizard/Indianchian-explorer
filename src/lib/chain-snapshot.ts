@@ -2,6 +2,7 @@ import { unstable_cache } from "next/cache";
 import { getApi } from "@/lib/polkadot";
 import { scrapePrometheusMetrics } from "@/lib/prometheus";
 import type { NetworkMetrics } from "@/lib/prometheus";
+import { DEFAULT_NETWORK, type ChainNetwork } from "@/lib/network";
 
 export type ChainBlock = {
     number: number;
@@ -20,14 +21,14 @@ export type ChainSnapshot = {
     } | null;
 };
 
-async function fetchChainSnapshot(): Promise<ChainSnapshot> {
-    const api = await getApi();
+async function fetchChainSnapshot(network: ChainNetwork): Promise<ChainSnapshot> {
+    const api = await getApi(network);
 
     const [latestHeader, finalizedHash, chainName, networkMetrics] = await Promise.all([
         api.rpc.chain.getHeader(),
         api.rpc.chain.getFinalizedHead(),
         api.rpc.system.chain(),
-        scrapePrometheusMetrics(),
+        scrapePrometheusMetrics(network),
     ]);
     const finalizedHeader = await api.rpc.chain.getHeader(finalizedHash);
 
@@ -58,15 +59,17 @@ async function fetchChainSnapshot(): Promise<ChainSnapshot> {
     };
 }
 
+// The network argument becomes part of the cache key, so preview and
+// mainnet snapshots never overwrite each other.
 export const getCachedChainSnapshot = unstable_cache(
-    async (): Promise<ChainSnapshot> => {
+    async (network: ChainNetwork = DEFAULT_NETWORK): Promise<ChainSnapshot> => {
         try {
-            return await fetchChainSnapshot();
+            return await fetchChainSnapshot(network);
         } catch (e) {
-            console.error("[chain-snapshot] Failed to fetch live chain data:", e);
+            console.error(`[chain-snapshot:${network}] Failed to fetch live chain data:`, e);
             return { latestBlock: 0, initialBlocks: [], initialStats: null };
         }
     },
-    ["indiachain-chain-snapshot-v1"],
+    ["indiachain-chain-snapshot-v2"],
     { revalidate: 10 }
 );
