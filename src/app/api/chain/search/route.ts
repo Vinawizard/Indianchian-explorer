@@ -3,9 +3,11 @@ export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { getApi, hexToString, tryParseJson } from "@/lib/polkadot";
 import { supabase } from "@/lib/supabase";
+import { resolveNetwork } from "@/lib/network";
 
 export async function GET(request: Request) {
     try {
+        const network = resolveNetwork(request);
         const { searchParams } = new URL(request.url);
         const q = searchParams.get("q")?.trim();
 
@@ -24,8 +26,10 @@ export async function GET(request: Request) {
         }
 
         // 2. Is it a Settlement ID/Key? (e.g. IND-AGRI-...)
-        if (q.startsWith("IND-") || q.startsWith("FARM-")) {
-            const api = await getApi();
+        // dataRegistry exists only on the preview runtime (mainnet uses the
+        // indianchain pallet), so guard by pallet presence.
+        if ((q.startsWith("IND-") || q.startsWith("FARM-")) && (await getApi(network)).query.dataRegistry?.registry) {
+            const api = await getApi(network);
             const rawData = await api.query.dataRegistry.registry(q);
 
             if (!rawData.isEmpty) {
@@ -40,7 +44,7 @@ export async function GET(request: Request) {
 
         // 3. Is it a Hash? Try block hash first (quick)
         if (q.startsWith("0x") && q.length === 66) {
-            const api = await getApi();
+            const api = await getApi(network);
             try {
                 const blockHashTest = await api.rpc.chain.getBlock(q);
                 if (blockHashTest) {

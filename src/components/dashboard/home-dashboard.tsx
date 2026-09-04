@@ -3,11 +3,13 @@ import { NetworkCharts } from "@/components/dashboard/network-charts";
 import { LiveNetworkFeed } from "@/components/dashboard/live-feed";
 import { getCachedHomeMetrics } from "@/lib/home-data";
 import { getCachedChainSnapshot } from "@/lib/chain-snapshot";
+import { resolveNetworkFromCookies } from "@/lib/network-server";
 
 export async function HomeDashboard() {
+    const network = await resolveNetworkFromCookies();
     const [homeMetrics, chainSnapshot] = await Promise.all([
         getCachedHomeMetrics(),
-        getCachedChainSnapshot(),
+        getCachedChainSnapshot(network),
     ]);
 
     const latestBlock =

@@ -4,20 +4,23 @@ export const revalidate = 0;
 import { NextResponse } from "next/server";
 import { getApi } from "@/lib/polkadot";
 import { scrapePrometheusMetrics } from "@/lib/prometheus";
+import { resolveNetwork } from "@/lib/network";
 
-export async function GET() {
+export async function GET(request: Request) {
     try {
-        const api = await getApi();
+        const network = resolveNetwork(request);
+        const api = await getApi(network);
 
         const [header, finalizedHeader, name, metrics] = await Promise.all([
             api.rpc.chain.getHeader(),
             api.rpc.chain.getFinalizedHead().then(hash => api.rpc.chain.getHeader(hash)),
             api.rpc.system.chain(),
-            scrapePrometheusMetrics(),
+            scrapePrometheusMetrics(network),
         ]);
 
         return NextResponse.json({
             status: "ok",
+            chainNetwork: network,
             stats: {
                 latestBlock: header.number.toNumber(),
                 finalizedBlock: finalizedHeader.number.toNumber(),

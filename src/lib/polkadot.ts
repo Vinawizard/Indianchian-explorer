@@ -1,46 +1,56 @@
 import { ApiPromise, WsProvider } from "@polkadot/api";
+import { DEFAULT_NETWORK, type ChainNetwork } from "./network";
 
-const WS_ENDPOINT = process.env.CHAIN_WS_ENDPOINT || "ws://localhost:9944";
+const ENDPOINTS: Record<ChainNetwork, string> = {
+    preview:
+        process.env.PREVIEW_WS_ENDPOINT ||
+        process.env.CHAIN_WS_ENDPOINT ||
+        "ws://localhost:9944",
+    mainnet: process.env.MAINNET_WS_ENDPOINT || "ws://localhost:9967",
+};
 
-let apiInstance: ApiPromise | null = null;
-let apiPromise: Promise<ApiPromise> | null = null;
+const apiInstance: Partial<Record<ChainNetwork, ApiPromise | null>> = {};
+const apiPromise: Partial<Record<ChainNetwork, Promise<ApiPromise> | null>> = {};
 
 /**
- * Returns a singleton ApiPromise connected to the IndianChain node.
+ * Returns a per-network singleton ApiPromise connected to an IndianChain node.
  * Lazy-initializes on first call, reuses on subsequent calls.
  */
-export async function getApi(): Promise<ApiPromise> {
-    if (apiInstance && apiInstance.isConnected) {
-        return apiInstance;
+export async function getApi(network: ChainNetwork = DEFAULT_NETWORK): Promise<ApiPromise> {
+    const existing = apiInstance[network];
+    if (existing && existing.isConnected) {
+        return existing;
     }
 
-    if (apiPromise) {
-        return apiPromise;
+    const inflight = apiPromise[network];
+    if (inflight) {
+        return inflight;
     }
 
-    apiPromise = (async () => {
+    const promise = (async () => {
         try {
-            const provider = new WsProvider(WS_ENDPOINT, 2500); // 2.5s reconnect
+            const provider = new WsProvider(ENDPOINTS[network], 2500); // 2.5s reconnect
             const api = await ApiPromise.create({ provider, noInitWarn: true });
             await api.isReady;
-            apiInstance = api;
+            apiInstance[network] = api;
 
             // Handle disconnection
             provider.on("disconnected", () => {
-                console.warn("[polkadot] WebSocket disconnected, will reconnect...");
-                apiInstance = null;
-                apiPromise = null;
+                console.warn(`[polkadot:${network}] WebSocket disconnected, will reconnect...`);
+                apiInstance[network] = null;
+                apiPromise[network] = null;
             });
 
             return api;
         } catch (err) {
-            apiInstance = null;
-            apiPromise = null;
+            apiInstance[network] = null;
+            apiPromise[network] = null;
             throw err;
         }
     })();
 
-    return apiPromise;
+    apiPromise[network] = promise;
+    return promise;
 }
 
 /**
