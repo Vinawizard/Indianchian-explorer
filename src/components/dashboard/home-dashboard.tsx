@@ -8,7 +8,7 @@ import { resolveNetworkFromCookies } from "@/lib/network-server";
 export async function HomeDashboard() {
     const network = await resolveNetworkFromCookies();
     const [homeMetrics, chainSnapshot] = await Promise.all([
-        getCachedHomeMetrics(),
+        getCachedHomeMetrics(network),
         getCachedChainSnapshot(network),
     ]);
 

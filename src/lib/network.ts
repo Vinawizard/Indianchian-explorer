@@ -1,6 +1,12 @@
 export type ChainNetwork = "mainnet" | "preview";
 
-export const DEFAULT_NETWORK: ChainNetwork = "mainnet";
+export const DEFAULT_NETWORK: ChainNetwork = "preview";
+
+/** Value of the `chain` column in Supabase event_payload_data per network. */
+export const SUPABASE_CHAIN: Record<ChainNetwork, string> = {
+    preview: "indianchain",
+    mainnet: "indianchain-mainnet",
+};
 export const NETWORK_COOKIE = "icnet";
 
 export function isChainNetwork(v: unknown): v is ChainNetwork {
