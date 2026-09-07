@@ -77,19 +77,19 @@ export function NetworkCharts({ transactionData, distributionData }: { transacti
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
             {/* Transactions & Events Chart */}
             <div className="card-premium p-8 relative group">
-                <div className="flex justify-between items-start mb-10 relative z-10">
+                <div className="flex flex-col sm:flex-row sm:justify-between items-start gap-4 sm:gap-0 mb-10 relative z-10">
                     <div>
                         <h2 className="text-heading text-white text-xl uppercase tracking-tighter">Network Activity</h2>
                         <p className="text-[10px] text-muted-foreground mt-2 uppercase tracking-[0.2em]">
                             Global Transactions & Protocol Events
                         </p>
                     </div>
-                    <div className="flex bg-white/5 p-1 border border-white/10">
+                    <div className="flex bg-white/5 p-0.5 sm:p-1 border border-white/10">
                         {["1D", "1W", "1M"].map((range) => (
                             <button
                                 key={range}
                                 onClick={() => setTimeRangeLeft(range)}
-                                className={`px-4 py-1.5 text-[10px] font-heading uppercase tracking-widest transition-all ${timeRangeLeft === range
+                                className={`px-2.5 py-1 sm:px-4 sm:py-1.5 text-[9px] sm:text-[10px] font-heading uppercase tracking-widest transition-all ${timeRangeLeft === range
                                     ? "bg-white text-black"
                                     : "text-muted-foreground hover:text-white"
                                     }`}
