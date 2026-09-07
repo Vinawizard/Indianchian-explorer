@@ -37,13 +37,6 @@ export function Header() {
                                 className={`${mobileOpen ? 'h-7 md:h-8' : 'h-8 md:h-10'} w-auto object-contain transition-all`}
                             />
                         </Link>
-
-                        {/* Mobile Search - ONLY visible when menu is open and below lg */}
-                        {mobileOpen && (
-                            <div className="flex-1 max-w-sm lg:hidden animate-in fade-in slide-in-from-right-4 duration-300">
-                                <SearchBar />
-                            </div>
-                        )}
                     </div>
 
                     {/* Desktop Navigation (lg and above) */}
@@ -83,7 +76,7 @@ export function Header() {
 
                     {/* Right side actions */}
                     <div className="flex items-center gap-3">
-                        <NetworkSwitcher />
+                        <NetworkSwitcher className="hidden lg:flex" />
                         {/* Hamburger/Close — visible below lg */}
                         <button
                             className={`lg:hidden flex items-center justify-center w-10 h-10 rounded-none border transition-all ${mobileOpen
@@ -115,8 +108,17 @@ export function Header() {
                         transition={{ duration: 0.2, ease: "easeOut" }}
                         className="fixed inset-0 top-20 z-40 lg:hidden bg-black"
                     >
-                        <nav className="container mx-auto px-6 py-10 flex flex-col gap-4">
-                            {NAV_ITEMS.map((item) => {
+                        <nav className="container mx-auto px-6 py-8 flex flex-col gap-6">
+                            {/* Search and Network inside mobile menu */}
+                            <div className="flex flex-col gap-4 mb-2">
+                                <div className="w-full">
+                                    <NetworkSwitcher className="w-full" />
+                                </div>
+                                <SearchBar />
+                            </div>
+                            
+                            <div className="flex flex-col gap-4">
+                                {NAV_ITEMS.map((item) => {
                                 const isActive = pathname === item.href;
                                 const Icon = item.icon;
                                 return (
@@ -124,16 +126,17 @@ export function Header() {
                                         key={item.href}
                                         href={item.href}
                                         onClick={() => setMobileOpen(false)}
-                                        className={`flex items-center gap-4 px-6 py-5 rounded-[2rem] text-sm font-heading uppercase tracking-[0.2em] transition-all border ${isActive
-                                            ? "bg-[#06b6d4]/5 border-[#06b6d4]/40 text-[#06b6d4] shadow-[0_0_20px_rgba(6,182,212,0.1)]"
-                                            : "text-muted-foreground hover:bg-white/5 hover:text-white border-transparent"
+                                        className={`flex items-center gap-4 px-5 py-4 border-l-2 text-xs font-mono uppercase tracking-widest transition-all ${isActive
+                                            ? "bg-white/5 border-accent text-white"
+                                            : "border-transparent text-muted-foreground hover:bg-white/5 hover:text-white hover:border-white/20"
                                             }`}
                                     >
-                                        <Icon className={`w-5 h-5 ${isActive ? 'text-[#06b6d4]' : 'text-muted-foreground'}`} />
+                                        <Icon className={`w-4 h-4 ${isActive ? 'text-accent' : 'text-muted-foreground'}`} />
                                         {item.label}
                                     </Link>
                                 );
                             })}
+                            </div>
                         </nav>
                     </motion.div>
                 )}

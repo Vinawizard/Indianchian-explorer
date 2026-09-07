@@ -155,14 +155,14 @@ export function LiveNetworkFeed({ initialBlocks = [], initialStats = null }: Liv
                 <div className="overflow-hidden border border-white/10">
                     {/* Header row */}
                     <div className="grid grid-cols-12 bg-white/[0.03] border-b border-white/10">
-                        <div className="col-span-3 flex items-center gap-2 px-5 py-3 text-[10px] text-muted-foreground uppercase tracking-widest border-r border-white/10">
-                            <Box className="w-3 h-3 shrink-0" /> BLOCK
+                        <div className="col-span-4 sm:col-span-3 flex items-center gap-2 px-2 sm:px-5 py-3 text-[10px] text-muted-foreground uppercase tracking-widest border-r border-white/10">
+                            <Box className="w-3 h-3 shrink-0 hidden sm:block" /> BLOCK
                         </div>
-                        <div className="col-span-6 flex items-center gap-2 px-5 py-3 text-[10px] text-muted-foreground uppercase tracking-widest border-r border-white/10">
-                            <Hash className="w-3 h-3 shrink-0" /> HASH
+                        <div className="col-span-5 sm:col-span-6 flex items-center gap-2 px-2 sm:px-5 py-3 text-[10px] text-muted-foreground uppercase tracking-widest border-r border-white/10">
+                            <Hash className="w-3 h-3 shrink-0 hidden sm:block" /> HASH
                         </div>
-                        <div className="col-span-3 flex items-center gap-2 px-5 py-3 text-[10px] text-muted-foreground uppercase tracking-widest">
-                            <Layers className="w-3 h-3 shrink-0" /> EXTRINSICS
+                        <div className="col-span-3 flex items-center gap-2 px-2 sm:px-5 py-3 text-[10px] text-muted-foreground uppercase tracking-widest">
+                            <Layers className="w-3 h-3 shrink-0 hidden sm:block" /> <span className="hidden sm:inline">EXTRINSICS</span><span className="sm:hidden">EXT</span>
                         </div>
                     </div>
 
@@ -182,26 +182,26 @@ export function LiveNetworkFeed({ initialBlocks = [], initialStats = null }: Liv
                                     <div className="absolute left-0 top-0 bottom-0 w-[2px] bg-accent opacity-0 group-hover:opacity-100 transition-opacity" />
 
                                     {/* Block number */}
-                                    <div className="col-span-3 flex items-center px-5 py-4 border-r border-white/5 font-mono">
+                                    <div className="col-span-4 sm:col-span-3 flex items-center px-2 sm:px-5 py-4 border-r border-white/5 font-mono">
                                         <Link
                                             href={`/block/${block.number}`}
-                                            className="inline-flex items-center gap-2 text-white/90 hover:text-accent transition-colors text-sm font-semibold"
+                                            className="flex flex-col lg:flex-row items-start lg:items-center gap-1 sm:gap-2 text-white/90 hover:text-accent transition-colors text-sm font-semibold"
                                         >
                                             {idx === 0 && (
                                                 <span className="text-[8px] font-mono bg-accent text-white px-1.5 py-0.5 uppercase tracking-wider leading-none">
                                                     LATEST
                                                 </span>
                                             )}
-                                            #{block.number}
+                                            <span>#{block.number}</span>
                                         </Link>
                                     </div>
 
                                     {/* Hash */}
-                                    <div className="col-span-6 flex items-center gap-2 px-5 py-4 border-r border-white/5 font-mono text-xs text-white/50">
+                                    <div className="col-span-5 sm:col-span-6 flex items-center gap-2 px-2 sm:px-5 py-4 border-r border-white/5 font-mono text-xs text-white/50 min-w-0">
                                         <span className="truncate">{block.hash}</span>
                                         <button
                                             onClick={() => copyToClipboard(block.hash)}
-                                            className="shrink-0 text-white/30 hover:text-white/80 transition-colors"
+                                            className="shrink-0 text-white/30 hover:text-white/80 transition-colors hidden sm:block"
                                             title="Copy hash"
                                         >
                                             <Copy className="w-3 h-3" />
@@ -209,16 +209,16 @@ export function LiveNetworkFeed({ initialBlocks = [], initialStats = null }: Liv
                                     </div>
 
                                     {/* Extrinsics + link */}
-                                    <div className="col-span-3 flex items-center justify-between px-5 py-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className="font-heading text-lg text-white font-bold leading-none">{block.extrinsicsCount}</span>
-                                            <span className="text-[9px] text-white/40 uppercase tracking-widest font-mono leading-none">EXT</span>
+                                    <div className="col-span-3 flex items-center justify-between px-2 sm:px-5 py-4">
+                                        <div className="flex items-center gap-1 sm:gap-2">
+                                            <span className="font-heading text-sm sm:text-lg text-white font-bold leading-none">{block.extrinsicsCount}</span>
+                                            <span className="text-[9px] text-white/40 uppercase tracking-widest font-mono leading-none hidden sm:inline">EXT</span>
                                         </div>
                                         <Link
                                             href={`/block/${block.number}`}
-                                            className="flex items-center justify-center w-8 h-8 border border-white/10 hover:border-accent hover:text-accent transition-colors text-white/30"
+                                            className="flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 border border-white/10 hover:border-accent hover:text-accent transition-colors text-white/30 shrink-0"
                                         >
-                                            <ChevronRight className="w-4 h-4" />
+                                            <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
                                         </Link>
                                     </div>
                                 </motion.div>

@@ -14,9 +14,9 @@ export default function Home() {
                 <div className="absolute top-10 right-0 w-80 h-80 glow-red pointer-events-none opacity-30" />
 
                 <div className="relative">
-                    <h1 className="text-6xl md:text-7xl text-heading mb-4 uppercase">
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl text-heading mb-4 uppercase leading-tight break-words">
                         Indian<span className="text-white decoration-2">Chain </span>
-                        EXPLORER
+                        <span className="block sm:inline">EXPLORER</span>
                     </h1>
                 </div>
             </section>
