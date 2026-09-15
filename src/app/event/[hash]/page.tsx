@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AlertCircle } from "lucide-react";
-import { getCachedEvent } from "@/lib/event-data";
+import { getEventForNetwork } from "@/lib/event-data";
 import { EventAttributes } from "@/components/events/event-attributes";
 
 export const revalidate = 60;
@@ -21,7 +21,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 
 export default async function EventPage({ params }: { params: Promise<{ hash: string }> }) {
     const { hash } = await params;
-    const { event, error, isBlockNumber } = await getCachedEvent(hash);
+    const { event, error, isBlockNumber } = await getEventForNetwork(hash);
 
     if (event && !isBlockNumber) {
         redirect(`/event/${event.block_number}`);

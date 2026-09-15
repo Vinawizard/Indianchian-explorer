@@ -1,5 +1,7 @@
 import { unstable_cache } from "next/cache";
 import { CARDANO_PROOF_OR_FILTER, hasCardanoProof } from "@/lib/cardano-proof";
+import { findMainnetRecord } from "@/lib/mainnet-records";
+import { resolveNetworkFromCookies } from "@/lib/network-server";
 import { supabase } from "@/lib/supabase";
 
 export type EventRecord = {
@@ -67,4 +69,26 @@ export function getCachedEvent(hash: string) {
         ["indiachain-event-v2", hash],
         { revalidate: 60 }
     )();
+}
+
+/**
+ * Detail lookup for whichever network the viewer is on.
+ * Mainnet is served from the node (no Supabase mirror); Preview keeps the
+ * cached Supabase path above exactly as it was.
+ */
+export async function getEventForNetwork(hash: string): Promise<{
+    event: EventRecord | null;
+    error: { message: string } | null;
+    isBlockNumber: boolean;
+}> {
+    const network = await resolveNetworkFromCookies();
+    if (network !== "mainnet") return getCachedEvent(hash);
+
+    const isBlockNumber = /^\d+$/.test(hash);
+    const record = await findMainnetRecord(hash);
+    return {
+        event: (record as EventRecord | null) ?? null,
+        error: record ? null : { message: "Record not found on IndianChain Mainnet" },
+        isBlockNumber,
+    };
 }

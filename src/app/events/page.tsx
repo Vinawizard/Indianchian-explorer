@@ -2,6 +2,7 @@ import Link from "next/link";
 import { EventsFilterBar } from "@/components/events/events-filter-bar";
 import { EventsTable } from "@/components/events/events-table";
 import { CARDANO_PROOF_OR_FILTER, hasCardanoProof } from "@/lib/cardano-proof";
+import { getMainnetRecordRows } from "@/lib/mainnet-records";
 import { supabase } from "@/lib/supabase";
 import { SUPABASE_CHAIN } from "@/lib/network";
 import { resolveNetworkFromCookies } from "@/lib/network-server";
@@ -38,7 +39,21 @@ export default async function EventsPage({
         maxBlock = actualMax;
     }
 
-    while (true) {
+    // MAINNET reads straight from the node — there is no Supabase mirror for it,
+    // and its records are not Cardano-anchored yet, so the proof filter that
+    // Preview relies on would hide every row. PREVIEW is untouched below.
+    if (network === "mainnet") {
+        const chainRows = await getMainnetRecordRows();
+        allEvents = chainRows.filter((row) => {
+            if (filterRecordType && row.record_type !== filterRecordType.toLowerCase()) return false;
+            if (filterStatus && row.submission_status !== filterStatus.toLowerCase()) return false;
+            if (minBlock !== null && row.block_number < minBlock) return false;
+            if (maxBlock !== null && row.block_number > maxBlock) return false;
+            return true;
+        });
+    }
+
+    while (network !== "mainnet") {
         let query = supabase
             .from("event_payload_data")
             .select(
@@ -70,7 +85,11 @@ export default async function EventsPage({
         from += PAGE_SIZE;
     }
 
-    const filteredEvents = allEvents.filter(hasCardanoProof);
+    // The Cardano-proof gate applies to Preview only: those rows are mirrored after
+    // anchoring, so an unanchored row there means incomplete data. Mainnet rows come
+    // from the chain itself and are authoritative the moment they are finalized.
+    const filteredEvents =
+        network === "mainnet" ? allEvents : allEvents.filter(hasCardanoProof);
 
     // Group by block_number — preserve DB insertion order
     const blockMap = new Map<
