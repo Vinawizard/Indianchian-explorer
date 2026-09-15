@@ -70,7 +70,27 @@ type BlockFacts = {
 const blockByTimestamp = new Map<number, number>();
 const factsByBlock = new Map<number, BlockFacts>();
 
-/** Highest block whose timestamp is <= `targetMs`. ~17 calls, then cached forever. */
+const SLOT_MS = 6000;
+let genesisTsCache: number | null = null;
+
+async function timestampAt(
+    api: Awaited<ReturnType<typeof getApi>>,
+    blockNumber: number
+): Promise<number> {
+    const hash = await api.rpc.chain.getBlockHash(blockNumber);
+    const at = await api.at(hash);
+    return Number((await at.query.timestamp.now()).toString());
+}
+
+/**
+ * Block number for a record's chain timestamp.
+ *
+ * Aura slots are a fixed 6s, so `block = 1 + (ts - genesisTs) / 6000` is exact on a
+ * chain with no missed slots — ONE cached RPC call instead of ~17 sequential ones.
+ * That difference matters when this runs on a serverless host far from the node.
+ * The result is always checked against the real block, and any mismatch (a missed
+ * slot would shift every later block) falls back to a binary search.
+ */
 async function resolveBlockByTimestamp(
     api: Awaited<ReturnType<typeof getApi>>,
     targetMs: number
@@ -78,21 +98,29 @@ async function resolveBlockByTimestamp(
     const cached = blockByTimestamp.get(targetMs);
     if (cached !== undefined) return cached;
 
-    const head = (await api.rpc.chain.getHeader()).number.toNumber();
-    let lo = 1;
-    let hi = head;
-    let best = 1;
+    if (genesisTsCache === null) genesisTsCache = await timestampAt(api, 1);
 
-    while (lo <= hi) {
-        const mid = (lo + hi) >> 1;
-        const hash = await api.rpc.chain.getBlockHash(mid);
-        const at = await api.at(hash);
-        const ts = Number((await at.query.timestamp.now()).toString());
-        if (ts <= targetMs) {
-            best = mid;
-            lo = mid + 1;
-        } else {
-            hi = mid - 1;
+    const head = (await api.rpc.chain.getHeader()).number.toNumber();
+    const guess = Math.min(Math.max(1 + Math.floor((targetMs - genesisTsCache) / SLOT_MS), 1), head);
+
+    let best: number;
+    const guessTs = await timestampAt(api, guess);
+    if (guessTs <= targetMs && (guess === head || (await timestampAt(api, guess + 1)) > targetMs)) {
+        best = guess; // arithmetic held
+    } else {
+        // Missed slots somewhere — fall back to an exact search.
+        let lo = 1;
+        let hi = head;
+        best = 1;
+        while (lo <= hi) {
+            const mid = (lo + hi) >> 1;
+            const ts = await timestampAt(api, mid);
+            if (ts <= targetMs) {
+                best = mid;
+                lo = mid + 1;
+            } else {
+                hi = mid - 1;
+            }
         }
     }
 
