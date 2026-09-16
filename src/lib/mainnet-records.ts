@@ -14,6 +14,7 @@
  */
 import { unstable_cache } from "next/cache";
 import { getApi } from "./polkadot";
+import { getMainnetAnchorLinks } from "./mainnet-anchors";
 
 /** Shape mirrors the Supabase `event_payload_data` columns the events UI selects. */
 export type MainnetRecordRow = {
@@ -252,6 +253,7 @@ async function fetchMainnetRecordRows(): Promise<MainnetRecordRow[]> {
         facts.set(blockNumber, await getBlockFacts(api, blockNumber));
     }
 
+    const links = await getMainnetAnchorLinks();
     const rows: MainnetRecordRow[] = raw.map((r) => {
         const blockNumber = blockOf.get(r.chainTimestamp) ?? 0;
         const f = facts.get(blockNumber);
@@ -274,9 +276,9 @@ async function fetchMainnetRecordRows(): Promise<MainnetRecordRow[]> {
             farmer_id: r.farmerUuid ?? (r.record_type === "farmer" ? r.entityUuid : null),
             record_id: r.entityUuid,
             version: r.version,
-            // Not anchored to Cardano yet — these stay null until L1 anchoring runs.
-            merkle_root: null,
-            cardano_tx_hash: null,
+            // filled from the mainnet app DB below (null until that record is L1-anchored)
+            merkle_root: links[`${r.entityUuid}:${r.version}`]?.merkle_root ?? null,
+            cardano_tx_hash: links[`${r.entityUuid}:${r.version}`]?.cardano_tx_hash ?? null,
             payload_hash: r.payloadHash,
         };
     });
@@ -285,11 +287,23 @@ async function fetchMainnetRecordRows(): Promise<MainnetRecordRow[]> {
     return rows;
 }
 
-/** All mainnet records, newest block first. Cached 30s. */
+/**
+ * All mainnet records, newest block first. Cached 30s.
+ * Walking every block needs hundreds of RPC calls; that is fine next to the node but
+ * not from a remote serverless host through the rate-limited public RPC. Remote copies
+ * (no MAINNET_APP_DB_URL) therefore fetch the rows the node host has already built.
+ */
+const REMOTE_ROWS_URL = process.env.MAINNET_RECORDS_URL || "http://139.59.11.86/mainnet-api/records";
+async function fetchRowsRemote(): Promise<MainnetRecordRow[]> {
+    try {
+        const res = await fetch(REMOTE_ROWS_URL, { cache: "no-store" });
+        if (!res.ok) return [];
+        return ((await res.json()).rows ?? []) as MainnetRecordRow[];
+    } catch { return []; }
+}
 export function getMainnetRecordRows() {
-    return unstable_cache(fetchMainnetRecordRows, ["indianchain-mainnet-records-v1"], {
-        revalidate: 30,
-    })();
+    const fn = process.env.MAINNET_APP_DB_URL ? fetchMainnetRecordRows : fetchRowsRemote;
+    return unstable_cache(fn, ["indianchain-mainnet-records-v2"], { revalidate: 30 })();
 }
 
 /** Single record for the detail page: accepts a block number, payload_id or tx hash. */

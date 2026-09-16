@@ -1,4 +1,5 @@
 "use client";
+import { cardanoscanTx } from "@/lib/cardanoscan";
 
 import { useState, useMemo, useEffect } from "react";
 import Link from "next/link";
@@ -269,7 +270,7 @@ function ExpandedPanel({ block }: { block: BlockRow }) {
                                     <div className="sm:col-span-9 px-5 py-3 text-[11px] font-mono break-all flex items-center">
                                         {rt.cardano_tx_hash ? (
                                             <a
-                                                href={`https://preview.cardanoscan.io/transaction/${rt.cardano_tx_hash}`}
+                                                href={cardanoscanTx(block.chain, String(rt.cardano_tx_hash))}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
                                                 className="text-[#4d9fff] hover:text-white transition-colors duration-200 cursor-pointer"
