@@ -274,7 +274,7 @@ export function LiveNetworkFeed({ initialBlocks = [], initialStats = null }: Liv
                             <div>
                                 <p className="text-[9px] text-white/40 uppercase tracking-widest mb-1.5 font-bold">CONNECTION STATE</p>
                                 <p className="text-sm font-bold text-white uppercase tracking-wider">
-                                    {node.status === 'up' ? 'STABLE / SYNCHED' : 'OFFLINE'}
+                                    {node.status === 'up' ? 'STABLE / SYNCED' : 'OFFLINE'}
                                 </p>
                             </div>
 
