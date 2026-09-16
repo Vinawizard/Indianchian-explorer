@@ -8,6 +8,7 @@ import { SUPABASE_CHAIN } from "@/lib/network";
 import { resolveNetworkFromCookies } from "@/lib/network-server";
 
 export const revalidate = 0;
+export const maxDuration = 60;   // remote copies fetch a large records feed
 
 export default async function EventsPage({
     searchParams,

@@ -1,6 +1,7 @@
 export type ChainNetwork = "mainnet" | "preview";
 
-export const DEFAULT_NETWORK: ChainNetwork = "preview";
+export const DEFAULT_NETWORK: ChainNetwork =
+    process.env.NEXT_PUBLIC_DEFAULT_NETWORK === "mainnet" ? "mainnet" : "preview";
 
 /** Value of the `chain` column in Supabase event_payload_data per network. */
 export const SUPABASE_CHAIN: Record<ChainNetwork, string> = {

@@ -1,3 +1,4 @@
+export const maxDuration = 60;
 import { Suspense } from "react";
 import { HomeDashboard } from "@/components/dashboard/home-dashboard";
 import { HomeDashboardSkeleton } from "@/components/dashboard/home-dashboard-skeleton";
