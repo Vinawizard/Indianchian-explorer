@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, Variants } from "framer-motion";
-import { Box, Activity, Zap, Shield } from "lucide-react";
+import { Box, Activity, Zap } from "lucide-react";
 
 interface MetricStats {
     latestBlock: number;
@@ -56,7 +56,7 @@ export function MetricCards({ stats }: { stats: MetricStats }) {
             sub: "Live Height",
         },
         {
-            label: "Total Transactions",
+            label: "Total Records",
             value: stats.totalTransactions.toLocaleString(),
             icon: Activity,
             accent: "#22c55e",
@@ -65,22 +65,13 @@ export function MetricCards({ stats }: { stats: MetricStats }) {
             sub: "Cardano-proof records",
         },
         {
-            label: "Total Events",
+            label: "Total TXs",
             value: stats.totalEvents.toLocaleString(),
             icon: Zap,
             accent: "#f59e0b",
             glow: "rgba(245,158,11,0.15)",
             border: "rgba(245,158,11,0.25)",
             sub: "Cardano-proof records",
-        },
-        {
-            label: "Validators",
-            value: stats.validators,
-            icon: Shield,
-            accent: "#a855f7",
-            glow: "rgba(168,85,247,0.15)",
-            border: "rgba(168,85,247,0.25)",
-            sub: "Active nodes",
         },
     ];
 
@@ -89,7 +80,7 @@ export function MetricCards({ stats }: { stats: MetricStats }) {
             variants={container}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
         >
             {cards.map((card, i) => (
                 <motion.div
