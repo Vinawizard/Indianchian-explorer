@@ -90,6 +90,7 @@ export function EventsFilterBar() {
                     <select value={status} onChange={(e) => setStatus(e.target.value)} className={selectClass}>
                         <option value="">ALL_STATUS</option>
                         <option value="confirmed">CONFIRMED</option>
+                    <option value="anchored">ANCHORED (ON CARDANO)</option>
 
                     </select>
                     <ChevronIcon />

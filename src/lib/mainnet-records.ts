@@ -12,7 +12,6 @@
  *   - 2 calls per distinct block to attach tx hash / index / fee
  * Blocks are immutable, so both caches are permanent for the process lifetime.
  */
-import { unstable_cache } from "next/cache";
 import { getApi } from "./polkadot";
 import { getMainnetAnchorLinks } from "./mainnet-anchors";
 
@@ -261,7 +260,8 @@ async function fetchMainnetRecordRows(): Promise<MainnetRecordRow[]> {
         return {
             payload_id: `${r.entityUuid}_${r.version}`,
             block_number: blockNumber,
-            submission_status: "confirmed",
+            // "anchored" once its batch is on Cardano L1; lets the STATUS column and filter show it
+            submission_status: links[`${r.entityUuid}:${r.version}`]?.cardano_tx_hash ? "anchored" : "confirmed",
             chain: "indianchain-mainnet",
             record_type: r.record_type,
             type: r.type,
@@ -301,9 +301,11 @@ async function fetchRowsRemote(): Promise<MainnetRecordRow[]> {
         return ((await res.json()).rows ?? []) as MainnetRecordRow[];
     } catch { return []; }
 }
-export function getMainnetRecordRows() {
-    const fn = process.env.MAINNET_APP_DB_URL ? fetchMainnetRecordRows : fetchRowsRemote;
-    return unstable_cache(fn, ["indianchain-mainnet-records-v2"], { revalidate: 30 })();
+let rowsMemo: { at: number; v: MainnetRecordRow[] } | null = null;
+export async function getMainnetRecordRows() {
+    if (rowsMemo && Date.now() - rowsMemo.at < 20_000) return rowsMemo.v;
+    const v = await (process.env.MAINNET_APP_DB_URL ? fetchMainnetRecordRows : fetchRowsRemote)();
+    rowsMemo = { at: Date.now(), v }; return v;
 }
 
 /** Single record for the detail page: accepts a block number, payload_id or tx hash. */

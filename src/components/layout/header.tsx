@@ -11,7 +11,7 @@ import { useState } from "react";
 
 const NAV_ITEMS = [
     { label: "Home", href: "/", icon: Activity },
-    { label: "Events", href: "/events", icon: Layers }, { label: "Anchors", href: "/anchors", icon: Layers },
+    { label: "Events", href: "/events", icon: Layers },
 ];
 
 export function Header() {

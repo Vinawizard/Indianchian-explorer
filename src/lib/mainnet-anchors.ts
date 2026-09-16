@@ -3,7 +3,13 @@
  * (MAINNET_APP_DB_URL); anywhere else (Vercel) it falls back to the public read-only
  * JSON the host explorer serves at MAINNET_ANCHORS_URL. Preview is untouched.
  */
-import { unstable_cache } from "next/cache";
+// Small in-memory TTL cache instead of next/cache: the on-disk data cache was serving
+// stale entries for these fast-changing tables.
+const memo = new Map<string, { at: number; v: unknown }>();
+async function ttl<T>(key: string, ms: number, fn: () => Promise<T>): Promise<T> {
+    const hit = memo.get(key); if (hit && Date.now() - hit.at < ms) return hit.v as T;
+    const v = await fn(); memo.set(key, { at: Date.now(), v }); return v;
+}
 
 export type AnchorBatch = {
     batch_index: number; merkle_root: string; records_hash: string | null; record_count: number;
@@ -34,9 +40,7 @@ async function fetchBatches(): Promise<AnchorBatch[]> {
     try { const res = await fetch(PUBLIC_URL, { cache: "no-store" }); if (!res.ok) return []; return (await res.json()).batches ?? []; }
     catch { return []; }
 }
-export function getMainnetAnchorBatches() {
-    return unstable_cache(fetchBatches, ["indianchain-mainnet-anchors-v1"], { revalidate: 30 })();
-}
+export function getMainnetAnchorBatches() { return ttl("batches", 20_000, fetchBatches); }
 
 /** record_id:version -> anchor link, for enriching chain-sourced event rows. */
 async function fetchLinks(): Promise<Record<string, AnchorLink>> {
@@ -50,7 +54,5 @@ async function fetchLinks(): Promise<Record<string, AnchorLink>> {
     try { const res = await fetch(PUBLIC_URL + "?links=1", { cache: "no-store" }); if (!res.ok) return {}; return (await res.json()).links ?? {}; }
     catch { return {}; }
 }
-export function getMainnetAnchorLinks() {
-    return unstable_cache(fetchLinks, ["indianchain-mainnet-anchor-links-v1"], { revalidate: 30 })();
-}
+export function getMainnetAnchorLinks() { return ttl("links", 20_000, fetchLinks); }
 export { cardanoscanTx } from "./cardanoscan";
