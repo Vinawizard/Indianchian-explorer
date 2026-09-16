@@ -10,7 +10,7 @@ const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin"],
 });
-//mainnet included now
+//mainnet included now!
 const robotoMono = Roboto_Mono({
   variable: "--font-roboto-mono",
   subsets: ["latin"],
