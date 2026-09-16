@@ -93,6 +93,6 @@ export const getCachedHomeMetrics = unstable_cache(
             fallbackLatestBlock: allEvents.length > 0 ? allEvents[0].block_number : 0,
         };
     },
-    ["indiachain-home-metrics-v4"],
+    ["indiachain-home-metrics-v5"],
     { revalidate: 30 }
 );
