@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Activity, Box, Hash, Copy, ChevronRight, Layers, CheckCircle2, Server, Search } from "lucide-react";
+import { Activity, Box, Hash, Copy, ChevronRight, Layers, CheckCircle2, Search } from "lucide-react";
 import Link from "next/link";
 import { useSearch } from "@/components/providers/search-provider";
 
@@ -249,44 +249,6 @@ export function LiveNetworkFeed({ initialBlocks = [], initialStats = null }: Liv
                             </motion.div>
                         )}
                     </div>
-                </div>
-            </div>
-
-            {/* VALIDATOR NODE HEALTH */}
-            <div>
-                <h2 className="text-xl text-heading uppercase tracking-tighter flex items-center gap-3 mb-6">
-                    <Server className="w-5 h-5 text-white/50" /> VALIDATOR NODE HEALTH
-                </h2>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-                    {stats?.network?.nodes ? stats.network.nodes.map((node) => (
-                        <motion.div
-                            key={node.id}
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            className="bg-[#0a0a0a] border border-white/10 p-5 hover:border-white/25 transition-all relative overflow-hidden group"
-                        >
-                            <div className="flex items-center justify-between mb-8">
-                                <span className="font-mono text-xs text-white/60 font-bold">NODE_{node.id}</span>
-                                <div className={`w-2.5 h-2.5 rounded-full ${node.status === 'up' ? 'bg-[#ff5500] shadow-[0_0_10px_#ff5500]' : 'bg-red-600 shadow-[0_0_10px_#dc2626]'}`} />
-                            </div>
-
-                            <div>
-                                <p className="text-[9px] text-white/40 uppercase tracking-widest mb-1.5 font-bold">CONNECTION STATE</p>
-                                <p className="text-sm font-bold text-white uppercase tracking-wider">
-                                    {node.status === 'up' ? 'STABLE / SYNCED' : 'OFFLINE'}
-                                </p>
-                            </div>
-
-                            {/* Subtle hover effect light */}
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/[0.02] rounded-full blur-2xl group-hover:bg-white/[0.04] transition-colors pointer-events-none -mr-16 -mt-16" />
-                        </motion.div>
-                    )) : (
-                        // Skeleton loading state
-                        Array.from({ length: 5 }).map((_, i) => (
-                            <div key={i} className="bg-white/5 border border-white/10 rounded-2xl h-32 animate-pulse" />
-                        ))
-                    )}
                 </div>
             </div>
         </div>
