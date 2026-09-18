@@ -2,7 +2,7 @@ import Link from "next/link";
 import { EventsFilterBar } from "@/components/events/events-filter-bar";
 import { EventsTable } from "@/components/events/events-table";
 import { CARDANO_PROOF_OR_FILTER, hasCardanoProof } from "@/lib/cardano-proof";
-import { getMainnetRecordRows } from "@/lib/mainnet-records";
+import { DEFAULT_ROW_LIMIT, queryMainnetRecords } from "@/lib/mainnet-records";
 import { supabase } from "@/lib/supabase";
 import { SUPABASE_CHAIN } from "@/lib/network";
 import { resolveNetworkFromCookies } from "@/lib/network-server";
@@ -40,18 +40,16 @@ export default async function EventsPage({
         maxBlock = actualMax;
     }
 
-    // MAINNET reads straight from the node — there is no Supabase mirror for it,
-    // and its records are not Cardano-anchored yet, so the proof filter that
-    // Preview relies on would hide every row. PREVIEW is untouched below.
+    // MAINNET reads straight from the node (host) or from the host's API (remote copies).
+    // Filters run server-side and the result is capped: with 100k+ records the full list
+    // would not fit a page. The header shows the true total. PREVIEW is untouched below.
+    let mainnetTotal = 0;
     if (network === "mainnet") {
-        const chainRows = await getMainnetRecordRows();
-        allEvents = chainRows.filter((row) => {
-            if (filterRecordType && row.record_type !== filterRecordType.toLowerCase()) return false;
-            if (filterStatus && row.submission_status !== filterStatus.toLowerCase()) return false;
-            if (minBlock !== null && row.block_number < minBlock) return false;
-            if (maxBlock !== null && row.block_number > maxBlock) return false;
-            return true;
+        const r = await queryMainnetRecords({
+            status: filterStatus || undefined, record_type: filterRecordType || undefined,
+            minBlock, maxBlock, limit: DEFAULT_ROW_LIMIT,
         });
+        allEvents = r.rows; mainnetTotal = r.total;
     }
 
     while (network !== "mainnet") {
@@ -154,7 +152,8 @@ export default async function EventsPage({
     const groupedEvents = Array.from(blockMap.values()).filter(
         (block) => block.record_types.length > 0
     );
-    const totalRecords = filteredEvents.length;
+    const totalRecords = network === "mainnet" ? mainnetTotal : filteredEvents.length;
+    const capped = network === "mainnet" && mainnetTotal > filteredEvents.length;
     const totalBlocks = groupedEvents.length;
 
     return (
@@ -188,6 +187,11 @@ export default async function EventsPage({
                 </div>
             </div>
 
+            {capped && (
+                <p className="text-[11px] text-muted-foreground uppercase tracking-widest mb-3 relative z-10">
+                    Showing the latest {filteredEvents.length.toLocaleString()} of {mainnetTotal.toLocaleString()} records — use the block range or filters to see others
+                </p>
+            )}
             <EventsFilterBar />
             <EventsTable events={groupedEvents} totalRecords={totalRecords} />
         </div>

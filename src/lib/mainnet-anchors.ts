@@ -5,7 +5,8 @@
  */
 // Small in-memory TTL cache instead of next/cache: the on-disk data cache was serving
 // stale entries for these fast-changing tables.
-const memo = new Map<string, { at: number; v: unknown }>();
+// shared across route bundles (see mainnet-records.ts)
+const memo: Map<string, { at: number; v: unknown }> = ((globalThis as unknown as { __icAnchorMemo?: Map<string, { at: number; v: unknown }> }).__icAnchorMemo ??= new Map());
 async function ttl<T>(key: string, ms: number, fn: () => Promise<T>): Promise<T> {
     const hit = memo.get(key); if (hit && Date.now() - hit.at < ms) return hit.v as T;
     const v = await fn(); memo.set(key, { at: Date.now(), v }); return v;

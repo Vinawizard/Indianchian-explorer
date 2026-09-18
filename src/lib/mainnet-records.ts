@@ -12,6 +12,9 @@
  *   - 2 calls per distinct block to attach tx hash / index / fee
  * Blocks are immutable, so both caches are permanent for the process lifetime.
  */
+import fs from "node:fs";
+import path from "node:path";
+import { buildChartSeries } from "@/lib/chart-series";
 import { getApi } from "./polkadot";
 import { getMainnetAnchorLinks } from "./mainnet-anchors";
 
@@ -66,12 +69,54 @@ type BlockFacts = {
     byEntity: Map<string, { tx_hash: string; tx_index: number; tx_fee: number | null }>;
 };
 
+// One process-wide state object: Next.js bundles this module once per route (API route,
+// pages…), so plain module variables would give every route its own cache and its own
+// full rebuild. globalThis is shared by all of them.
+type SharedState = {
+    blockByTimestamp: Map<number, number>;
+    factsByBlock: Map<number, BlockFacts>;
+    blockCacheSavedSize: number;
+    genesisTs: number | null;
+    scannedThrough: number;
+    rowsMemo: { at: number; v: MainnetRecordRow[] } | null;
+    rowsBuild: Promise<MainnetRecordRow[]> | null;
+    summaryMemo: { at: number; v: MainnetSummary } | null;
+    fullBuiltAt: number;
+};
+const S: SharedState = ((globalThis as unknown as { __icMainnetRecords?: SharedState }).__icMainnetRecords ??= {
+    blockByTimestamp: new Map(), factsByBlock: new Map(), blockCacheSavedSize: -1, genesisTs: null,
+    scannedThrough: 0, rowsMemo: null, rowsBuild: null, summaryMemo: null, fullBuiltAt: 0,
+});
 // Blocks are immutable once finalized, so these never need invalidating.
-const blockByTimestamp = new Map<number, number>();
-const factsByBlock = new Map<number, BlockFacts>();
+const blockByTimestamp = S.blockByTimestamp;
+const factsByBlock = S.factsByBlock;
+
+// …and therefore safe to persist: a restart must not re-walk every block (minutes at 100k+ records).
+const BLOCK_CACHE_FILE = path.join(process.cwd(), "data", "mainnet-block-cache.json");
+(function loadBlockCache() {
+    if (S.blockCacheSavedSize >= 0 || factsByBlock.size) return;   // another route bundle loaded it already
+    try {
+        const j = JSON.parse(fs.readFileSync(BLOCK_CACHE_FILE, "utf8"));
+        for (const [ts, b] of j.blockByTimestamp ?? []) blockByTimestamp.set(Number(ts), Number(b));
+        for (const f of j.facts ?? []) factsByBlock.set(f.block_number, { block_number: f.block_number, block_hash: f.block_hash, byEntity: new Map(f.byEntity) });
+        S.blockCacheSavedSize = factsByBlock.size;
+    } catch { /* first run: nothing cached yet */ }
+})();
+function saveBlockCache() {
+    if (factsByBlock.size === S.blockCacheSavedSize) return;
+    try {
+        fs.mkdirSync(path.dirname(BLOCK_CACHE_FILE), { recursive: true });
+        const tmp = BLOCK_CACHE_FILE + ".tmp";
+        fs.writeFileSync(tmp, JSON.stringify({
+            blockByTimestamp: [...blockByTimestamp],
+            facts: [...factsByBlock.values()].map((f) => ({ block_number: f.block_number, block_hash: f.block_hash, byEntity: [...f.byEntity] })),
+        }));
+        fs.renameSync(tmp, BLOCK_CACHE_FILE);
+        S.blockCacheSavedSize = factsByBlock.size;
+    } catch (e) { console.error("mainnet block cache not saved:", e); }
+}
 
 const SLOT_MS = 6000;
-let genesisTsCache: number | null = null;
 
 async function timestampAt(
     api: Awaited<ReturnType<typeof getApi>>,
@@ -98,10 +143,10 @@ async function resolveBlockByTimestamp(
     const cached = blockByTimestamp.get(targetMs);
     if (cached !== undefined) return cached;
 
-    if (genesisTsCache === null) genesisTsCache = await timestampAt(api, 1);
+    if (S.genesisTs === null) S.genesisTs = await timestampAt(api, 1);
 
     const head = (await api.rpc.chain.getHeader()).number.toNumber();
-    const guess = Math.min(Math.max(1 + Math.floor((targetMs - genesisTsCache) / SLOT_MS), 1), head);
+    const guess = Math.min(Math.max(1 + Math.floor((targetMs - S.genesisTs) / SLOT_MS), 1), head);
 
     let best: number;
     const guessTs = await timestampAt(api, guess);
@@ -189,24 +234,114 @@ async function getBlockFacts(
     return facts;
 }
 
+/** Finalized head at the last build: blocks up to here are reflected in S.rowsMemo. */
+async function finalizedHead(api: Awaited<ReturnType<typeof getApi>>): Promise<number> {
+    const h = await api.rpc.chain.getFinalizedHead();
+    return (await api.rpc.chain.getHeader(h)).number.toNumber();
+}
+function rawToRow(r: RawRecord, blockNumber: number, f: BlockFacts | undefined, links: Awaited<ReturnType<typeof getMainnetAnchorLinks>>): MainnetRecordRow {
+    const tx = f?.byEntity.get(`${r.entityUuid}:${r.version}`) ?? null;
+    const link = links[`${r.entityUuid}:${r.version}`];
+    return {
+        payload_id: `${r.entityUuid}_${r.version}`,
+        block_number: blockNumber,
+        submission_status: link?.cardano_tx_hash ? "anchored" : "confirmed",
+        chain: "indianchain",
+        record_type: r.record_type,
+        type: r.type,
+        tx_hash: tx?.tx_hash ?? null,
+        block_hash: f?.block_hash ?? null,
+        signer_address: r.submitter,
+        tx_fee: tx?.tx_fee ?? null,
+        tx_index: tx?.tx_index ?? null,
+        timestamp: isoOrNull(r.eventTimestamp),
+        confirmed_at: isoOrNull(r.chainTimestamp),
+        entity_id: r.entityUuid,
+        farmer_id: r.farmerUuid ?? (r.record_type === "farmer" ? r.entityUuid : null),
+        record_id: r.entityUuid,
+        version: r.version,
+        merkle_root: link?.merkle_root ?? null,
+        cardano_tx_hash: link?.cardano_tx_hash ?? null,
+        payload_hash: r.payloadHash,
+    };
+}
+function decodeRaw(entityHex: string, version: number, v: Record<string, unknown>, source: (typeof STORAGES)[number]): RawRecord {
+    const linkedFarmer = v.farmerId ? String(v.farmerId) : null;
+    return {
+        entityUuid: hexToUuid(entityHex),
+        version,
+        payloadHash: v.payloadHash ? String(v.payloadHash) : null,
+        eventTimestamp: Number(v.eventTimestamp ?? 0),
+        chainTimestamp: Number(v.chainTimestamp ?? 0),
+        submitter: v.submitter ? String(v.submitter) : null,
+        farmerUuid: linkedFarmer ? hexToUuid(linkedFarmer) : null,
+        record_type: source.record_type,
+        type: source.type,
+    };
+}
+type RawRecord = {
+    entityUuid: string; version: number; payloadHash: string | null; eventTimestamp: number;
+    chainTimestamp: number; submitter: string | null; farmerUuid: string | null; record_type: string; type: string;
+};
+
+/**
+ * Incremental refresh: records can only appear through extrinsics in NEW blocks, so scan
+ * finalized blocks since the last build, read storage just for the keys found there, and
+ * refresh the anchor status of every row from the app DB. Milliseconds per block instead
+ * of decoding all storage (tens of seconds, blocking the event loop) on every refresh.
+ */
+async function refreshMainnetRecordRows(prev: MainnetRecordRow[]): Promise<MainnetRecordRow[]> {
+    const api = await getApi("mainnet");
+    const pallet = api.query.indianchain as unknown as Record<string, ((id: string, version: number) => Promise<{ isEmpty: boolean; toJSON: () => Record<string, unknown> | null }>) | undefined>;
+    const head = await finalizedHead(api);
+    const byId = new Map(prev.map((r) => [r.payload_id, r]));
+    const blockOfId = new Map(prev.map((r) => [r.payload_id, r.block_number]));
+    const fresh: { raw: RawRecord; block: number }[] = [];
+    for (let n = S.scannedThrough + 1; n <= head; n++) {
+        const f = await getBlockFacts(api, n);
+        for (const key of f.byEntity.keys()) {
+            const [uuid, ver] = key.split(":");
+            const hex = "0x" + uuid.replace(/-/g, "");
+            for (const source of STORAGES) {
+                const getter = pallet[source.key];
+                if (!getter) continue;
+                let v: { isEmpty: boolean; toJSON: () => Record<string, unknown> | null };
+                try { v = await getter(hex, Number(ver)); } catch { continue; }
+                const j = v.isEmpty ? null : v.toJSON();
+                if (!j) continue;
+                fresh.push({ raw: decodeRaw(hex, Number(ver), j, source), block: n });
+                break;
+            }
+        }
+    }
+    saveBlockCache();
+    const links = await getMainnetAnchorLinks();
+    for (const { raw, block } of fresh) {
+        const row = rawToRow(raw, block, factsByBlock.get(block), links);
+        byId.set(row.payload_id, row); blockOfId.set(row.payload_id, block);
+    }
+    // anchor status changes for existing rows as batches land on Cardano — cheap map pass
+    const rows = [...byId.values()].map((r) => {
+        const link = links[`${r.record_id}:${r.version}`];
+        const status = link?.cardano_tx_hash ? "anchored" : "confirmed";
+        return r.submission_status === status && r.cardano_tx_hash === (link?.cardano_tx_hash ?? null)
+            ? r
+            : { ...r, submission_status: status, merkle_root: link?.merkle_root ?? null, cardano_tx_hash: link?.cardano_tx_hash ?? null };
+    });
+    rows.sort((a, b) => b.block_number - a.block_number || a.record_id!.localeCompare(b.record_id!));
+    S.scannedThrough = head;
+    return rows;
+}
+
+const FULL_REBUILD_EVERY = 15 * 60_000;   // safety net: a periodic full storage read backs the incremental scan
 async function fetchMainnetRecordRows(): Promise<MainnetRecordRow[]> {
+    if (S.rowsMemo && S.scannedThrough > 0 && Date.now() - S.fullBuiltAt < FULL_REBUILD_EVERY) return refreshMainnetRecordRows(S.rowsMemo.v);
     const api = await getApi("mainnet");
     const pallet = api.query.indianchain;
     if (!pallet) return [];
+    const headBefore = await finalizedHead(api);   // storage read below reflects at least this block
 
-    type Raw = {
-        entityUuid: string;
-        version: number;
-        payloadHash: string | null;
-        eventTimestamp: number;
-        chainTimestamp: number;
-        submitter: string | null;
-        farmerUuid: string | null;
-        record_type: string;
-        type: string;
-    };
-
-    const raw: Raw[] = [];
+    const raw: RawRecord[] = [];
 
     for (const source of STORAGES) {
         const storage = (pallet as Record<string, unknown>)[source.key] as
@@ -223,19 +358,7 @@ async function fetchMainnetRecordRows(): Promise<MainnetRecordRow[]> {
 
         for (const [key, value] of entries) {
             const v = value.toJSON() as Record<string, unknown>;
-            const entityHex = String(key.args[0]);
-            const linkedFarmer = v.farmerId ? String(v.farmerId) : null;
-            raw.push({
-                entityUuid: hexToUuid(entityHex),
-                version: Number(key.args[1]),
-                payloadHash: v.payloadHash ? String(v.payloadHash) : null,
-                eventTimestamp: Number(v.eventTimestamp ?? 0),
-                chainTimestamp: Number(v.chainTimestamp ?? 0),
-                submitter: v.submitter ? String(v.submitter) : null,
-                farmerUuid: linkedFarmer ? hexToUuid(linkedFarmer) : null,
-                record_type: source.record_type,
-                type: source.type,
-            });
+            raw.push(decodeRaw(String(key.args[0]), Number(key.args[1]), v, source));
         }
     }
 
@@ -252,36 +375,15 @@ async function fetchMainnetRecordRows(): Promise<MainnetRecordRow[]> {
         facts.set(blockNumber, await getBlockFacts(api, blockNumber));
     }
 
+    saveBlockCache();
+
     const links = await getMainnetAnchorLinks();
     const rows: MainnetRecordRow[] = raw.map((r) => {
         const blockNumber = blockOf.get(r.chainTimestamp) ?? 0;
-        const f = facts.get(blockNumber);
-        const tx = f?.byEntity.get(`${r.entityUuid}:${r.version}`) ?? null;
-        return {
-            payload_id: `${r.entityUuid}_${r.version}`,
-            block_number: blockNumber,
-            // "anchored" once its batch is on Cardano L1; lets the STATUS column and filter show it
-            submission_status: links[`${r.entityUuid}:${r.version}`]?.cardano_tx_hash ? "anchored" : "confirmed",
-            chain: "indianchain-mainnet",
-            record_type: r.record_type,
-            type: r.type,
-            tx_hash: tx?.tx_hash ?? null,
-            block_hash: f?.block_hash ?? null,
-            signer_address: r.submitter,
-            tx_fee: tx?.tx_fee ?? null,
-            tx_index: tx?.tx_index ?? null,
-            timestamp: isoOrNull(r.eventTimestamp),
-            confirmed_at: isoOrNull(r.chainTimestamp),
-            entity_id: r.entityUuid,
-            farmer_id: r.farmerUuid ?? (r.record_type === "farmer" ? r.entityUuid : null),
-            record_id: r.entityUuid,
-            version: r.version,
-            // filled from the mainnet app DB below (null until that record is L1-anchored)
-            merkle_root: links[`${r.entityUuid}:${r.version}`]?.merkle_root ?? null,
-            cardano_tx_hash: links[`${r.entityUuid}:${r.version}`]?.cardano_tx_hash ?? null,
-            payload_hash: r.payloadHash,
-        };
+        return rawToRow(r, blockNumber, facts.get(blockNumber), links);
     });
+    S.scannedThrough = headBefore;
+    S.fullBuiltAt = Date.now();
 
     rows.sort((a, b) => b.block_number - a.block_number || a.record_id!.localeCompare(b.record_id!));
     return rows;
@@ -294,34 +396,128 @@ async function fetchMainnetRecordRows(): Promise<MainnetRecordRow[]> {
  * (no MAINNET_APP_DB_URL) therefore fetch the rows the node host has already built.
  */
 const REMOTE_ROWS_URL = process.env.MAINNET_RECORDS_URL || "http://139.59.11.86/mainnet-api/records";
+const REMOTE_TIMEOUT_MS = 25_000;
 async function fetchRowsRemote(): Promise<MainnetRecordRow[]> {
-    try {
-        const res = await fetch(REMOTE_ROWS_URL, { cache: "no-store" });
-        if (!res.ok) return [];
-        return ((await res.json()).rows ?? []) as MainnetRecordRow[];
-    } catch { return []; }
+    const res = await fetch(`${REMOTE_ROWS_URL}?limit=10000`, { cache: "no-store", signal: AbortSignal.timeout(REMOTE_TIMEOUT_MS) });
+    if (!res.ok) throw new Error(`records feed ${res.status}`);
+    return ((await res.json()).rows ?? []) as MainnetRecordRow[];
 }
-let rowsMemo: { at: number; v: MainnetRecordRow[] } | null = null;
-export async function getMainnetRecordRows() {
-    if (rowsMemo && Date.now() - rowsMemo.at < 20_000) return rowsMemo.v;
-    const v = await (process.env.MAINNET_APP_DB_URL ? fetchMainnetRecordRows : fetchRowsRemote)();
-    rowsMemo = { at: Date.now(), v }; return v;
+/**
+ * Stale-while-revalidate: a full rebuild walks chain storage (tens of seconds at 100k+
+ * records), so requests always get the last good row set immediately and ONE background
+ * rebuild refreshes it once it is older than ROWS_TTL. Only the very first request after
+ * a restart waits. A failed rebuild keeps the previous rows.
+ */
+const ROWS_TTL = 60_000;
+function rebuildRows(): Promise<MainnetRecordRow[]> {
+    if (!S.rowsBuild) {
+        S.rowsBuild = (process.env.MAINNET_APP_DB_URL ? fetchMainnetRecordRows : fetchRowsRemote)()
+            .then((v) => { S.rowsMemo = { at: Date.now(), v }; return v; })
+            .catch((e) => { console.error("mainnet rows rebuild failed:", e?.message ?? e); return S.rowsMemo?.v ?? []; })
+            .finally(() => { S.rowsBuild = null; });
+    }
+    return S.rowsBuild;
+}
+export async function getMainnetRecordRows(): Promise<MainnetRecordRow[]> {
+    if (S.rowsMemo) {
+        if (Date.now() - S.rowsMemo.at > ROWS_TTL) void rebuildRows();   // refresh in the background
+        return S.rowsMemo.v;
+    }
+    return rebuildRows();
+}
+
+/** Filters the events page and the API share, so host and remote copies behave the same. */
+export type RecordQuery = {
+    status?: string; record_type?: string;
+    minBlock?: number | null; maxBlock?: number | null;
+    find?: string;            // block number, payload_id, tx hash or record_id
+    limit?: number;           // rows returned (newest first); total is always the full match count
+};
+export const DEFAULT_ROW_LIMIT = 2000;
+export function filterRows(rows: MainnetRecordRow[], q: RecordQuery): MainnetRecordRow[] {
+    const status = q.status?.toLowerCase(), rt = q.record_type?.toLowerCase();
+    const find = q.find?.trim();
+    const findNum = find && /^\d+$/.test(find) ? parseInt(find, 10) : null;
+    const findLower = find?.toLowerCase();
+    return rows.filter((r) => {
+        if (rt && r.record_type !== rt) return false;
+        if (status && r.submission_status !== status) return false;
+        if (q.minBlock != null && r.block_number < q.minBlock) return false;
+        if (q.maxBlock != null && r.block_number > q.maxBlock) return false;
+        if (find) {
+            if (findNum !== null) return r.block_number === findNum;
+            return r.payload_id.toLowerCase() === findLower || r.tx_hash?.toLowerCase() === findLower || r.record_id?.toLowerCase() === findLower;
+        }
+        return true;
+    });
+}
+function queryString(q: RecordQuery): string {
+    const p = new URLSearchParams();
+    if (q.status) p.set("status", q.status);
+    if (q.record_type) p.set("record_type", q.record_type);
+    if (q.minBlock != null) p.set("start", String(q.minBlock));
+    if (q.maxBlock != null) p.set("end", String(q.maxBlock));
+    if (q.find) p.set("find", q.find);
+    p.set("limit", String(q.limit ?? DEFAULT_ROW_LIMIT));
+    return p.toString();
+}
+/**
+ * Rows matching a query, newest first, capped at `limit`, plus the full match count.
+ * Host: filters the cached rows. Remote copies: ask the host — never pull every row
+ * across the network (100k+ rows is ~100 MB, which breaks a serverless function).
+ */
+export async function queryMainnetRecords(q: RecordQuery): Promise<{ rows: MainnetRecordRow[]; total: number }> {
+    const limit = q.limit ?? DEFAULT_ROW_LIMIT;
+    if (process.env.MAINNET_APP_DB_URL) {
+        const all = filterRows(await getMainnetRecordRows(), q);
+        return { rows: all.slice(0, limit), total: all.length };
+    }
+    try {
+        const res = await fetch(`${REMOTE_ROWS_URL}?${queryString({ ...q, limit })}`, { cache: "no-store", signal: AbortSignal.timeout(REMOTE_TIMEOUT_MS) });
+        if (!res.ok) return { rows: [], total: 0 };
+        const j = await res.json();
+        return { rows: (j.rows ?? []) as MainnetRecordRow[], total: Number(j.total ?? (j.rows?.length ?? 0)) };
+    } catch { return { rows: [], total: 0 }; }
+}
+
+/** Home-page numbers + chart series, computed once on the host (a few KB) instead of shipping every row. */
+export type MainnetSummary = {
+    totalEvents: number; totalBlocks: number; anchored: number; fallbackLatestBlock: number;
+    transactionChartData: ReturnType<typeof buildChartSeries>["transactionChartData"];
+    distributionChartData: ReturnType<typeof buildChartSeries>["distributionChartData"];
+};
+export async function getMainnetSummary(): Promise<MainnetSummary> {
+    if (S.summaryMemo && Date.now() - S.summaryMemo.at < 20_000) return S.summaryMemo.v;
+    let v: MainnetSummary;
+    if (process.env.MAINNET_APP_DB_URL) {
+        const rows = await getMainnetRecordRows();
+        const { transactionChartData, distributionChartData } = buildChartSeries(rows, 7);
+        v = {
+            totalEvents: rows.length,
+            totalBlocks: new Set(rows.map((r) => r.block_number)).size,
+            anchored: rows.filter((r) => r.submission_status === "anchored").length,
+            fallbackLatestBlock: rows.length ? rows[0].block_number : 0,
+            transactionChartData, distributionChartData,
+        };
+    } else {
+        try {
+            const res = await fetch(`${REMOTE_ROWS_URL}?summary=1`, { cache: "no-store", signal: AbortSignal.timeout(REMOTE_TIMEOUT_MS) });
+            if (!res.ok) throw new Error(`summary ${res.status}`);
+            v = (await res.json()) as MainnetSummary;
+        } catch (e) {
+            console.error("mainnet summary fetch failed:", (e as Error)?.message ?? e);
+            if (S.summaryMemo) return S.summaryMemo.v;      // stale beats zeros on a production page
+            v = emptySummary();
+        }
+    }
+    S.summaryMemo = { at: Date.now(), v }; return v;
+}
+function emptySummary(): MainnetSummary {
+    return { totalEvents: 0, totalBlocks: 0, anchored: 0, fallbackLatestBlock: 0, transactionChartData: [], distributionChartData: [] };
 }
 
 /** Single record for the detail page: accepts a block number, payload_id or tx hash. */
 export async function findMainnetRecord(needle: string): Promise<MainnetRecordRow | null> {
-    const rows = await getMainnetRecordRows();
-    if (/^\d+$/.test(needle)) {
-        const n = parseInt(needle, 10);
-        return rows.find((r) => r.block_number === n) ?? null;
-    }
-    const lower = needle.toLowerCase();
-    return (
-        rows.find(
-            (r) =>
-                r.payload_id.toLowerCase() === lower ||
-                r.tx_hash?.toLowerCase() === lower ||
-                r.record_id?.toLowerCase() === lower
-        ) ?? null
-    );
+    const { rows } = await queryMainnetRecords({ find: needle, limit: 1 });
+    return rows[0] ?? null;
 }

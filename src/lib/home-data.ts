@@ -5,7 +5,7 @@ import {
     hasCardanoProof,
 } from "@/lib/cardano-proof";
 import { supabase } from "@/lib/supabase";
-import { getMainnetRecordRows } from "@/lib/mainnet-records";
+import { getMainnetSummary } from "@/lib/mainnet-records";
 import { buildChartSeries } from "@/lib/chart-series";
 import { DEFAULT_NETWORK, SUPABASE_CHAIN, type ChainNetwork } from "@/lib/network";
 
@@ -29,20 +29,6 @@ export type HomeMetrics = {
 };
 
 async function fetchAllEventSummaries(network: ChainNetwork): Promise<HomeEventRow[]> {
-    // Mainnet has no Supabase mirror — read the same chain-sourced rows the
-    // events page uses. Preview keeps the Supabase path below untouched.
-    if (network === "mainnet") {
-        const rows = await getMainnetRecordRows();
-        return rows.map((r) => ({
-            block_number: r.block_number,
-            tx_hash: r.tx_hash,
-            timestamp: r.timestamp,
-            record_type: r.record_type,
-            merkle_root: r.merkle_root,
-            cardano_tx_hash: r.cardano_tx_hash,
-        }));
-    }
-
     const PAGE_SIZE = 1000;
     let allEvents: HomeEventRow[] = [];
     let from = 0;
@@ -73,14 +59,23 @@ async function fetchAllEventSummaries(network: ChainNetwork): Promise<HomeEventR
 export const getCachedHomeMetrics = unstable_cache(
     // network is part of the cache key: preview and mainnet totals never mix
     async (network: ChainNetwork = DEFAULT_NETWORK): Promise<HomeMetrics> => {
+        // Mainnet: totals + chart series come pre-computed from the node host (a few KB),
+        // never the row list — 100k+ rows would not fit a serverless response.
+        if (network === "mainnet") {
+            const s = await getMainnetSummary();
+            return {
+                allEvents: [],
+                totalBlocks: s.totalBlocks,
+                totalEvents: s.totalEvents,
+                totalTransactions: s.totalEvents,
+                transactionChartData: s.transactionChartData,
+                distributionChartData: s.distributionChartData,
+                fallbackLatestBlock: s.fallbackLatestBlock,
+            };
+        }
         const rawEvents = await fetchAllEventSummaries(network);
-        // Cardano-proof gating is a Preview concern (those rows are mirrored after
-        // anchoring). Mainnet rows come from chain state and are authoritative.
-        const allEvents = network === "mainnet" ? rawEvents : rawEvents.filter(hasCardanoProof);
-        const totalBlocks =
-            network === "mainnet"
-                ? new Set(allEvents.map((e) => e.block_number)).size
-                : countUniqueBlocks(allEvents);
+        const allEvents = rawEvents.filter(hasCardanoProof);
+        const totalBlocks = countUniqueBlocks(allEvents);
         const { transactionChartData, distributionChartData } = buildChartSeries(allEvents, 7);
 
         return {
@@ -93,6 +88,6 @@ export const getCachedHomeMetrics = unstable_cache(
             fallbackLatestBlock: allEvents.length > 0 ? allEvents[0].block_number : 0,
         };
     },
-    ["indiachain-home-metrics-v5"],
+    ["indiachain-home-metrics-v6"],
     { revalidate: 30 }
 );
