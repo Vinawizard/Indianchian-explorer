@@ -343,26 +343,50 @@ async function fetchMainnetRecordRows(): Promise<MainnetRecordRow[]> {
 
     const raw: RawRecord[] = [];
 
+    // Storage is read PAGED, never as one entries() call: at 510k records a single
+    // queryStorageAt takes ~68s and the RPC client aborts at 60s. Each page is decoded
+    // straight into RawRecord so the codec objects can be freed as we go.
+    type StorageEntry = [{ args: { toHex: () => string }[] }, { toJSON: () => Record<string, unknown> }];
+    type PagedStorage = {
+        entriesPaged?: (o: { args: unknown[]; pageSize: number; startKey?: string }) => Promise<StorageEntry[]>;
+        entries?: () => Promise<StorageEntry[]>;
+    };
+    const PAGE = 1000;
+    let storagesRead = 0;
+
     for (const source of STORAGES) {
-        const storage = (pallet as Record<string, unknown>)[source.key] as
-            | { entries: () => Promise<[{ args: unknown[] }, { toJSON: () => Record<string, unknown> }][]> }
-            | undefined;
-        if (!storage?.entries) continue;
+        const storage = (pallet as Record<string, unknown>)[source.key] as PagedStorage | undefined;
+        if (!storage) continue;
+        let got = 0;
 
-        let entries: [{ args: unknown[] }, { toJSON: () => Record<string, unknown> }][];
-        try {
-            entries = await storage.entries();
-        } catch {
-            continue; // storage item absent in this runtime — skip, don't fail the page
+        if (storage.entriesPaged) {
+            let startKey: string | undefined;
+            for (;;) {
+                const page = await storage.entriesPaged({ args: [], pageSize: PAGE, startKey });
+                if (page.length === 0) break;
+                for (const [key, value] of page) {
+                    raw.push(decodeRaw(key.args[0].toHex(), Number(key.args[1].toHex()), value.toJSON() as Record<string, unknown>, source));
+                }
+                got += page.length;
+                startKey = (page[page.length - 1][0] as unknown as { toHex: () => string }).toHex();
+                if (page.length < PAGE) break;
+            }
+        } else if (storage.entries) {
+            for (const [key, value] of await storage.entries()) {
+                raw.push(decodeRaw(key.args[0].toHex(), Number(key.args[1].toHex()), value.toJSON() as Record<string, unknown>, source));
+                got++;
+            }
+        } else {
+            continue;   // storage item absent in this runtime
         }
-
-        for (const [key, value] of entries) {
-            const v = value.toJSON() as Record<string, unknown>;
-            raw.push(decodeRaw(String(key.args[0]), Number(key.args[1]), v, source));
-        }
+        if (got > 0) storagesRead++;
     }
 
-    if (raw.length === 0) return [];
+    // An empty read is a FAILURE, not an answer. Returning [] here would be memoised and
+    // the whole site would show zeros until the next restart — which is exactly what happened.
+    if (storagesRead === 0 || raw.length === 0) {
+        throw new Error("chain storage read returned no records — refusing to cache an empty result");
+    }
 
     // One binary search per DISTINCT chain timestamp, then one index pass per block.
     const timestamps = [...new Set(raw.map((r) => r.chainTimestamp))].filter((t) => t > 0);
@@ -510,7 +534,10 @@ export async function getMainnetSummary(): Promise<MainnetSummary> {
             v = emptySummary();
         }
     }
-    S.summaryMemo = { at: Date.now(), v }; return v;
+    // Never memoise a zero summary: that would keep the site showing 0 for the whole TTL
+    // even though the next rebuild is about to succeed.
+    if (v.totalEvents > 0) S.summaryMemo = { at: Date.now(), v };
+    return v;
 }
 function emptySummary(): MainnetSummary {
     return { totalEvents: 0, totalBlocks: 0, anchored: 0, fallbackLatestBlock: 0, transactionChartData: [], distributionChartData: [] };
