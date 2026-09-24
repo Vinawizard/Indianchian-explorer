@@ -26,6 +26,8 @@ const item: Variants = {
 
 export function MetricCards({ stats }: { stats: MetricStats }) {
     const [realtimeBlock, setRealtimeBlock] = useState(stats.latestBlock);
+    // Live record total from the chain's own counter (mainnet only). null = use the server value.
+    const [liveTotal, setLiveTotal] = useState<number | null>(null);
 
     useEffect(() => {
         const fetchLatest = async () => {
@@ -36,6 +38,8 @@ export function MetricCards({ stats }: { stats: MetricStats }) {
                     if (data?.stats?.latestBlock) {
                         setRealtimeBlock(data.stats.latestBlock);
                     }
+                    const n = data?.stats?.totalRecords;
+                    setLiveTotal(typeof n === "number" && n > 0 ? n : null);
                 }
             } catch (e) {}
         };
@@ -56,7 +60,7 @@ export function MetricCards({ stats }: { stats: MetricStats }) {
         },
         {
             label: "Total Records",
-            value: stats.totalTransactions.toLocaleString(),
+            value: (liveTotal ?? stats.totalTransactions).toLocaleString(),
             icon: Activity,
             accent: "#22c55e",
             glow: "rgba(34,197,94,0.15)",
@@ -64,7 +68,7 @@ export function MetricCards({ stats }: { stats: MetricStats }) {
         },
         {
             label: "Total TXs",
-            value: stats.totalEvents.toLocaleString(),
+            value: (liveTotal ?? stats.totalEvents).toLocaleString(),
             icon: Zap,
             accent: "#f59e0b",
             glow: "rgba(245,158,11,0.15)",

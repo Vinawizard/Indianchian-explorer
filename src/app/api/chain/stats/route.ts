@@ -11,11 +11,17 @@ export async function GET(request: Request) {
         const network = resolveNetwork(request);
         const api = await getApi(network);
 
-        const [header, finalizedHeader, name, metrics] = await Promise.all([
+        // Mainnet also reports the pallet's own record counter so the home cards update live.
+        // Preview totals are Cardano-proof records from Supabase, so no counter is sent there.
+        const counter = network === "mainnet"
+            ? (api.query as unknown as Record<string, Record<string, (() => Promise<{ toString(): string }>) | undefined> | undefined>).indianchain?.totalRecords
+            : undefined;
+        const [header, finalizedHeader, name, metrics, totalRecords] = await Promise.all([
             api.rpc.chain.getHeader(),
             api.rpc.chain.getFinalizedHead().then(hash => api.rpc.chain.getHeader(hash)),
             api.rpc.system.chain(),
             scrapePrometheusMetrics(network),
+            counter ? counter().then((v) => Number(v.toString())).catch(() => undefined) : Promise.resolve(undefined),
         ]);
 
         return NextResponse.json({
@@ -26,6 +32,7 @@ export async function GET(request: Request) {
                 finalizedBlock: finalizedHeader.number.toNumber(),
                 chainName: name.toString(),
                 network: metrics,
+                ...(typeof totalRecords === "number" && totalRecords > 0 ? { totalRecords } : {}),
             }
         });
     } catch (error: any) {

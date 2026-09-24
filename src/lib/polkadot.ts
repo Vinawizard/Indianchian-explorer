@@ -11,47 +11,71 @@ const ENDPOINTS: Record<ChainNetwork, string> = {
     mainnet: process.env.MAINNET_WS_ENDPOINT || "ws://139.59.11.86/mainnet-rpc",
 };
 
-const apiInstance: Partial<Record<ChainNetwork, ApiPromise | null>> = {};
-const apiPromise: Partial<Record<ChainNetwork, Promise<ApiPromise> | null>> = {};
+/**
+ * One connection per network for the whole process (globalThis: Next.js bundles this
+ * module once per route, and a connection per bundle multiplied sockets and memory).
+ *
+ * On a disconnect the SAME instance is kept: its provider reconnects every 2.5 s and the
+ * instance resumes. The previous version dropped the reference and created a new ApiPromise
+ * on every disconnect, while the old one kept reconnecting in the background holding its
+ * full decorated metadata — a leak on every RPC-node restart.
+ */
+type ApiState = {
+    instance: Partial<Record<ChainNetwork, ApiPromise>>;
+    pending: Partial<Record<ChainNetwork, Promise<ApiPromise>>>;
+};
+const state: ApiState = ((globalThis as unknown as { __icPolkadot?: ApiState }).__icPolkadot ??= { instance: {}, pending: {} });
+
+const CONNECT_TIMEOUT_MS = 15_000;    // first connection
+const RECONNECT_WAIT_MS = 10_000;     // how long a caller waits for an auto-reconnect
+
+function waitConnected(api: ApiPromise, ms: number): Promise<void> {
+    if (api.isConnected) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+        const onConnected = () => { clearTimeout(timer); api.off("connected", onConnected); resolve(); };
+        const timer = setTimeout(() => { api.off("connected", onConnected); reject(new Error("chain RPC not connected")); }, ms);
+        api.on("connected", onConnected);
+    });
+}
 
 /**
- * Returns a per-network singleton ApiPromise connected to an IndianChain node.
+ * Returns the per-network singleton ApiPromise connected to an IndianChain node.
  * Lazy-initializes on first call, reuses on subsequent calls.
  */
 export async function getApi(network: ChainNetwork = DEFAULT_NETWORK): Promise<ApiPromise> {
-    const existing = apiInstance[network];
-    if (existing && existing.isConnected) {
+    const existing = state.instance[network];
+    if (existing) {
+        await waitConnected(existing, RECONNECT_WAIT_MS);
         return existing;
     }
 
-    const inflight = apiPromise[network];
-    if (inflight) {
-        return inflight;
-    }
+    const inflight = state.pending[network];
+    if (inflight) return inflight;
 
     const promise = (async () => {
+        const provider = new WsProvider(ENDPOINTS[network], 2500); // 2.5s reconnect
+        provider.on("disconnected", () => {
+            console.warn(`[polkadot:${network}] WebSocket disconnected, will reconnect...`);
+        });
+        const api = new ApiPromise({ provider, noInitWarn: true });
+        let timer: ReturnType<typeof setTimeout> | undefined;
         try {
-            const provider = new WsProvider(ENDPOINTS[network], 2500); // 2.5s reconnect
-            const api = await ApiPromise.create({ provider, noInitWarn: true });
-            await api.isReady;
-            apiInstance[network] = api;
-
-            // Handle disconnection
-            provider.on("disconnected", () => {
-                console.warn(`[polkadot:${network}] WebSocket disconnected, will reconnect...`);
-                apiInstance[network] = null;
-                apiPromise[network] = null;
-            });
-
+            await Promise.race([
+                api.isReadyOrError,
+                new Promise((_, reject) => { timer = setTimeout(() => reject(new Error(`chain RPC connect timed out (${network})`)), CONNECT_TIMEOUT_MS); }),
+            ]);
+            state.instance[network] = api;
             return api;
         } catch (err) {
-            apiInstance[network] = null;
-            apiPromise[network] = null;
+            await api.disconnect().catch(() => undefined);   // stop the provider retrying forever
             throw err;
+        } finally {
+            if (timer) clearTimeout(timer);
+            delete state.pending[network];
         }
     })();
 
-    apiPromise[network] = promise;
+    state.pending[network] = promise;
     return promise;
 }
 

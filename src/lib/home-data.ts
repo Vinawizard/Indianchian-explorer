@@ -56,23 +56,30 @@ async function fetchAllEventSummaries(network: ChainNetwork): Promise<HomeEventR
     return allEvents;
 }
 
-export const getCachedHomeMetrics = unstable_cache(
-    // network is part of the cache key: preview and mainnet totals never mix
+/**
+ * Home metrics. Mainnet: totals + chart series come pre-computed from the node host (a few
+ * KB), refreshed there every 15 s in the background — no extra cache layer, so the cards are
+ * never more than one refresh behind. Preview: unchanged (Supabase, 30 s data cache).
+ */
+export async function getCachedHomeMetrics(network: ChainNetwork = DEFAULT_NETWORK): Promise<HomeMetrics> {
+    if (network === "mainnet") {
+        const s = await getMainnetSummary();
+        return {
+            allEvents: [],
+            totalBlocks: s.totalBlocks,
+            totalEvents: s.totalEvents,
+            totalTransactions: s.totalEvents,
+            transactionChartData: s.transactionChartData,
+            distributionChartData: s.distributionChartData,
+            fallbackLatestBlock: s.fallbackLatestBlock,
+        };
+    }
+    return getCachedPreviewHomeMetrics(network);
+}
+
+const getCachedPreviewHomeMetrics = unstable_cache(
+    // network is part of the cache key: networks never mix
     async (network: ChainNetwork = DEFAULT_NETWORK): Promise<HomeMetrics> => {
-        // Mainnet: totals + chart series come pre-computed from the node host (a few KB),
-        // never the row list — 100k+ rows would not fit a serverless response.
-        if (network === "mainnet") {
-            const s = await getMainnetSummary();
-            return {
-                allEvents: [],
-                totalBlocks: s.totalBlocks,
-                totalEvents: s.totalEvents,
-                totalTransactions: s.totalEvents,
-                transactionChartData: s.transactionChartData,
-                distributionChartData: s.distributionChartData,
-                fallbackLatestBlock: s.fallbackLatestBlock,
-            };
-        }
         const rawEvents = await fetchAllEventSummaries(network);
         const allEvents = rawEvents.filter(hasCardanoProof);
         const totalBlocks = countUniqueBlocks(allEvents);
