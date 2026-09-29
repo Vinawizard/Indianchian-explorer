@@ -8,7 +8,7 @@ const ENDPOINTS: Record<ChainNetwork, string> = {
         "ws://localhost:9944",
     // Default is the guarded public path on the node host, so a deployment with
     // no MAINNET_WS_ENDPOINT configured (e.g. Vercel) still reaches mainnet.
-    mainnet: process.env.MAINNET_WS_ENDPOINT || "ws://139.59.11.86/mainnet-rpc",
+    mainnet: process.env.MAINNET_WS_ENDPOINT || "wss://ic-node.trivolvetech.com/mainnet-rpc",
 };
 
 /**
