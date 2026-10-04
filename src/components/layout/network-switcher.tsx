@@ -3,9 +3,9 @@
 import { useEffect, useState } from "react";
 import { DEFAULT_NETWORK, NETWORK_COOKIE, isChainNetwork, type ChainNetwork } from "@/lib/network";
 
-const OPTIONS: { value: ChainNetwork; label: string; dot: string }[] = [
-    { value: "mainnet", label: "MAINNET", dot: "bg-[#ff5500] shadow-[0_0_8px_#ff5500]" },
-    { value: "preview", label: "PREVIEW", dot: "bg-[#06b6d4] shadow-[0_0_8px_#06b6d4]" },
+const OPTIONS: { value: ChainNetwork; label: string }[] = [
+    { value: "mainnet", label: "MAINNET" },
+    { value: "preview", label: "PREVIEW" },
 ];
 
 function readCookie(): ChainNetwork {
@@ -41,12 +41,11 @@ export function NetworkSwitcher({ className }: { className?: string }) {
                         key={opt.value}
                         onClick={() => select(opt.value)}
                         aria-pressed={isActive}
-                        className={`flex flex-1 justify-center items-center gap-2 px-4 py-3 text-[10px] sm:text-xs font-mono uppercase tracking-widest transition-all ${i > 0 ? "border-l border-white/10" : ""} ${isActive
+                        className={`flex flex-1 justify-center items-center px-4 py-3 text-[10px] sm:text-xs font-mono uppercase tracking-widest transition-all ${i > 0 ? "border-l border-white/10" : ""} ${isActive
                             ? "bg-white/10 text-white border-b-2 border-b-accent"
                             : "text-muted-foreground hover:text-white hover:bg-white/5 border-b-2 border-b-transparent"
                             }`}
                     >
-                        <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${isActive ? opt.dot : "bg-white/20"}`} />
                         <span>{opt.label}</span>
                     </button>
                 );
