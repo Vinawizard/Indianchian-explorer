@@ -1,5 +1,6 @@
 "use client";
 import { cardanoscanTx } from "@/lib/cardanoscan";
+import type { ChainNetwork } from "@/lib/network";
 
 import { useState } from "react";
 
@@ -60,7 +61,7 @@ export function buildPayload(rt: any, chain: string): Record<string, unknown> {
     };
 }
 
-export function EventAttributes({ event }: { event: any }) {
+export function EventAttributes({ event, network }: { event: any; network: ChainNetwork }) {
     const [tab, setTab] = useState<"table" | "json" | "cardano">("table");
     const payload = buildPayload(event, event.chain || "indiachain");
 
@@ -156,7 +157,7 @@ export function EventAttributes({ event }: { event: any }) {
                             <div className="col-span-12 md:col-span-9 px-8 py-5 text-[13px] font-mono break-all flex items-center leading-loose">
                                 {event.cardano_tx_hash ? (
                                     <a
-                                        href={cardanoscanTx(event.chain, String(event.cardano_tx_hash))}
+                                        href={cardanoscanTx(network, String(event.cardano_tx_hash))}
                                         target="_blank"
                                         rel="noopener noreferrer"
                                         className="text-[#4d9fff] hover:text-white transition-colors duration-200 cursor-pointer"

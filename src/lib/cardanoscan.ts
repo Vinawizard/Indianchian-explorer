@@ -1,3 +1,9 @@
-/** Client-safe: no server imports. Picks the explorer by the row's chain value. */
-export const cardanoscanTx = (chain: string | null | undefined, tx: string) =>
-    (chain === "indianchain-mainnet" ? "https://cardanoscan.io/transaction/" : "https://preview.cardanoscan.io/transaction/") + tx;
+import type { ChainNetwork } from "./network";
+
+/**
+ * Client-safe: no server imports. Picks the Cardano explorer by the selected network:
+ * IndianChain mainnet anchors on Cardano mainnet, preview on Cardano preview.
+ * (Not by the row's `chain` label — mainnet rows carry "indianchain" too.)
+ */
+export const cardanoscanTx = (network: ChainNetwork, tx: string) =>
+    (network === "mainnet" ? "https://cardanoscan.io/transaction/" : "https://preview.cardanoscan.io/transaction/") + tx;

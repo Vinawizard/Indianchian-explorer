@@ -193,7 +193,7 @@ export default async function EventsPage({
                 </p>
             )}
             <EventsFilterBar />
-            <EventsTable events={groupedEvents} totalRecords={totalRecords} />
+            <EventsTable events={groupedEvents} totalRecords={totalRecords} network={network} />
         </div>
     );
 }
