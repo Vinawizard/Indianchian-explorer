@@ -4,6 +4,8 @@
  * database access and callers use the host's public read-only endpoints instead.
  * Preview is untouched.
  */
+import { hostApi } from "./host-api";
+
 // Small in-memory TTL cache instead of next/cache: the on-disk data cache was serving
 // stale entries for these fast-changing tables.
 // shared across route bundles (see mainnet-records.ts)
@@ -22,7 +24,7 @@ export type AnchorBatch = {
 };
 
 const DB_URL = process.env.MAINNET_APP_DB_URL;
-const PUBLIC_URL = process.env.MAINNET_ANCHORS_URL || "http://139.59.11.86/mainnet-api/anchors";
+const PUBLIC_URL = hostApi("anchors", process.env.MAINNET_ANCHORS_URL);
 
 /**
  * One pool per process (globalThis: Next.js bundles this module once per route, and a
@@ -69,7 +71,7 @@ export { cardanoscanTx } from "./cardanoscan";
 
 /* ---------- explorer views over the anchor batches (host: cached table; remote: host endpoint) ---------- */
 
-const REMOTE_BASE = (process.env.MAINNET_ANCHORS_URL || "http://139.59.11.86/mainnet-api/anchors").replace(/\/$/, "");
+const REMOTE_BASE = hostApi("anchors", process.env.MAINNET_ANCHORS_URL).replace(/\/$/, "");
 
 async function remote<T>(qs: string, fallback: T): Promise<T> {
     try {

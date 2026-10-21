@@ -21,6 +21,7 @@
 import { buildChartSeries } from "@/lib/chart-series";
 import { getApi } from "./polkadot";
 import { getPool } from "./mainnet-anchors";
+import { hostApi } from "./host-api";
 
 /** Shape mirrors the Supabase `event_payload_data` columns the events UI selects. */
 export type MainnetRecordRow = {
@@ -191,7 +192,7 @@ function queryString(q: RecordQuery): string {
     return p.toString();
 }
 
-const REMOTE_ROWS_URL = process.env.MAINNET_RECORDS_URL || "http://139.59.11.86/mainnet-api/records";
+const REMOTE_ROWS_URL = hostApi("records", process.env.MAINNET_RECORDS_URL);
 const REMOTE_TIMEOUT_MS = 25_000;
 
 // Process-wide state (Next.js bundles this module once per route; globalThis is shared).

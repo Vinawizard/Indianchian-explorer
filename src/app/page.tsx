@@ -63,6 +63,12 @@ export default async function Home() {
         <div className="page">
             <Aurora />
             <Hero figures={<MetricCards latestBlock={blocks.best || null} totalRecords={summary?.totalEvents || null} anchored={summary?.anchored ?? null} network={network} />} />
+            <div className="mt-8">
+                <LiveFeed
+                    blocks={blocks.blocks.map((b) => ({ number: b.number, hash: b.hash, extrinsicsCount: b.extrinsics, timestamp: b.timestamp }))}
+                    finalized={blocks.finalized || null} records={records.rows} anchors={anchors.batches} network={network}
+                />
+            </div>
             {daily.length > 0 && (
                 <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <TrendChart title="Network activity" subtitle="Global transactions & protocol events" mode="step" days={daily.map((x) => x.day)}
@@ -75,12 +81,6 @@ export default async function Home() {
                         ]} />
                 </div>
             )}
-            <div className="mt-8">
-                <LiveFeed
-                    blocks={blocks.blocks.map((b) => ({ number: b.number, hash: b.hash, extrinsicsCount: b.extrinsics, timestamp: b.timestamp }))}
-                    finalized={blocks.finalized || null} records={records.rows} anchors={anchors.batches} network={network}
-                />
-            </div>
         </div>
     );
 }
