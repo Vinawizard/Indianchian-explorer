@@ -6,6 +6,7 @@ import { listBlocks } from "@/lib/block-data";
 import { previewOnline } from "@/lib/preview-status";
 import { SearchBar } from "@/components/layout/search-bar";
 import { MetricCards } from "@/components/home/metric-cards";
+import { Aurora } from "@/components/home/aurora";
 import { LiveFeed } from "@/components/home/live-feed";
 import { TrendChart } from "@/components/charts/trend-chart";
 import { ACTIVITY, INK, SERIES, TINT } from "@/components/charts/palette";
@@ -43,6 +44,7 @@ export default async function Home() {
         const up = await previewOnline();
         return (
             <div className="page">
+                <Aurora />
                 <Hero />
                 <div className="card mt-8"><Empty title={up ? "Preview" : "Preview network offline"} action={<Link href="/events" className="btn">Events</Link>} /></div>
             </div>
@@ -59,6 +61,7 @@ export default async function Home() {
 
     return (
         <div className="page">
+            <Aurora />
             <Hero figures={<MetricCards latestBlock={blocks.best || null} totalRecords={summary?.totalEvents || null} anchored={summary?.anchored ?? null} network={network} />} />
             {daily.length > 0 && (
                 <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">

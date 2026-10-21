@@ -32,9 +32,11 @@ No green or amber. Status is a chip: blue with a check when done, quiet grey wit
 
 - `.card`: dark glass, `rgba(5,6,14,.38)` to `rgba(0,0,0,.5)`, `blur(24px) saturate(160%)`, a 1px rim
   (blue top-left, red bottom-right, lit under the cursor). Radius 16px. No grey fills, no header bands.
-- Backdrop: one fixed layer behind every page (`.aurora`): black, Trivolve blue and red light
-  drifting slowly (four transform-only CSS loops, 44-60 s), the plus-sign grid on top. Boxes never
-  carry their own gradient, so every box shows the same colours moving behind it.
+- Backdrop: one fixed layer behind every page (`.backdrop`): black, a still Trivolve blue glow
+  top-left and red bottom-right, the plus-sign grid. Boxes never carry their own gradient.
+- Landing page only (`.aurora`): the same light moving, four transform-only CSS loops (26-34 s).
+  Measured with Playwright on the backdrop alone across the loop: brightest hero point (p99)
+  luminance 0.012, so the `#888` labels stay at 4.78:1 or better and white text at 16.9:1.
 - `.panel`: the card's rim with nothing inside, fully see-through; used for the landing hero.
 
 ## Tables
@@ -49,7 +51,7 @@ Hover: a blue sweep and a 2px blue bar on the left; copy buttons appear on hover
   items (spring, 0.35s, no bounce).
 - Live feed: a new block slides in at the top (220ms ease-out). Nothing blinks or pulses.
 - Range and feed switches: the white thumb slides the same way.
-- Charts draw once on load and on a range change. Reduced motion stops the backdrop and removes movement.
+- Charts draw once on load and on a range change. Reduced motion stops the landing light and removes movement.
 
 ## Charts
 

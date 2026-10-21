@@ -20,8 +20,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         // Font variables live on <html> so every token that references them resolves.
         <html lang="en" className={`dark ${doto.variable}`}>
             <body className="min-h-screen flex flex-col">
-                {/* the moving Trivolve light behind every page (CSS only, see globals.css) */}
-                <div className="aurora" aria-hidden><i className="a1" /><i className="a2" /><i className="a3" /><i className="a4" /></div>
+                {/* the Trivolve light behind every page (still; the landing page adds the moving one) */}
+                <div className="backdrop" aria-hidden />
                 <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 btn btn-white">
                     Skip to content
                 </a>
