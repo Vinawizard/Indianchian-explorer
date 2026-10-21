@@ -66,89 +66,62 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                 }
             />
 
-            <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
-                <div className="min-w-0 space-y-6 lg:col-span-8">
-                    <section className="card" aria-labelledby="rec">
-                        <div className="card-head"><div><h2 id="rec" className="section-title">Event</h2><p className="card-sub">{typeLabel} · version {r.version}</p></div></div>
-                        <KV rows={[
-                            { label: "Event ID", value: <Hash value={rid} full /> },
-                            { label: "Type", value: typeLabel },
-                            { label: "Version", value: <span className="num">{r.version}</span> },
-                            ...(r.farmer_id && r.record_type !== "farmer" ? [{ label: "Farmer", value: <span className="inline-flex flex-wrap items-center gap-3"><Hash value={r.farmer_id} href={`/record/${r.farmer_id}`} head={13} tail={12} /><Link href={`/events?farmer=${r.farmer_id}`} className="label transition-colors hover:text-white">All events</Link></span> }] : []),
-                            ...(r.record_type === "farmer" ? [{ label: "Linked events", value: <Link href={`/events?farmer=${rid}`} className="link">Agricultural and credit events</Link> }] : []),
-                            ...(r.parent_record_id && r.parent_record_id !== r.farmer_id ? [{ label: "Linked to", value: <Hash value={r.parent_record_id} href={`/record/${r.parent_record_id}`} head={13} tail={12} /> }] : []),
-                            { label: "Recorded at", value: <span className="num">{utc(r.timestamp)}</span> },
-                        ]} />
-                    </section>
+            <div className="space-y-6">
+                <section className="card" aria-labelledby="rec">
+                    <div className="card-head"><div><h2 id="rec" className="section-title">Event</h2><p className="card-sub">{typeLabel} · version {r.version}</p></div></div>
+                    <KV rows={[
+                        { label: "Event ID", value: <Hash value={rid} full /> },
+                        { label: "Type", value: typeLabel },
+                        { label: "Version", value: <span className="num">{r.version}</span> },
+                        ...(r.farmer_id && r.record_type !== "farmer" ? [{ label: "Farmer", value: <span className="inline-flex flex-wrap items-center gap-3"><Hash value={r.farmer_id} href={`/record/${r.farmer_id}`} head={13} tail={12} /><Link href={`/events?farmer=${r.farmer_id}`} className="label transition-colors hover:text-white">All events</Link></span> }] : []),
+                        ...(r.record_type === "farmer" ? [{ label: "Linked events", value: <Link href={`/events?farmer=${rid}`} className="link">Agricultural and credit events</Link> }] : []),
+                        ...(r.parent_record_id && r.parent_record_id !== r.farmer_id ? [{ label: "Linked to", value: <Hash value={r.parent_record_id} href={`/record/${r.parent_record_id}`} head={13} tail={12} /> }] : []),
+                        { label: "Recorded at", value: <span className="num">{utc(r.timestamp)}</span> },
+                    ]} />
+                </section>
 
-                    <section className="card" aria-labelledby="chain">
-                        <div className="card-head"><div><h2 id="chain" className="section-title">IndianChain</h2><p className="card-sub">Block {r.block_number} · extrinsic {r.tx_index ?? "—"}</p></div></div>
-                        <KV rows={[
-                            { label: "Block", value: <Link href={`/block/${r.block_number}`} className="num link">#{r.block_number}</Link> },
-                            { label: "Finalized at", value: <span className="num">{utc(r.confirmed_at)}</span> },
-                            { label: "Transaction", value: <Hash value={r.tx_hash} full /> },
-                            { label: "Extrinsic", value: <span className="num">{r.tx_index ?? "—"}</span> },
-                            { label: "Payload hash", value: <Hash value={r.payload_hash} full /> },
-                            { label: "Submitter", value: <Hash value={r.signer_address} head={10} tail={8} /> },
-                        ]} />
-                    </section>
+                <section className="card" aria-labelledby="chain">
+                    <div className="card-head"><div><h2 id="chain" className="section-title">IndianChain</h2><p className="card-sub">Block {r.block_number} · extrinsic {r.tx_index ?? "—"}</p></div></div>
+                    <KV rows={[
+                        { label: "Block", value: <Link href={`/block/${r.block_number}`} className="num link">#{r.block_number}</Link> },
+                        { label: "Finalized at", value: <span className="num">{utc(r.confirmed_at)}</span> },
+                        { label: "Transaction", value: <Hash value={r.tx_hash} full /> },
+                        { label: "Extrinsic", value: <span className="num">{r.tx_index ?? "—"}</span> },
+                        { label: "Payload hash", value: <Hash value={r.payload_hash} full /> },
+                        { label: "Submitter", value: <Hash value={r.signer_address} head={10} tail={8} /> },
+                    ]} />
+                </section>
 
-                    <section className="card" aria-labelledby="cardano">
-                        <div className="card-head">
-                            <div><h2 id="cardano" className="section-title">Cardano anchor</h2><p className="card-sub">{anchored && r.batch_index != null ? `Batch ${fmtInt(r.batch_index)}` : "Pending"}</p></div>
-                            {anchored && (
-                                <div className="flex flex-wrap gap-2">
-                                    <a href={`${VERIFY_API}/api/mainnet/records/${rid}/proof?version=${r.version}`} target="_blank" rel="noopener noreferrer" className="btn !h-9">Verify proof<ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></a>
-                                    {r.cardano_tx_hash && <a href={cardanoscanTx(network, r.cardano_tx_hash)} target="_blank" rel="noopener noreferrer" className="btn !h-9">Cardanoscan<ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></a>}
-                                </div>
-                            )}
-                        </div>
-                        {anchored ? (
-                            <KV rows={[
-                                { label: "Batch", value: r.batch_index != null ? <Link href={`/anchor/${r.batch_index}`} className="num link">#{fmtInt(r.batch_index)}</Link> : "—" },
-                                { label: "Merkle root", value: <Hash value={r.merkle_root ?? batch?.merkle_root} full /> },
-                                { label: "Cardano tx", value: r.cardano_tx_hash ? <Hash value={r.cardano_tx_hash} href={cardanoscanTx(network, r.cardano_tx_hash)} external full /> : "—" },
-                                { label: "Anchored at", value: <span className="num">{utc(batch?.confirmed_at)}</span> },
-                            ]} />
-                        ) : (
-                            <div className="flex items-center gap-3 px-8 pb-8"><Status>Pending</Status><span className="text-[10px] uppercase tracking-[0.1em] text-muted">Included in the next anchor batch</span></div>
+                <section className="card" aria-labelledby="cardano">
+                    <div className="card-head">
+                        <div><h2 id="cardano" className="section-title">Cardano anchor</h2><p className="card-sub">{anchored && r.batch_index != null ? `Batch ${fmtInt(r.batch_index)}` : "Pending"}</p></div>
+                        {anchored && (
+                            <div className="flex flex-wrap gap-2">
+                                <a href={`${VERIFY_API}/api/mainnet/records/${rid}/proof?version=${r.version}`} target="_blank" rel="noopener noreferrer" className="btn !h-9">Verify proof<ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></a>
+                                {r.cardano_tx_hash && <a href={cardanoscanTx(network, r.cardano_tx_hash)} target="_blank" rel="noopener noreferrer" className="btn !h-9">Cardanoscan<ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></a>}
+                            </div>
                         )}
-                    </section>
-                </div>
+                    </div>
+                    {anchored ? (
+                        <KV rows={[
+                            { label: "Batch", value: r.batch_index != null ? <Link href={`/anchor/${r.batch_index}`} className="num link">#{fmtInt(r.batch_index)}</Link> : "—" },
+                            { label: "Merkle root", value: <Hash value={r.merkle_root ?? batch?.merkle_root} full /> },
+                            { label: "Cardano tx", value: r.cardano_tx_hash ? <Hash value={r.cardano_tx_hash} href={cardanoscanTx(network, r.cardano_tx_hash)} external full /> : "—" },
+                            { label: "Anchored at", value: <span className="num">{utc(batch?.confirmed_at)}</span> },
+                        ]} />
+                    ) : (
+                        <div className="flex items-center gap-3 px-8 pb-8"><Status>Pending</Status><span className="text-[10px] uppercase tracking-[0.1em] text-muted">Included in the next anchor batch</span></div>
+                    )}
+                </section>
 
-                <aside className="min-w-0 space-y-6 lg:col-span-4">
-                    <section className="card" aria-labelledby="versions">
-                        <div className="card-head"><div><h2 id="versions" className="section-title">Versions</h2><p className="card-sub">{versions.length} on chain</p></div></div>
-                        <ol>
-                            {[...versions].reverse().map((v) => {
-                                const on = v.version === r.version;
-                                const va = v.batch_index != null || !!v.cardano_tx_hash;
-                                return (
-                                    <li key={v.payload_id}>
-                                        <Link href={recordHref(rid, v.version)} aria-current={on ? "page" : undefined}
-                                            className={`grid grid-cols-[44px_1fr_auto] items-center gap-3 px-8 py-4 transition-colors duration-200 ${on ? "bg-[linear-gradient(90deg,rgba(0,24,254,0.16),transparent_75%)] shadow-[inset_2px_0_0_var(--blue-line)]" : "hover:bg-[linear-gradient(90deg,rgba(0,24,254,0.1),transparent_70%)]"}`}>
-                                            <span className={`num text-[14px] ${on ? "text-white" : "text-white/50"}`}>v{v.version}</span>
-                                            <span className="min-w-0">
-                                                <span className="num block text-[12px] text-white/80">#{v.block_number}</span>
-                                                <span className="block text-[10px] uppercase tracking-[0.1em] text-muted"><TimeAgo iso={v.confirmed_at} /></span>
-                                            </span>
-                                            <Status tone={va ? "positive" : "neutral"}>{va ? "Anchored" : "Pending"}</Status>
-                                        </Link>
-                                    </li>
-                                );
-                            })}
-                        </ol>
-                    </section>
-
-                    <details className="card group">
-                        <summary className="card-head cursor-pointer list-none">
-                            <div><h2 className="section-title">JSON</h2><p className="card-sub">Json_export</p></div>
-                            <span className="label group-open:hidden">Show</span>
-                            <span className="label hidden group-open:inline">Hide</span>
-                        </summary>
-                        <JsonView data={raw} />
-                    </details>
-                </aside>
+                <details className="card group">
+                    <summary className="card-head cursor-pointer list-none">
+                        <div><h2 className="section-title">JSON</h2><p className="card-sub">Json_export</p></div>
+                        <span className="label group-open:hidden">Show</span>
+                        <span className="label hidden group-open:inline">Hide</span>
+                    </summary>
+                    <JsonView data={raw} />
+                </details>
             </div>
         </div>
     );
