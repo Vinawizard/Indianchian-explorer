@@ -37,11 +37,11 @@ export function StatBox({ label, items }: { label: string; items: { value: strin
     return (
         <div className="glass rounded-[12px] px-5 py-4">
             <p className="text-[10px] uppercase tracking-[0.1em] text-muted">{label}</p>
-            <div className="mt-2.5 flex items-center gap-4">
+            <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-3">
                 {items.map((it, i) => (
                     <Fragment key={it.unit}>
                         {i > 0 && <span aria-hidden className="h-4 w-px bg-white/15" />}
-                        <span className="inline-flex items-baseline gap-2"><DotNum value={it.value} className="fig-sm" /><span className="text-[10px] uppercase tracking-[0.05em] text-blue-text">{it.unit}</span></span>
+                        <span className="inline-flex items-end gap-2"><DotNum value={it.value} /><span className="mb-[2px] text-[10px] uppercase leading-none tracking-[0.05em] text-blue-text">{it.unit}</span></span>
                     </Fragment>
                 ))}
             </div>

@@ -180,8 +180,8 @@ function FarmerTrace({ farmer, rows, failed }: { farmer: string; rows: MainnetRe
                     ["Anchored", anchored],
                 ].map(([l, v]) => (
                     <div key={l as string} className="flex flex-col items-center gap-3 px-5 py-8 text-center">
-                        <DotNum value={fmtInt(v as number)} className="!text-[36px]" />
-                        <div className="text-[10px] uppercase tracking-[0.2em] text-white/70">{l}</div>
+                        <DotNum value={fmtInt(v as number)} />
+                        <div className="text-[11px] uppercase tracking-[0.16em] text-white/70">{l}</div>
                     </div>
                 ))}
             </section>

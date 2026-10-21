@@ -1,8 +1,6 @@
-/** A figure in the wordmark's dot matrix; thousands separators are pulled in so the digits read as one number. */
+import { DotText } from "./dot-text";
+
+/** A figure in the wordmark's dot matrix, drawn on the 4px dot grid (see DotText). */
 export function DotNum({ value, className = "" }: { value: string; className?: string }) {
-    return (
-        <span className={`fig ${className}`}>
-            {value.split(/(,)/).map((part, i) => (part === "," ? <span key={i} className="sep">,</span> : part))}
-        </span>
-    );
+    return <DotText text={value} cell={4} label={value} descender className={className} />;
 }

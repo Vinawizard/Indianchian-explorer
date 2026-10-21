@@ -9,8 +9,8 @@ type Props = { latestBlock: number | null; totalRecords: number | null; anchored
 const fmt = (n: number | null) => (n == null ? "—" : n.toLocaleString("en-US"));
 
 /**
- * The three headline figures in the hero, set in the wordmark's dot matrix on one baseline and
- * divided by hairlines. Latest block and the chain's event counter refresh every block.
+ * The three headline figures in the hero, drawn in the wordmark's dot matrix on the same 4px dot
+ * grid, centred in three equal columns divided by hairlines. Latest block and the chain's event counter refresh every block.
  */
 export function MetricCards({ latestBlock, totalRecords, anchored, network }: Props) {
     const [block, setBlock] = useState(latestBlock);
@@ -41,10 +41,10 @@ export function MetricCards({ latestBlock, totalRecords, anchored, network }: Pr
         <section aria-label="Network figures" className="grid grid-cols-1 sm:grid-cols-3">
             {cards.map(({ label, value, icon: Icon, href }, i) => (
                 <Link key={label} href={href}
-                    className={`group flex flex-col items-center gap-4 px-4 py-8 text-center sm:py-2 ${i > 0 ? "border-t border-white/10 sm:border-l sm:border-t-0" : ""}`}>
+                    className={`group flex flex-col items-center gap-4 px-4 py-8 text-center sm:py-0 ${i > 0 ? "border-t border-white/10 sm:border-l sm:border-t-0" : ""}`}>
                     <DotNum value={value} className="transition-colors duration-200 group-hover:text-[#c9cfff]" />
-                    <span className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/70 transition-colors duration-200 group-hover:text-white">
-                        <Icon className="h-3.5 w-3.5 text-blue-text" aria-hidden />{label}
+                    <span className="inline-flex items-center gap-2 text-[11px] leading-4 uppercase tracking-[0.16em] text-white/70 transition-colors duration-200 group-hover:text-white">
+                        <Icon className="h-[13px] w-[13px] text-blue-text" aria-hidden />{label}
                     </span>
                 </Link>
             ))}

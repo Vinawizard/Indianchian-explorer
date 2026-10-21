@@ -7,6 +7,7 @@ import { previewOnline } from "@/lib/preview-status";
 import { SearchBar } from "@/components/layout/search-bar";
 import { MetricCards } from "@/components/home/metric-cards";
 import { Aurora } from "@/components/home/aurora";
+import { DotText } from "@/components/ui/dot-text";
 import { LiveFeed } from "@/components/home/live-feed";
 import { TrendChart } from "@/components/charts/trend-chart";
 import { ACTIVITY, INK, SERIES, TINT } from "@/components/charts/palette";
@@ -23,14 +24,17 @@ const settle = async <T,>(p: Promise<T>, fallback: T): Promise<T> => { try { ret
  */
 function Hero({ figures }: { figures?: React.ReactNode }) {
     return (
-        <section className="panel spot mt-6 overflow-hidden px-5 pb-10 pt-16 text-center sm:px-10 sm:pb-12 sm:pt-20">
-            <h1 className="t-hero text-white">
-                <span className="dot">IndianChain</span>{" "}
-                <span className="block text-white/90 sm:inline">Explorer</span>
+        <section className="panel spot mt-6 overflow-hidden px-5 pb-14 pt-16 text-center sm:px-10 sm:pb-16 sm:pt-[72px]">
+            {/* the whole wordmark in Doto's dots, drawn on the 8px grid (5px on phones) */}
+            <h1 className="flex flex-col items-center gap-4 text-white">
+                <span className="sr-only">IndianChain Explorer</span>
+                <span className="hidden xl:block"><DotText text="IndianChain Explorer" cell={8} /></span>
+                <span className="hidden flex-col items-center gap-5 sm:flex xl:hidden"><DotText text="IndianChain" cell={8} /><DotText text="Explorer" cell={8} /></span>
+                <span className="flex flex-col items-center gap-4 sm:hidden"><DotText text="IndianChain" cell={5} /><DotText text="Explorer" cell={5} /></span>
             </h1>
             <div className="mx-auto mt-10 max-w-[640px] text-left"><SearchBar large /></div>
             {figures && (
-                <div className="mx-auto mt-14 max-w-[1200px] pt-10" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.12) 20%, rgba(255,255,255,0.12) 80%, transparent) top / 100% 1px no-repeat" }}>
+                <div className="mx-auto mt-16 max-w-[1200px] pt-12" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.12) 20%, rgba(255,255,255,0.12) 80%, transparent) top / 100% 1px no-repeat" }}>
                     {figures}
                 </div>
             )}

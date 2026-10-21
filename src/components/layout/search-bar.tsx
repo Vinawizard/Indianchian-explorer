@@ -61,10 +61,10 @@ export function SearchBar({ className = "", autoFocus, large }: { className?: st
                 autoFocus={autoFocus}
                 autoComplete="off"
                 spellCheck={false}
-                placeholder="Search block / tx hash / event ID…"
+                placeholder="Block / tx hash / event ID…"
                 aria-invalid={!!error}
                 aria-describedby={error ? `${id}-error` : undefined}
-                className={`field !normal-case !tracking-normal !text-[13px] pl-10 pr-10 placeholder:uppercase placeholder:tracking-[0.1em] placeholder:text-[10px] ${large ? "!h-[52px] !rounded-[12px] !pl-12 !text-[14px]" : "!h-[40px]"}`}
+                className={`field !normal-case !tracking-normal !text-[13px] pl-10 pr-10 placeholder:uppercase placeholder:tracking-[0.12em] placeholder:text-[11px] ${large ? "!h-[52px] !rounded-[12px] !pl-12 !text-[14px]" : "!h-[40px]"}`}
             />
             <span className="pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2">
                 {busy ? <Loader2 aria-hidden className="h-4 w-4 animate-spin text-faint" /> : <kbd className="hidden h-5 min-w-5 items-center justify-center rounded-[4px] border border-white/15 px-1.5 text-[10px] text-white/50 sm:inline-flex">/</kbd>}

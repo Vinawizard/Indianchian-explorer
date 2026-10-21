@@ -116,12 +116,6 @@
   .mono { font-size: 12px; font-variant-numeric: tabular-nums; }
   .code { font-family: var(--font-mono); font-size: 11px; line-height: 24px; }
   .dot { font-family: var(--font-dot); font-weight: 800; letter-spacing: 0.01em; }
-  /* figures in the same dot matrix as the wordmark; separators pulled in so the digits read as one number */
-  .fig { font-family: var(--font-dot); font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: 0; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  @media (min-width: 1024px) { .fig { font-size: 52px; } }
-  .fig-sm { font-size: 28px; }
-  @media (min-width: 1024px) { .fig-sm { font-size: 28px; } }
-  .fig .sep { display: inline-block; margin-inline: -0.12em 0.02em; }
 
   /* ---------- Boxes: dark see-through glass. The backdrop shows through, darker and frosted;
      only a hairline rim says where the glass is. ---------- */
