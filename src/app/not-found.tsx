@@ -1,17 +1,12 @@
 import Link from "next/link";
 import { Empty } from "@/components/ui/empty";
-import { PageHeader } from "@/components/ui/page-header";
 
 export default function NotFound() {
     return (
-        <div className="shell">
-            <PageHeader title="Not found" />
-            <section className="panel">
-                <Empty title="Nothing on IndianChain matches this address"
-                    action={<><Link href="/records" className="btn">Browse records</Link><Link href="/" className="btn">Overview</Link></>}>
-                    Check the ID, or search from the header: a block number, a block or transaction hash, a record ID or a farmer ID.
-                </Empty>
-            </section>
+        <div className="page pt-10">
+            <div className="card">
+                <Empty title="Not found" action={<><Link href="/" className="btn">Home</Link><Link href="/records" className="btn">Records</Link></>} />
+            </div>
         </div>
     );
 }

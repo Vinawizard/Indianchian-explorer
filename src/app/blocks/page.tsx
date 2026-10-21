@@ -22,29 +22,27 @@ export default async function BlocksPage({ searchParams }: { searchParams: Promi
     const last = data?.blocks[data.blocks.length - 1];
 
     return (
-        <div className="shell">
+        <div className="page">
             <PageHeader
-                crumbs={[{ label: "Overview", href: "/" }, { label: "Blocks" }]}
+                crumbs={[{ label: "IndianChain", href: "/" }, { label: "Blocks" }]}
                 title="Blocks"
-                meta={data ? <>Best block <span className="num text-ink">{fmtInt(data.best)}</span> · finalized <span className="num text-ink">{fmtInt(data.finalized)}</span> · a new block every 6 seconds.</> : undefined}
+                actions={data ? (<div className="card px-5 py-3 text-right"><p className="label">Finalized</p><p className="dot mt-1 text-2xl leading-none text-white">{fmtInt(data.finalized)}</p></div>) : undefined}
             />
-            <section className="panel" aria-label="Blocks">
+            <section className="card" aria-label="Blocks">
                 {!data ? (
-                    <Empty title="The node did not answer" action={<Link href="/blocks" className="btn">Try again</Link>}>
-                        {network === "preview" ? "The Preview testnet is offline." : "IndianChain could not be reached just now."}
-                    </Empty>
+                    <Empty title={network === "preview" ? "Preview network offline" : "Node unavailable"} action={<Link href="/blocks" className="btn">Retry</Link>} />
                 ) : (
                     <div className="overflow-x-auto">
                         <table className="table">
                             <caption className="sr-only">Blocks</caption>
-                            <thead><tr><th scope="col">Block</th><th scope="col">Produced</th><th scope="col">Time (UTC)</th><th scope="col">Hash</th><th scope="col" className="r">Extrinsics</th><th scope="col">Status</th></tr></thead>
+                            <thead><tr><th scope="col">Block</th><th scope="col">Age</th><th scope="col" className="hidden lg:table-cell">Timestamp (UTC)</th><th scope="col" className="hidden md:table-cell">Hash</th><th scope="col" className="r">Extrinsics</th><th scope="col">Status</th></tr></thead>
                             <tbody>
                                 {data.blocks.map((b) => (
                                     <tr key={b.number}>
-                                        <td><Link href={`/block/${b.number}`} className="num link">{fmtInt(b.number)}</Link></td>
+                                        <td><Link href={`/block/${b.number}`} className="num font-semibold text-white hover:text-blue-text">#{fmtInt(b.number)}</Link></td>
                                         <td className="text-muted"><TimeAgo iso={b.timestamp} /></td>
-                                        <td className="num text-[13px] text-faint">{utc(b.timestamp).replace(" UTC", "")}</td>
-                                        <td><Hash value={b.hash} head={10} tail={8} /></td>
+                                        <td className="num hidden text-[13px] text-white/50 lg:table-cell">{utc(b.timestamp).replace(" UTC", "")}</td>
+                                        <td className="hidden md:table-cell"><Hash value={b.hash} head={12} tail={8} /></td>
                                         <td className="r num text-muted">{b.extrinsics}</td>
                                         <td>{b.number <= data!.finalized ? <Status tone="positive">Finalized</Status> : <Status>Finalizing</Status>}</td>
                                     </tr>
@@ -54,9 +52,9 @@ export default async function BlocksPage({ searchParams }: { searchParams: Promi
                     </div>
                 )}
                 {data && (
-                    <div className="flex items-center justify-between border-t border-line px-4 py-3 text-[13px]">
-                        {before ? <Link href="/blocks" className="text-muted hover:text-ink">← Latest</Link> : <span className="text-faint">Latest blocks</span>}
-                        {last && last.number > 0 ? <Link href={`/blocks?before=${last.number}`} className="btn">Older blocks →</Link> : <span />}
+                    <div className="flex items-center justify-between border-t border-line px-6 py-4">
+                        {before ? <Link href="/blocks" className="btn">Latest</Link> : <span />}
+                        {last && last.number > 0 ? <Link href={`/blocks?before=${last.number}`} className="btn">Older</Link> : <span />}
                     </div>
                 )}
             </section>

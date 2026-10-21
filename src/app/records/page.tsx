@@ -69,61 +69,62 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
     if (farmer) return <FarmerTrace farmer={farmer} rows={rows} failed={failed} />;
 
     return (
-        <div className="shell">
+        <div className="page">
             <PageHeader
-                crumbs={[{ label: "Overview", href: "/" }, { label: "Records" }]}
+                crumbs={[{ label: "IndianChain", href: "/" }, { label: "Records" }]}
                 title="Records"
-                meta={total >= 0
-                    ? <><span className="num text-ink">{fmtInt(total)}</span> {filtered ? "records match these filters" : "records finalized on IndianChain"}, newest first.</>
-                    : "Every record version finalized on IndianChain, newest first."}
+                actions={total >= 0 ? (
+                    <div className="card px-5 py-3 text-right">
+                        <p className="label">{filtered ? "Matching" : "On chain"}</p>
+                        <p className="dot mt-1 text-2xl leading-none text-white">{fmtInt(total)}</p>
+                    </div>
+                ) : undefined}
             />
 
-            <form method="get" action="/records" className="panel mb-6 grid grid-cols-2 gap-x-4 gap-y-3 p-4 lg:grid-cols-[1fr_1fr_140px_140px_auto]">
-                <label className="flex flex-col gap-1.5 text-[13px] text-faint">
+            <form method="get" action="/records" className="mb-8 grid grid-cols-2 gap-x-4 gap-y-4 lg:grid-cols-[1fr_1fr_160px_160px_auto]">
+                <label className="label flex flex-col gap-2">
                     Record type
-                    <select name="type" defaultValue={type} className="control">
+                    <select name="type" defaultValue={type} className="field">
                         <option value="">All types</option>
                         <option value="farmer">Farmer</option>
                         <option value="agri_record">Agricultural record</option>
                         <option value="credit_app">Credit application</option>
                     </select>
                 </label>
-                <label className="flex flex-col gap-1.5 text-[13px] text-faint">
+                <label className="label flex flex-col gap-2">
                     Cardano anchor
-                    <select name="status" defaultValue={status} className="control">
+                    <select name="status" defaultValue={status} className="field">
                         <option value="">Any</option>
                         <option value="anchored">Anchored</option>
-                        <option value="confirmed">Waiting for anchor</option>
+                        <option value="confirmed">Pending</option>
                     </select>
                 </label>
-                <label className="flex flex-col gap-1.5 text-[13px] text-faint">
+                <label className="label flex flex-col gap-2">
                     From block
-                    <input name="start" inputMode="numeric" pattern="[0-9]*" defaultValue={start ?? ""} placeholder="0" className="control num" />
+                    <input name="start" inputMode="numeric" pattern="[0-9]*" defaultValue={start ?? ""} placeholder="0" className="field num" />
                 </label>
-                <label className="flex flex-col gap-1.5 text-[13px] text-faint">
+                <label className="label flex flex-col gap-2">
                     To block
-                    <input name="end" inputMode="numeric" pattern="[0-9]*" defaultValue={end ?? ""} placeholder="Latest" className="control num" />
+                    <input name="end" inputMode="numeric" pattern="[0-9]*" defaultValue={end ?? ""} placeholder="Latest" className="field num" />
                 </label>
                 <div className="col-span-2 flex items-end gap-2 lg:col-span-1">
-                    <button type="submit" className="btn btn-primary">Apply</button>
-                    {filtered && <Link href="/records" className="btn">Clear</Link>}
+                    <button type="submit" className="btn btn-blue !h-11">Apply</button>
+                    {filtered && <Link href="/records" className="btn !h-11">Reset</Link>}
                 </div>
             </form>
 
-            <section className="panel" aria-label="Records">
+            <section className="card" aria-label="Records">
                 {failed ? (
-                    <Empty title="Records could not be loaded" action={<Link href={keep({})} className="btn">Try again</Link>}>The records ledger did not answer in time.</Empty>
+                    <Empty title="Could not load records" action={<Link href={keep({})} className="btn">Retry</Link>} />
                 ) : rows.length === 0 ? (
-                    <Empty title="No records match" action={filtered ? <Link href="/records" className="btn">Clear filters</Link> : undefined}>
-                        {network === "mainnet" ? "Widen the block range or choose another type." : "The preview mirror has no records for these filters."}
-                    </Empty>
+                    <Empty title="No records found" action={filtered ? <Link href="/records" className="btn">Reset filters</Link> : undefined} />
                 ) : (
                     <RecordsTable rows={rows} caption="Records" />
                 )}
                 {(before || next) && (
-                    <div className="flex items-center justify-between border-t border-line px-4 py-3 text-[13px]">
-                        {before ? <Link href={keep({ before: null })} className="text-muted hover:text-ink">← Newest</Link> : <span />}
-                        {next ? <Link href={keep({ before: next })} className="btn">Older records →</Link> : <span className="text-faint">End of list</span>}
+                    <div className="flex items-center justify-between border-t border-line px-6 py-4">
+                        {before ? <Link href={keep({ before: null })} className="btn">Newest</Link> : <span />}
+                        {next ? <Link href={keep({ before: next })} className="btn">Older</Link> : <span className="label">End</span>}
                     </div>
                 )}
             </section>
@@ -139,34 +140,32 @@ function FarmerTrace({ farmer, rows, failed }: { farmer: string; rows: MainnetRe
     const order: Record<string, number> = { farmer: 0, agri_record: 1, credit_app: 2 };
     const sorted = [...rows].sort((a, b) => (order[a.record_type] ?? 9) - (order[b.record_type] ?? 9) || (a.record_id ?? "").localeCompare(b.record_id ?? "") || (a.version ?? 0) - (b.version ?? 0));
     return (
-        <div className="shell">
+        <div className="page">
             <PageHeader
-                crumbs={[{ label: "Overview", href: "/" }, { label: "Records", href: "/records" }, { label: `Farmer ${shortId(farmer)}` }]}
-                title={`Farmer ${shortId(farmer)}`}
-                meta="Every version of this farmer's record and every agricultural and credit record linked to it."
-                actions={<Link href={`/record/${farmer}`} className="btn">Open farmer record</Link>}
+                crumbs={[{ label: "Records", href: "/records" }, { label: `Farmer ${shortId(farmer)}` }]}
+                title="Farmer trace"
+                meta={<Hash value={farmer} full />}
+                actions={<Link href={`/record/${farmer}`} className="btn">Farmer record</Link>}
             />
-            <section className="panel mb-6 grid grid-cols-2 divide-x divide-[var(--line)] md:grid-cols-4">
+            <section className="wash-x mb-8 grid grid-cols-2 border border-white/10 md:grid-cols-4 [&>*+*]:border-l [&>*]:border-white/10">
                 {[
                     ["Farmer versions", count("farmer")],
-                    ["Agricultural records", distinct("agri_record"), `${count("agri_record")} versions`],
-                    ["Credit applications", distinct("credit_app"), `${count("credit_app")} versions`],
-                    ["Anchored on Cardano", anchored, `of ${rows.length} versions`],
-                ].map(([l, v, s]) => (
-                    <div key={l as string} className="px-5 py-4">
-                        <div className="text-[13px] text-faint">{l}</div>
-                        <div className="num mt-1.5 text-[22px] leading-8">{fmtInt(v as number)}</div>
-                        {s && <div className="mt-1 text-[12px] text-faint">{s}</div>}
+                    ["Agricultural", distinct("agri_record")],
+                    ["Credit", distinct("credit_app")],
+                    ["Anchored", anchored],
+                ].map(([l, v]) => (
+                    <div key={l as string} className="flex flex-col items-center gap-2 px-5 py-8 text-center">
+                        <div className="dot text-3xl leading-none text-white">{fmtInt(v as number)}</div>
+                        <div className="text-[12px] font-medium uppercase tracking-[0.12em] text-white/80">{l}</div>
                     </div>
                 ))}
             </section>
-            <div className="mb-3 flex items-center gap-2 text-[13px] text-faint">Farmer ID <Hash value={farmer} full /></div>
-            <section className="panel" aria-label="Farmer records">
+            <section className="card" aria-label="Farmer records">
                 {failed ? <Empty title="Records could not be loaded" />
-                    : rows.length === 0 ? <Empty title="No records on chain for this farmer yet">Records appear here once they are finalized on IndianChain.</Empty>
-                    : <RecordsTable rows={sorted} cols={["record", "version", "block", "time", "tx", "anchor"]} caption={`Records of farmer ${farmer}`} />}
+                    : rows.length === 0 ? <Empty title="No records on chain yet" />
+                    : <RecordsTable rows={sorted} cols={["record", "version", "block", "time", "anchor"]} caption={`Records of farmer ${farmer}`} />}
             </section>
-            {rows.length >= 300 && <p className="mt-3 text-[13px] text-faint">Showing the first 300 versions.</p>}
+            {rows.length >= 300 && <p className="label mt-3">First 300 versions</p>}
         </div>
     );
 }

@@ -11,7 +11,7 @@ export function Hash({ value, href, external, full, copy = true, head, tail, cla
 }) {
     if (!value) return <span className="text-faint">—</span>;
     const text = full ? value : shortHash(value, head, tail);
-    const body = <span className={`mono ${full ? "break-all" : "whitespace-nowrap"}`} title={full ? undefined : value}>{text}</span>;
+    const body = <span className={`mono ${full ? "break-all !text-[12.5px]" : "whitespace-nowrap"}`} title={full ? undefined : value}>{text}</span>;
     return (
         <span className={`inline-flex items-center gap-1 min-w-0 ${className}`}>
             {href ? (
@@ -21,7 +21,7 @@ export function Hash({ value, href, external, full, copy = true, head, tail, cla
                     <Link href={href} className="link min-w-0">{body}</Link>
                 )
             ) : (
-                <span className="text-ink min-w-0">{body}</span>
+                <span className="min-w-0 text-white/85">{body}</span>
             )}
             {copy && <CopyButton value={value} label="Copy to clipboard" />}
         </span>

@@ -3,77 +3,71 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, Search, X } from "lucide-react";
+import { Activity, Anchor, Box, Layers, Menu, X } from "lucide-react";
 import { SearchBar } from "./search-bar";
 import { NetworkSwitcher } from "./network-switcher";
 
-export const NAV = [
-    { href: "/", label: "Overview", match: (p: string) => p === "/" },
-    { href: "/records", label: "Records", match: (p: string) => p.startsWith("/record") || p.startsWith("/event") },
-    { href: "/blocks", label: "Blocks", match: (p: string) => p.startsWith("/block") },
-    { href: "/anchors", label: "Cardano anchors", match: (p: string) => p.startsWith("/anchor") },
+const NAV = [
+    { href: "/", label: "Home", icon: Activity, match: (p: string) => p === "/" },
+    { href: "/records", label: "Records", icon: Layers, match: (p: string) => p.startsWith("/record") || p.startsWith("/event") },
+    { href: "/blocks", label: "Blocks", icon: Box, match: (p: string) => p.startsWith("/block") },
+    { href: "/anchors", label: "Anchors", icon: Anchor, match: (p: string) => p.startsWith("/anchor") },
 ];
 
 export function Header() {
     const pathname = usePathname() || "/";
-    const [menu, setMenu] = useState(false);
-    const [search, setSearch] = useState(false);
-    useEffect(() => { setMenu(false); setSearch(false); }, [pathname]);
+    const [open, setOpen] = useState(false);
+    useEffect(() => setOpen(false), [pathname]);
 
     return (
-        <header className="sticky top-0 z-40 border-b border-line bg-ground">
-            <div className="shell flex h-14 items-center gap-6">
-                <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="IndianChain Explorer, home">
-                    <Image src="/trivolve-logo.png" alt="Trivolve Tech" width={98} height={32} priority className="h-8 w-auto" />
-                    <span aria-hidden className="h-5 w-px bg-line" />
-                    <span className="font-brand text-[13px] leading-none tracking-[0.02em] text-ink">Explorer</span>
+        <header className="sticky top-0 z-50 h-20 border-b border-white/5 bg-black/85 backdrop-blur-xl">
+            <div className="page flex h-full items-center gap-6">
+                <Link href="/" className="flex shrink-0 items-center" aria-label="IndianChain Explorer home">
+                    <Image src="/trivolve-logo.png" alt="Trivolve Tech" width={122} height={40} priority className="h-9 w-auto lg:h-10" />
                 </Link>
 
-                <nav aria-label="Main" className="hidden h-full items-stretch gap-6 lg:flex">
-                    {NAV.map((n) => (
-                        <Link key={n.href} href={n.href} aria-current={n.match(pathname) ? "page" : undefined} className="tab text-[14px] font-medium">
-                            {n.label}
-                        </Link>
-                    ))}
+                <nav aria-label="Main" className="hidden items-center gap-1 lg:flex">
+                    {NAV.map(({ href, label, icon: Icon, match }) => {
+                        const active = match(pathname);
+                        return (
+                            <Link key={href} href={href} aria-current={active ? "page" : undefined}
+                                className={`flex h-10 items-center gap-2 border-b-2 px-4 text-[11px] font-medium uppercase tracking-[0.14em] transition-colors ${active ? "border-blue bg-white/5 text-white" : "border-transparent text-faint hover:text-white"}`}>
+                                <Icon className={`h-3.5 w-3.5 ${active ? "text-blue-text" : ""}`} aria-hidden />
+                                {label}
+                            </Link>
+                        );
+                    })}
                 </nav>
 
-                <div className="ml-auto hidden items-center gap-3 md:flex">
-                    <SearchBar className="w-[300px] xl:w-[360px]" />
-                    <NetworkSwitcher />
-                </div>
+                <div className="mx-auto hidden w-full max-w-md lg:block">{pathname !== "/" && <SearchBar />}</div>
 
-                <div className="ml-auto flex items-center md:hidden">
-                    <button type="button" className="inline-flex h-10 w-10 items-center justify-center text-muted hover:text-ink" aria-label="Search" aria-expanded={search} onClick={() => { setSearch((v) => !v); setMenu(false); }}>
-                        <Search className="h-[18px] w-[18px]" aria-hidden />
-                    </button>
-                    <button type="button" className="inline-flex h-10 w-10 items-center justify-center text-muted hover:text-ink" aria-label={menu ? "Close menu" : "Open menu"} aria-expanded={menu} onClick={() => { setMenu((v) => !v); setSearch(false); }}>
-                        {menu ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
-                    </button>
-                </div>
-                <div className="hidden md:flex lg:hidden">
-                    <button type="button" className="inline-flex h-10 w-10 items-center justify-center text-muted hover:text-ink" aria-label={menu ? "Close menu" : "Open menu"} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
-                        {menu ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
+                <div className="ml-auto flex items-center gap-3 lg:ml-0">
+                    <NetworkSwitcher className="hidden lg:inline-flex" />
+                    <button type="button" onClick={() => setOpen((v) => !v)} aria-label={open ? "Close menu" : "Open menu"} aria-expanded={open}
+                        className="icon-btn h-10 w-10 lg:hidden">
+                        {open ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
                     </button>
                 </div>
             </div>
 
-            {search && (
-                <div className="border-t border-line md:hidden">
-                    <div className="shell py-3"><SearchBar autoFocus className="w-full" /></div>
-                </div>
-            )}
-            {menu && (
-                <div className="border-t border-line lg:hidden">
-                    <nav aria-label="Main" className="shell flex flex-col py-2">
-                        {NAV.map((n) => (
-                            <Link key={n.href} href={n.href} aria-current={n.match(pathname) ? "page" : undefined}
-                                className={`flex h-12 items-center text-[15px] ${n.match(pathname) ? "text-ink" : "text-muted hover:text-ink"}`}>
-                                {n.match(pathname) && <span aria-hidden className="mr-3 h-4 w-px bg-accent" />}
-                                {n.label}
-                            </Link>
-                        ))}
-                        <div className="py-3 md:hidden"><NetworkSwitcher /></div>
-                    </nav>
+            {open && (
+                <div className="fixed inset-0 top-20 z-40 bg-black lg:hidden">
+                    <div className="page flex flex-col gap-6 py-6">
+                        <SearchBar />
+                        <NetworkSwitcher className="w-full [&>*]:flex-1" />
+                        <nav aria-label="Main" className="flex flex-col gap-2">
+                            {NAV.map(({ href, label, icon: Icon, match }) => {
+                                const active = match(pathname);
+                                return (
+                                    <Link key={href} href={href} aria-current={active ? "page" : undefined}
+                                        className={`flex items-center gap-4 border-l-2 px-5 py-4 text-xs font-medium uppercase tracking-[0.14em] ${active ? "border-blue bg-white/5 text-white" : "border-transparent text-faint hover:bg-white/5 hover:text-white"}`}>
+                                        <Icon className={`h-4 w-4 ${active ? "text-blue-text" : ""}`} aria-hidden />
+                                        {label}
+                                    </Link>
+                                );
+                            })}
+                        </nav>
+                    </div>
                 </div>
             )}
         </header>
