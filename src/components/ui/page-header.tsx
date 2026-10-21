@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Fragment, type ReactNode } from "react";
+import { DotNum } from "./dot-num";
 
 export type Crumb = { label: string; href?: string };
 
@@ -31,16 +32,16 @@ export function PageHeader({ crumbs, title, meta, actions }: { crumbs?: Crumb[];
     );
 }
 
-/** The original "Network activity" box: a tracked label and figures with small blue units. */
-export function StatBox({ label, items }: { label: string; items: { value: ReactNode; unit: string }[] }) {
+/** The original "Network activity" box: a tracked label and dot-matrix figures with small blue units. */
+export function StatBox({ label, items }: { label: string; items: { value: string; unit: string }[] }) {
     return (
         <div className="glass rounded-[12px] px-5 py-4">
             <p className="text-[10px] uppercase tracking-[0.1em] text-muted">{label}</p>
-            <div className="mt-1.5 flex items-center gap-3">
+            <div className="mt-2.5 flex items-center gap-4">
                 {items.map((it, i) => (
                     <Fragment key={it.unit}>
-                        {i > 0 && <span aria-hidden className="h-3 w-px bg-white/15" />}
-                        <span className="num text-[20px] leading-none text-white">{it.value} <span className="text-[10px] uppercase tracking-[0.05em] text-blue-text">{it.unit}</span></span>
+                        {i > 0 && <span aria-hidden className="h-4 w-px bg-white/15" />}
+                        <span className="inline-flex items-baseline gap-2"><DotNum value={it.value} className="fig-sm" /><span className="text-[10px] uppercase tracking-[0.05em] text-blue-text">{it.unit}</span></span>
                     </Fragment>
                 ))}
             </div>

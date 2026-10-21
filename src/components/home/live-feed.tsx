@@ -46,17 +46,17 @@ export function LiveFeed({ blocks: initialBlocks, finalized: initialFinalized, r
     const more = tab === "blocks" ? { href: "/blocks", label: "All blocks" } : tab === "events" ? { href: "/events", label: "All events" } : { href: "/anchors", label: "All anchors" };
 
     return (
-        <section aria-labelledby="feed">
-            <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+        <section aria-labelledby="feed" className="card">
+            <div className="flex flex-col items-start gap-4 px-5 py-6 sm:flex-row sm:justify-between sm:px-8 sm:py-8">
                 <div>
-                    <h2 id="feed" className="text-[24px] font-normal uppercase leading-tight tracking-[-0.05em] text-white">Live feed</h2>
-                    <p className="card-sub !mt-1">Updates every ~6 seconds with network consensus</p>
+                    <h2 id="feed" className="section-title">Live feed</h2>
+                    <p className="card-sub">Updates every ~6 seconds with network consensus</p>
                 </div>
-                <Segmented label="Feed" value={tab} onChange={setTab}
+                <Segmented label="Feed" size="sm" value={tab} onChange={setTab}
                     options={[{ value: "blocks", label: "Blocks" }, { value: "events", label: "Events" }, { value: "anchors", label: "Anchors" }]} />
             </div>
 
-            <div className="card">
+            <div>
                 {tab === "blocks" && (
                     <div className="overflow-x-auto">
                         <table className="table">

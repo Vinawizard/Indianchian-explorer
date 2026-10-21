@@ -16,14 +16,23 @@ export const maxDuration = 60;
 
 const settle = async <T,>(p: Promise<T>, fallback: T): Promise<T> => { try { return await p; } catch { return fallback; } };
 
-function Hero() {
+/**
+ * The landing hero: one see-through panel over the moving Trivolve light, holding the wordmark,
+ * the search and the three network figures in the same dot matrix.
+ */
+function Hero({ figures }: { figures?: React.ReactNode }) {
     return (
-        <section className="wash-y spot relative mt-6 overflow-hidden rounded-[16px] border border-white/10 px-6 pb-12 pt-14 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:pb-14 sm:pt-16">
+        <section className="panel spot mt-6 overflow-hidden px-5 pb-10 pt-16 text-center sm:px-10 sm:pb-12 sm:pt-20">
             <h1 className="t-hero text-white">
-                <span className="dot font-extrabold">IndianChain</span>{" "}
+                <span className="dot">IndianChain</span>{" "}
                 <span className="block text-white/90 sm:inline">Explorer</span>
             </h1>
-            <div className="mx-auto mt-9 max-w-[640px] text-left"><SearchBar large /></div>
+            <div className="mx-auto mt-10 max-w-[640px] text-left"><SearchBar large /></div>
+            {figures && (
+                <div className="mx-auto mt-14 max-w-[1200px] pt-10" style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.12) 20%, rgba(255,255,255,0.12) 80%, transparent) top / 100% 1px no-repeat" }}>
+                    {figures}
+                </div>
+            )}
         </section>
     );
 }
@@ -50,18 +59,9 @@ export default async function Home() {
 
     return (
         <div className="page">
-            <Hero />
-            <div className="mt-6">
-                <MetricCards latestBlock={blocks.best || null} totalRecords={summary?.totalEvents || null} anchored={summary?.anchored ?? null} network={network} />
-            </div>
-            <div className="mt-12">
-                <LiveFeed
-                    blocks={blocks.blocks.map((b) => ({ number: b.number, hash: b.hash, extrinsicsCount: b.extrinsics, timestamp: b.timestamp }))}
-                    finalized={blocks.finalized || null} records={records.rows} anchors={anchors.batches} network={network}
-                />
-            </div>
+            <Hero figures={<MetricCards latestBlock={blocks.best || null} totalRecords={summary?.totalEvents || null} anchored={summary?.anchored ?? null} network={network} />} />
             {daily.length > 0 && (
-                <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
                     <TrendChart title="Network activity" subtitle="Global transactions & protocol events" mode="step" days={daily.map((x) => x.day)}
                         series={[{ key: "all", label: "Events", color: ACTIVITY, width: 2, tint: TINT.blue, fill: 0.3, ink: INK.blue, values: daily.map((x) => x.farmer + x.agri_record + x.credit_app) }]} />
                     <TrendChart title="Record distribution" subtitle="Sector-specific data visualization" mode="smooth" days={daily.map((x) => x.day)}
@@ -72,6 +72,12 @@ export default async function Home() {
                         ]} />
                 </div>
             )}
+            <div className="mt-8">
+                <LiveFeed
+                    blocks={blocks.blocks.map((b) => ({ number: b.number, hash: b.hash, extrinsicsCount: b.extrinsics, timestamp: b.timestamp }))}
+                    finalized={blocks.finalized || null} records={records.rows} anchors={anchors.batches} network={network}
+                />
+            </div>
         </div>
     );
 }

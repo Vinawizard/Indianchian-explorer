@@ -43,10 +43,8 @@
   --red: #ff0000;
   --red-text: #ff5c5c;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  /* trivolvetech.com: the plus-sign grid and the blue -> black -> red wash */
+  /* trivolvetech.com: the plus-sign grid */
   --plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='136' height='136'%3E%3Cpath d='M68 63v10M63 68h10' stroke='%23ffffff' stroke-opacity='0.09' stroke-width='1'/%3E%3C/svg%3E");
-  --wash-x: linear-gradient(85.91deg, rgba(0, 24, 254, 0.4) -19%, rgba(0, 0, 0, 0.4) 53.51%, rgba(255, 0, 0, 0.357) 118.99%);
-  --wash-y: linear-gradient(180deg, rgba(0, 24, 254, 0.32) -30%, rgba(0, 0, 0, 0.2) 48%, rgba(255, 0, 0, 0.26) 125%);
 }
 
 @layer base {
@@ -57,19 +55,6 @@
     font-family: var(--font-sans); font-size: 14px; line-height: 1.5;
     -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
   }
-  /* Trivolve light behind every page: blue from the top-left, red from the bottom-right, the plus
-     grid. Fixed to the viewport, so the glass boxes always have colour to frost. */
-  body::before {
-    content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
-    background:
-      var(--plus),
-      radial-gradient(900px 600px at 8% -6%, rgba(0, 24, 254, 0.30), transparent 62%),
-      radial-gradient(760px 520px at 100% 104%, rgba(255, 0, 0, 0.22), transparent 60%),
-      radial-gradient(640px 420px at 78% 38%, rgba(40, 60, 255, 0.09), transparent 65%),
-      radial-gradient(520px 380px at 18% 78%, rgba(255, 30, 30, 0.07), transparent 65%),
-      #000;
-    background-size: 136px 136px, auto, auto, auto, auto, auto;
-  }
   ::selection { background: var(--blue); color: #fff; }
   :focus-visible { outline: 2px solid var(--blue-line); outline-offset: 2px; border-radius: 4px; }
   input::placeholder { color: rgba(255, 255, 255, 0.5); }
@@ -77,9 +62,27 @@
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 99px; }
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; }
   }
 }
+
+/*
+ * The Trivolve light, one layer behind the whole site: blue, black and red drifting slowly
+ * (transform-only CSS animation, 40-60 s loops). Every box above it is see-through, so all of
+ * them show the same colours moving.
+ */
+.aurora { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: #000; }
+.aurora::after { content: ""; position: absolute; inset: 0; background-image: var(--plus); background-size: 136px 136px; }
+.aurora i { position: absolute; border-radius: 50%; will-change: transform; }
+.aurora .a1 { width: 78vmax; height: 78vmax; left: -30vmax; top: -42vmax; background: radial-gradient(closest-side, rgba(0, 24, 254, 0.62), rgba(0, 24, 254, 0.2) 55%, transparent); animation: drift1 44s ease-in-out infinite alternate; }
+.aurora .a2 { width: 74vmax; height: 74vmax; right: -30vmax; bottom: -44vmax; background: radial-gradient(closest-side, rgba(255, 0, 0, 0.5), rgba(255, 0, 0, 0.16) 55%, transparent); animation: drift2 52s ease-in-out infinite alternate; }
+.aurora .a3 { width: 52vmax; height: 52vmax; left: 46vw; top: -6vh; background: radial-gradient(closest-side, rgba(36, 56, 255, 0.24), transparent); animation: drift3 60s ease-in-out infinite alternate; }
+.aurora .a4 { width: 46vmax; height: 46vmax; left: -8vw; bottom: -14vh; background: radial-gradient(closest-side, rgba(255, 24, 24, 0.16), transparent); animation: drift4 48s ease-in-out infinite alternate; }
+@keyframes drift1 { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(22vw, 14vh, 0) scale(1.08); } 100% { transform: translate3d(8vw, 30vh, 0) scale(0.94); } }
+@keyframes drift2 { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(-24vw, -12vh, 0) scale(1.1); } 100% { transform: translate3d(-6vw, -30vh, 0) scale(0.95); } }
+@keyframes drift3 { 0% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(-30vw, 26vh, 0); } 100% { transform: translate3d(10vw, 44vh, 0); } }
+@keyframes drift4 { 0% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(34vw, -20vh, 0); } 100% { transform: translate3d(54vw, -6vh, 0); } }
+@media (prefers-reduced-motion: reduce) { .aurora i { animation: none !important; } }
 
 @layer components {
   /* Wide like the original (full width, 32px gutters), capped for very large screens */
@@ -91,7 +94,6 @@
   @media (min-width: 640px) { .t-hero { font-size: 48px; } }
   .t-title { font-size: 36px; line-height: 1; letter-spacing: -0.05em; font-weight: 400; text-transform: uppercase; }
   @media (min-width: 640px) { .t-title { font-size: 48px; } }
-  .t-figure { font-size: 30px; line-height: 1; letter-spacing: -0.025em; font-weight: 700; font-variant-numeric: tabular-nums; }
   .section-title { font-size: 20px; line-height: 1.2; font-weight: 400; text-transform: uppercase; letter-spacing: -0.05em; color: #fff; }
   .card-sub { margin-top: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); }
   .label { font-size: 10px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); }
@@ -100,16 +102,25 @@
   .mono { font-size: 12px; font-variant-numeric: tabular-nums; }
   .code { font-family: var(--font-mono); font-size: 11px; line-height: 24px; }
   .dot { font-family: var(--font-dot); font-weight: 800; letter-spacing: 0.01em; }
+  /* figures in the same dot matrix as the wordmark; separators pulled in so the digits read as one number */
+  .fig { font-family: var(--font-dot); font-weight: 800; font-size: 40px; line-height: 1; letter-spacing: 0; color: #fff; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  @media (min-width: 1024px) { .fig { font-size: 52px; } }
+  .fig-sm { font-size: 28px; }
+  @media (min-width: 1024px) { .fig-sm { font-size: 28px; } }
+  .fig .sep { display: inline-block; margin-inline: -0.12em 0.02em; }
 
   /* ---------- Boxes: dark see-through glass. The backdrop shows through, darker and frosted;
      only a hairline rim says where the glass is. ---------- */
   .card {
     position: relative; isolation: isolate; overflow: hidden; border-radius: 16px;
-    background: linear-gradient(180deg, rgba(5, 6, 14, 0.38), rgba(0, 0, 0, 0.5));
-    -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%);
+    background: linear-gradient(180deg, rgba(4, 5, 12, 0.34), rgba(0, 0, 0, 0.46));
+    -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 30px 60px -32px rgba(0, 0, 0, 0.9);
   }
-  .card::before {
+  /* .panel: the same rim with nothing inside it, for the landing hero: fully see-through */
+  .panel { position: relative; isolation: isolate; border-radius: 20px; background: linear-gradient(180deg, rgba(0, 0, 0, 0.02), rgba(0, 0, 0, 0.18)); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06); }
+  .panel > * { position: relative; z-index: 1; }
+  .card::before, .panel::before {
     content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; padding: 1px; pointer-events: none;
     background:
       radial-gradient(280px circle at var(--mx, -600px) var(--my, -600px), rgba(120, 135, 255, 0.6), transparent 70%),
@@ -199,9 +210,7 @@
   .icon-btn:hover { color: #fff; border-color: var(--blue-line); }
   .icon-btn:active { transform: scale(0.94); }
 
-  /* ---------- The Trivolve wash panels (hero, stats band) ---------- */
-  .wash-x { background-image: var(--plus), var(--wash-x); background-size: 136px 136px, auto; }
-  .wash-y { background-image: var(--plus), var(--wash-y); background-size: 136px 136px, auto; }
+  /* ---------- Cursor light on the see-through panels ---------- */
   .spot { position: relative; isolation: isolate; }
   .spot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
     background: radial-gradient(380px circle at var(--mx, -500px) var(--my, -500px), rgba(92, 110, 255, 0.10), transparent 65%); }
@@ -215,6 +224,7 @@
 
   @media (prefers-reduced-transparency: reduce) {
     .card, .glass, .btn, .field { -webkit-backdrop-filter: none; backdrop-filter: none; background: #0b0b10; }
+    .aurora i { opacity: 0.5; }
   }
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
     .card { background: rgba(6, 6, 12, 0.94); }

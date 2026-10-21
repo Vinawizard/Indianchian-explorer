@@ -3,14 +3,14 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { Box, Layers } from "lucide-react";
 import { CardanoIcon } from "@/components/ui/cardano-icon";
+import { DotNum } from "@/components/ui/dot-num";
 
 type Props = { latestBlock: number | null; totalRecords: number | null; anchored: number | null; network: string };
 const fmt = (n: number | null) => (n == null ? "—" : n.toLocaleString("en-US"));
 
 /**
- * The three headline figures as one Trivolve band (the blue -> black -> red wash with the plus
- * grid), the same treatment as the stats band on trivolvetech.com; figures set as in the original cards.
- * Latest block and the chain's record counter refresh every block.
+ * The three headline figures in the hero, set in the wordmark's dot matrix on one baseline and
+ * divided by hairlines. Latest block and the chain's event counter refresh every block.
  */
 export function MetricCards({ latestBlock, totalRecords, anchored, network }: Props) {
     const [block, setBlock] = useState(latestBlock);
@@ -38,13 +38,14 @@ export function MetricCards({ latestBlock, totalRecords, anchored, network }: Pr
         { label: "Anchored on Cardano", value: fmt(anchored), icon: CardanoIcon, href: "/anchors" },
     ];
     return (
-        <section aria-label="Network figures" className="wash-x grid grid-cols-1 overflow-hidden rounded-[16px] border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:grid-cols-3">
+        <section aria-label="Network figures" className="grid grid-cols-1 sm:grid-cols-3">
             {cards.map(({ label, value, icon: Icon, href }, i) => (
                 <Link key={label} href={href}
-                    className={`spot group flex flex-col items-center gap-3.5 px-6 py-10 text-center transition-colors duration-200 hover:bg-white/[0.03] ${i > 0 ? "border-t border-white/10 sm:border-l sm:border-t-0" : ""}`}>
-                    <Icon className="h-5 w-5 text-white/80 transition-transform duration-300 ease-out group-hover:-translate-y-0.5" aria-hidden />
-                    <span className="t-figure text-white">{value}</span>
-                    <span className="text-[10px] uppercase tracking-[0.2em] text-white/70">{label}</span>
+                    className={`group flex flex-col items-center gap-4 px-4 py-8 text-center sm:py-2 ${i > 0 ? "border-t border-white/10 sm:border-l sm:border-t-0" : ""}`}>
+                    <DotNum value={value} className="transition-colors duration-200 group-hover:text-[#c9cfff]" />
+                    <span className="inline-flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-white/70 transition-colors duration-200 group-hover:text-white">
+                        <Icon className="h-3.5 w-3.5 text-blue-text" aria-hidden />{label}
+                    </span>
                 </Link>
             ))}
         </section>

@@ -65,7 +65,7 @@ export function TrendChart({ title, subtitle, days, series, mode }: {
 
     return (
         <section className="card flex h-full flex-col" aria-label={title}>
-            <div className="flex flex-col items-start gap-4 px-8 pb-8 pt-8 sm:flex-row sm:justify-between">
+            <div className="flex flex-col items-start gap-4 px-5 py-6 sm:flex-row sm:justify-between sm:px-8 sm:py-8">
                 <div className="min-w-0">
                     <h2 className="section-title">{title}</h2>
                     <p className="card-sub">{subtitle}</p>

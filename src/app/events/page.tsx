@@ -11,6 +11,7 @@ import { PageHeader, StatBox } from "@/components/ui/page-header";
 import { RecordsTable } from "@/components/records/records-table";
 import { Empty } from "@/components/ui/empty";
 import { Hash } from "@/components/ui/hash";
+import { DotNum } from "@/components/ui/dot-num";
 
 export const revalidate = 0;
 export const maxDuration = 60;
@@ -171,7 +172,7 @@ function FarmerTrace({ farmer, rows, failed }: { farmer: string; rows: MainnetRe
                 meta={<Hash value={farmer} full />}
                 actions={<Link href={`/record/${farmer}`} className="btn">Farmer record<ChevronRight className="h-4 w-4" aria-hidden /></Link>}
             />
-            <section className="wash-x mb-10 grid grid-cols-2 overflow-hidden rounded-[16px] border border-white/10 md:grid-cols-4 [&>*+*]:border-l [&>*]:border-white/10">
+            <section className="panel mb-10 grid grid-cols-2 overflow-hidden md:grid-cols-4 [&>*+*]:border-l [&>*]:border-white/10">
                 {[
                     ["Farmer versions", count("farmer")],
                     ["Agricultural", distinct("agri_record")],
@@ -179,7 +180,7 @@ function FarmerTrace({ farmer, rows, failed }: { farmer: string; rows: MainnetRe
                     ["Anchored", anchored],
                 ].map(([l, v]) => (
                     <div key={l as string} className="flex flex-col items-center gap-3 px-5 py-8 text-center">
-                        <div className="t-figure text-white">{fmtInt(v as number)}</div>
+                        <DotNum value={fmtInt(v as number)} className="!text-[36px]" />
                         <div className="text-[10px] uppercase tracking-[0.2em] text-white/70">{l}</div>
                     </div>
                 ))}

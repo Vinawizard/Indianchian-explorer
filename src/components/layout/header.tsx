@@ -36,7 +36,7 @@ export function Header() {
                         const active = match(pathname);
                         return (
                             <Link key={href} href={href} aria-current={active ? "page" : undefined}
-                                className={`relative isolate flex h-9 items-center gap-2 px-5 text-[11px] uppercase tracking-[0.12em] transition-colors duration-150 ${active ? "text-white" : "text-muted hover:text-white"}`}>
+                                className={`relative isolate flex h-9 items-center gap-2 rounded-[8px] px-5 text-[11px] focus-visible:outline-1 focus-visible:outline-offset-[-1px] focus-visible:outline-white/40 uppercase tracking-[0.12em] transition-colors duration-150 ${active ? "text-white" : "text-muted hover:text-white"}`}>
                                 {active && (
                                     <motion.span layoutId="nav-plate" aria-hidden
                                         className="absolute inset-0 -z-10 overflow-hidden rounded-[8px] border border-white/[0.08] bg-white/[0.05]"

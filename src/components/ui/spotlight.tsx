@@ -10,7 +10,7 @@ export function Spotlight() {
     useEffect(() => {
         if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) return;
         let raf = 0, ev: PointerEvent | null = null, current: HTMLElement | null = null;
-        const SEL = ".card, .spot";
+        const SEL = ".card, .panel, .spot";
         const apply = () => {
             raf = 0;
             if (!ev) return;
