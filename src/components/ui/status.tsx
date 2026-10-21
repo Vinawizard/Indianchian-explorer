@@ -8,7 +8,7 @@ const CLS: Record<Tone, string> = { positive: "chip-green", warning: "chip-amber
 export function Status({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
     return (
         <span className={`chip ${CLS[tone]}`}>
-            {tone === "positive" && <Check className="h-3 w-3" strokeWidth={3} aria-hidden />}
+            {tone === "positive" && <Check className="h-2.5 w-2.5" strokeWidth={3.5} aria-hidden />}
             {children}
         </span>
     );

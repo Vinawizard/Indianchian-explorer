@@ -26,7 +26,7 @@ export default async function BlocksPage({ searchParams }: { searchParams: Promi
             <PageHeader
                 crumbs={[{ label: "IndianChain", href: "/" }, { label: "Blocks" }]}
                 title="Blocks"
-                actions={data ? (<div className="card px-5 py-3 text-right"><p className="label">Finalized</p><p className="dot mt-1 text-2xl leading-none text-white">{fmtInt(data.finalized)}</p></div>) : undefined}
+                actions={data ? (<div className="glass rounded-[14px] px-5 py-3 text-right"><p className="label">Finalized</p><p className="num mt-1 text-[22px] font-semibold leading-none tracking-[-0.02em] text-white">{fmtInt(data.finalized)}</p></div>) : undefined}
             />
             <section className="card" aria-label="Blocks">
                 {!data ? (

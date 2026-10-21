@@ -31,7 +31,7 @@ export function JsonView({ data, maxHeight = 460 }: { data: unknown; maxHeight?:
     return (
         <div className="relative">
             <div className="absolute right-3 top-3"><CopyButton value={JSON.stringify(data, null, 2)} label="Copy JSON" /></div>
-            <pre className="mono overflow-auto bg-black/40 px-6 py-5 text-[12.5px] leading-[1.7] text-white/80" style={{ maxHeight }}><Value v={data} indent={0} /></pre>
+            <pre className="mono overflow-auto bg-black/30 px-6 py-5 !text-[12px] leading-[1.75] text-white/80" style={{ maxHeight }}><Value v={data} indent={0} /></pre>
         </div>
     );
 }

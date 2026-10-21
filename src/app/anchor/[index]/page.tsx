@@ -41,7 +41,7 @@ export default async function AnchorPage({ params }: { params: Promise<{ index: 
         <div className="page">
             <PageHeader
                 crumbs={[{ label: "Cardano anchors", href: "/anchors" }, { label: `#${fmtInt(n)}` }]}
-                title={<>Anchor <span className="dot">#{fmtInt(n)}</span></>}
+                title={<>Anchor <span className="num font-normal text-white/60">#{fmtInt(n)}</span></>}
                 meta={
                     <>
                         <Status tone="positive">Confirmed</Status>
@@ -70,7 +70,7 @@ export default async function AnchorPage({ params }: { params: Promise<{ index: 
                 ]} />
             </section>
             <section className="card mt-6" aria-labelledby="sealed">
-                <div className="card-head"><h2 id="sealed" className="section-title">Records</h2><span className="dot text-lg text-white/60">{fmtInt(records.rows.length)}</span></div>
+                <div className="card-head"><h2 id="sealed" className="section-title">Records</h2><span className="chip chip-grey num">{fmtInt(records.rows.length)}</span></div>
                 {records.rows.length
                     ? <RecordsTable rows={records.rows} cols={["record", "version", "farmer", "block"]} caption="Records sealed in this anchor" />
                     : <Empty title="Could not load records" />}

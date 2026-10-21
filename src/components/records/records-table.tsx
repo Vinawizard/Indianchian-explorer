@@ -36,25 +36,25 @@ export function RecordsTable({ rows, cols = ALL, caption }: { rows: MainnetRecor
                                 {has("record") && (
                                     <td>
                                         <Link href={href} className="inline-flex items-baseline gap-3">
-                                            <span className="tag w-[104px]">{recordTypeShort(r.record_type)}</span>
+                                            <span className="tag w-[96px]">{recordTypeShort(r.record_type)}</span>
                                             <span className="mono link" title={id}>{shortId(id)}</span>
                                         </Link>
                                     </td>
                                 )}
-                                {has("version") && <td className="r num text-white/70">v{r.version ?? "—"}</td>}
+                                {has("version") && <td className="r num dim">v{r.version ?? "—"}</td>}
                                 {has("farmer") && (
                                     <td className="hidden lg:table-cell">
-                                        {r.farmer_id ? <Link href={`/records?farmer=${r.farmer_id}`} className="mono text-white/50 transition-colors hover:text-white" title={r.farmer_id}>{shortId(r.farmer_id)}</Link> : <span className="text-faint">—</span>}
+                                        {r.farmer_id ? <Link href={`/records?farmer=${r.farmer_id}`} className="mono text-white/55 transition-colors hover:text-white" title={r.farmer_id}>{shortId(r.farmer_id)}</Link> : <span className="text-faint">—</span>}
                                     </td>
                                 )}
-                                {has("block") && <td className="r hidden sm:table-cell"><Link href={`/block/${r.block_number}`} className="num text-white/70 transition-colors hover:text-white">#{fmtInt(r.block_number)}</Link></td>}
-                                {has("time") && <td className="hidden text-white/60 md:table-cell"><TimeAgo iso={r.confirmed_at} /></td>}
+                                {has("block") && <td className="r hidden sm:table-cell"><Link href={`/block/${r.block_number}`} className="num dim transition-colors hover:text-white">#{fmtInt(r.block_number)}</Link></td>}
+                                {has("time") && <td className="dim hidden md:table-cell"><TimeAgo iso={r.confirmed_at} /></td>}
                                 {has("tx") && <td className="hidden xl:table-cell"><span className="mono text-white/50" title={r.tx_hash ?? ""}>{shortHash(r.tx_hash, 10, 6)}</span></td>}
                                 {has("anchor") && (
                                     <td>
                                         <span className="inline-flex items-center gap-3">
                                             {anchored ? <Status tone="positive">Anchored</Status> : <Status tone="warning">Pending</Status>}
-                                            {r.batch_index != null && <Link href={`/anchor/${r.batch_index}`} className="num hidden text-[13px] text-white/50 hover:text-white sm:inline">#{fmtInt(r.batch_index)}</Link>}
+                                            {r.batch_index != null && <Link href={`/anchor/${r.batch_index}`} className="num hidden text-[13px] text-white/50 transition-colors hover:text-white sm:inline">#{fmtInt(r.batch_index)}</Link>}
                                         </span>
                                     </td>
                                 )}

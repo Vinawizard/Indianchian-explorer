@@ -24,7 +24,7 @@ export default async function AnchorsPage({ searchParams }: { searchParams: Prom
             <PageHeader
                 crumbs={[{ label: "IndianChain", href: "/" }, { label: "Anchors" }]}
                 title="Cardano anchors"
-                actions={data && data.total > 0 ? (<div className="card px-5 py-3 text-right"><p className="label">Transactions</p><p className="dot mt-1 text-2xl leading-none text-white">{fmtInt(data.total)}</p></div>) : undefined}
+                actions={data && data.total > 0 ? (<div className="glass rounded-[14px] px-5 py-3 text-right"><p className="label">Transactions</p><p className="num mt-1 text-[22px] font-semibold leading-none tracking-[-0.02em] text-white">{fmtInt(data.total)}</p></div>) : undefined}
             />
             <section className="card" aria-label="Cardano anchors">
                 {network !== "mainnet" ? <Empty title="Mainnet only" />

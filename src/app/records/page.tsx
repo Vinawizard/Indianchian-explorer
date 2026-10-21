@@ -74,9 +74,9 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
                 crumbs={[{ label: "IndianChain", href: "/" }, { label: "Records" }]}
                 title="Records"
                 actions={total >= 0 ? (
-                    <div className="card px-5 py-3 text-right">
+                    <div className="glass rounded-[14px] px-5 py-3 text-right">
                         <p className="label">{filtered ? "Matching" : "On chain"}</p>
-                        <p className="dot mt-1 text-2xl leading-none text-white">{fmtInt(total)}</p>
+                        <p className="num mt-1 text-[22px] font-semibold leading-none tracking-[-0.02em] text-white">{fmtInt(total)}</p>
                     </div>
                 ) : undefined}
             />
@@ -108,8 +108,8 @@ export default async function RecordsPage({ searchParams }: { searchParams: Prom
                     <input name="end" inputMode="numeric" pattern="[0-9]*" defaultValue={end ?? ""} placeholder="Latest" className="field num" />
                 </label>
                 <div className="col-span-2 flex items-end gap-2 lg:col-span-1">
-                    <button type="submit" className="btn btn-blue !h-11">Apply</button>
-                    {filtered && <Link href="/records" className="btn !h-11">Reset</Link>}
+                    <button type="submit" className="btn btn-blue !h-[42px]">Apply</button>
+                    {filtered && <Link href="/records" className="btn !h-[42px]">Reset</Link>}
                 </div>
             </form>
 
@@ -155,7 +155,7 @@ function FarmerTrace({ farmer, rows, failed }: { farmer: string; rows: MainnetRe
                     ["Anchored", anchored],
                 ].map(([l, v]) => (
                     <div key={l as string} className="flex flex-col items-center gap-2 px-5 py-8 text-center">
-                        <div className="dot text-3xl leading-none text-white">{fmtInt(v as number)}</div>
+                        <div className="t-figure !text-[28px] text-white">{fmtInt(v as number)}</div>
                         <div className="text-[12px] font-medium uppercase tracking-[0.12em] text-white/80">{l}</div>
                     </div>
                 ))}

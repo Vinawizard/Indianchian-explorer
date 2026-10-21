@@ -55,7 +55,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
         <div className="page">
             <PageHeader
                 crumbs={[{ label: "Records", href: "/records" }, { label: typeLabel, href: `/records?type=${r.record_type}` }, { label: shortId(rid) }]}
-                title={<>{typeLabel} <span className="dot text-white/70">v{r.version}</span></>}
+                title={<>{typeLabel} <span className="num font-normal text-white/60">v{r.version}</span></>}
                 meta={
                     <>
                         <Status tone="positive">Finalized</Status>
@@ -118,7 +118,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
 
                 <aside className="min-w-0 space-y-6 lg:col-span-4">
                     <section className="card" aria-labelledby="versions">
-                        <div className="card-head"><h2 id="versions" className="section-title">Versions</h2><span className="dot text-lg text-white/60">{versions.length}</span></div>
+                        <div className="card-head"><h2 id="versions" className="section-title">Versions</h2><span className="chip chip-grey num">{versions.length}</span></div>
                         <ol>
                             {[...versions].reverse().map((v) => {
                                 const on = v.version === r.version;
@@ -127,7 +127,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                                     <li key={v.payload_id} className="border-b border-rule last:border-b-0">
                                         <Link href={recordHref(rid, v.version)} aria-current={on ? "page" : undefined}
                                             className={`grid grid-cols-[48px_1fr_auto] items-center gap-3 border-l-2 px-5 py-3.5 transition-colors ${on ? "border-blue bg-white/[0.04]" : "border-transparent hover:bg-white/[0.02]"}`}>
-                                            <span className={`dot text-base ${on ? "text-white" : "text-white/50"}`}>v{v.version}</span>
+                                            <span className={`num text-[14px] font-semibold ${on ? "text-white" : "text-white/50"}`}>v{v.version}</span>
                                             <span className="min-w-0">
                                                 <span className="num block text-[13px] text-white/80">#{fmtInt(v.block_number)}</span>
                                                 <span className="block text-[12px] text-faint"><TimeAgo iso={v.confirmed_at} /></span>

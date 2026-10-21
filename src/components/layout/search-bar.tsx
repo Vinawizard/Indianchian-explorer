@@ -49,9 +49,9 @@ export function SearchBar({ className = "", autoFocus, large }: { className?: st
     }
 
     return (
-        <form role="search" onSubmit={submit} className={`relative ${className}`}>
+        <form role="search" onSubmit={submit} className={`relative ${large ? "glass-rim rounded-[14px]" : ""} ${className}`}>
             <label htmlFor={autoFocus ? "search-m" : "search"} className="sr-only">Search blocks, records, farmers and transactions</label>
-            <Search aria-hidden className={`pointer-events-none absolute top-1/2 -translate-y-1/2 text-faint ${large ? "left-4 h-5 w-5 text-white/60" : "left-3.5 h-4 w-4"}`} />
+            <Search aria-hidden className={`pointer-events-none absolute top-1/2 z-10 -translate-y-1/2 text-white/45 ${large ? "left-4 h-5 w-5 text-white/60" : "left-3.5 h-4 w-4"}`} />
             <input
                 id={autoFocus ? "search-m" : "search"}
                 ref={ref}
@@ -60,16 +60,16 @@ export function SearchBar({ className = "", autoFocus, large }: { className?: st
                 autoFocus={autoFocus}
                 autoComplete="off"
                 spellCheck={false}
-                placeholder="Block, hash, record or farmer ID"
+                placeholder="Search block, hash or ID"
                 aria-invalid={!!error}
                 aria-describedby={error ? "search-error" : undefined}
-                className={`field pl-10 pr-10 tracking-wide ${large ? "!h-14 bg-black/60 !pl-12 text-[15px] backdrop-blur-sm" : "bg-white/[0.03]"}`}
+                className={`field pl-10 pr-10 ${large ? "!h-[52px] !rounded-[14px] !bg-white/[0.07] !pl-12 text-[15px]" : "!h-[38px]"}`}
             />
-            <span className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2">
-                {busy ? <Loader2 aria-hidden className="h-4 w-4 animate-spin text-faint" /> : <kbd className="hidden h-5 items-center border border-line px-1.5 text-[11px] text-faint sm:inline-flex">/</kbd>}
+            <span className="pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2">
+                {busy ? <Loader2 aria-hidden className="h-4 w-4 animate-spin text-faint" /> : <kbd className="hidden h-5 min-w-5 items-center justify-center rounded-[5px] border border-white/15 bg-white/5 px-1.5 text-[11px] text-white/55 sm:inline-flex">/</kbd>}
             </span>
             {error && (
-                <p id="search-error" role="alert" className="absolute left-0 right-0 top-full z-50 mt-1 border border-line bg-[#0e0e0e] px-3 py-2.5 text-[13px] text-muted shadow-[0_12px_32px_rgba(0,0,0,0.6)]">
+                <p id="search-error" role="alert" className="glass absolute left-0 right-0 top-full z-50 mt-2 rounded-[12px] px-4 py-3 text-[13px] text-white/80">
                     {error}
                 </p>
             )}

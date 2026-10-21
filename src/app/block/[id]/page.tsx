@@ -34,7 +34,7 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
     if (!block) {
         return (
             <div className="page">
-                <PageHeader crumbs={crumbs} title={Number.isFinite(n) ? <>Block <span className="dot">#{fmtInt(n)}</span></> : "Block"} />
+                <PageHeader crumbs={crumbs} title={Number.isFinite(n) ? <>Block <span className="num font-normal text-white/60">#{fmtInt(n)}</span></> : "Block"} />
                 <section className="card">
                     {failed ? (
                         <Empty title={network === "preview" ? "Preview network offline" : "Node unavailable"} action={<Link href={`/block/${id}`} className="btn">Retry</Link>} />
@@ -54,7 +54,7 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
         <div className="page">
             <PageHeader
                 crumbs={crumbs}
-                title={<>Block <span className="dot">#{fmtInt(block.number)}</span></>}
+                title={<>Block <span className="num font-normal text-white/60">#{fmtInt(block.number)}</span></>}
                 meta={
                     <>
                         {block.finalized ? <Status tone="positive">Finalized</Status> : <Status>Finalizing</Status>}
@@ -82,7 +82,7 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
 
             {network === "mainnet" && (
                 <section className="card mt-6" aria-labelledby="records">
-                    <div className="card-head"><h2 id="records" className="section-title">Records</h2><span className="dot text-lg text-white/60">{fmtInt(records.rows.length)}</span></div>
+                    <div className="card-head"><h2 id="records" className="section-title">Records</h2><span className="chip chip-grey num">{fmtInt(records.rows.length)}</span></div>
                     {records.rows.length
                         ? <RecordsTable rows={records.rows} cols={["record", "version", "farmer", "anchor"]} caption="Records in this block" />
                         : <p className="label px-6 py-6">No records in this block</p>}
@@ -90,7 +90,7 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
             )}
 
             <section className="card mt-6" aria-labelledby="extrinsics">
-                <div className="card-head"><h2 id="extrinsics" className="section-title">Extrinsics</h2><span className="dot text-lg text-white/60">{block.extrinsics.length}</span></div>
+                <div className="card-head"><h2 id="extrinsics" className="section-title">Extrinsics</h2><span className="chip chip-grey num">{block.extrinsics.length}</span></div>
                 <div className="overflow-x-auto">
                     <table className="table">
                         <caption className="sr-only">Extrinsics</caption>

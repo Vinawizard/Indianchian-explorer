@@ -7,7 +7,7 @@ import { previewOnline } from "@/lib/preview-status";
 import { SearchBar } from "@/components/layout/search-bar";
 import { MetricCards } from "@/components/home/metric-cards";
 import { LiveFeed } from "@/components/home/live-feed";
-import { AnchoredChart } from "@/components/charts/anchored-chart";
+import { NetworkActivity } from "@/components/charts/network-activity";
 import { Distribution } from "@/components/charts/distribution";
 import { Empty } from "@/components/ui/empty";
 
@@ -18,11 +18,12 @@ const settle = async <T,>(p: Promise<T>, fallback: T): Promise<T> => { try { ret
 
 function Hero() {
     return (
-        <section className="wash-y relative mt-8 overflow-hidden rounded-2xl border border-white/10 px-6 pb-14 pt-16 text-center sm:pt-20">
-            <h1 className="heading text-[38px] leading-[1.05] sm:text-6xl">
-                <span className="dot">IndianChain</span> <span className="block sm:inline">Explorer</span>
+        <section className="wash-y relative mt-6 overflow-hidden rounded-[22px] border border-white/10 px-6 pb-12 pt-14 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:pb-14 sm:pt-16">
+            <h1 className="t-hero text-white">
+                <span className="dot font-extrabold">IndianChain</span>{" "}
+                <span className="block font-medium tracking-[0.02em] text-white/90 sm:inline">Explorer</span>
             </h1>
-            <div className="mx-auto mt-10 max-w-2xl text-left"><SearchBar large /></div>
+            <div className="mx-auto mt-9 max-w-[640px] text-left"><SearchBar large /></div>
         </section>
     );
 }
@@ -50,18 +51,18 @@ export default async function Home() {
     return (
         <div className="page">
             <Hero />
-            <div className="mt-8">
+            <div className="mt-6">
                 <MetricCards latestBlock={blocks.best || null} totalRecords={summary?.totalEvents || null} anchored={summary?.anchored ?? null} network={network} />
             </div>
-            <div className="mt-14">
+            <div className="mt-12">
                 <LiveFeed
                     blocks={blocks.blocks.map((b) => ({ number: b.number, hash: b.hash, extrinsicsCount: b.extrinsics, timestamp: b.timestamp }))}
                     finalized={blocks.finalized || null} records={records.rows} anchors={anchors.batches} network={network}
                 />
             </div>
-            <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-5">
-                <div className="lg:col-span-3"><AnchoredChart days={days} /></div>
-                <div className="lg:col-span-2"><Distribution counts={summary?.byType ?? null} /></div>
+            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                <NetworkActivity days={days} />
+                <Distribution counts={summary?.byType ?? null} />
             </div>
         </div>
     );

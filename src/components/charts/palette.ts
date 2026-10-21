@@ -9,5 +9,5 @@ export const SERIES = {
     credit_app: "#ff4242",   // Trivolve red
 } as const;
 export const BAR = SERIES.farmer;
-export const GRID = "#1c1c1c";
-export const TICK = "#8a8a8a";
+export const GRID = "rgba(255,255,255,0.07)";
+export const TICK = "rgba(255,255,255,0.5)";
