@@ -6,7 +6,8 @@ const H = { "Cache-Control": "public, max-age=30" };
 /**
  * Mainnet records for remote copies of the explorer, served from the node host.
  *   ?summary=1                       -> home-page totals + chart series (a few KB)
- *   ?status=&record_type=&start=&end=&find=&limit=   -> { rows (newest first, capped), total }
+ *   ?status=&record_type=&start=&end=&find=&farmer=&batch=&before=&nocount=&limit=
+ *                                    -> { rows (newest first, capped), total (-1 with nocount) }
  * Never returns every row: 100k+ rows is ~100 MB and breaks a serverless function.
  */
 export async function GET(req: Request) {
@@ -18,6 +19,8 @@ export async function GET(req: Request) {
     const r = await queryMainnetRecords({
         status: q.get("status") ?? undefined, record_type: q.get("record_type") ?? undefined,
         minBlock: num("start"), maxBlock: num("end"), find: q.get("find") ?? undefined, limit,
+        farmer: q.get("farmer") ?? undefined, batch: num("batch"), before: q.get("before") ?? undefined,
+        noCount: q.get("nocount") === "1",
     });
     return NextResponse.json(r, { headers: H });
 }

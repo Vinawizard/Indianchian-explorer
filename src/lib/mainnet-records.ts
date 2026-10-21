@@ -44,6 +44,10 @@ export type MainnetRecordRow = {
     payload_hash: string | null;
     merkle_root: string | null;
     cardano_tx_hash: string | null;
+    /** Cardano anchor batch this version is sealed in (null until anchored). */
+    batch_index?: number | null;
+    /** The record this version hangs off (agri -> farmer, credit -> first linked agri). */
+    parent_record_id?: string | null;
 };
 
 const IS_HOST = !!process.env.MAINNET_APP_DB_URL;
@@ -70,7 +74,8 @@ function within<T>(p: Promise<T>, ms: number, what: string): Promise<T> {
 }
 
 const ROW_COLS = `record_id, version, record_type, type, block_number, block_hash, tx_hash, tx_index, tx_fee,
-    signer_address, timestamp, chain_timestamp, farmer_id, payload_hash, merkle_root, cardano_tx_hash, l1_anchored`;
+    signer_address, timestamp, chain_timestamp, farmer_id, payload_hash, merkle_root, cardano_tx_hash, l1_anchored,
+    l1_batch_index, parent_id`;
 
 /** DB row -> the exact row the chain-sourced explorer produced. */
 function toRow(x: any): MainnetRecordRow {
@@ -96,6 +101,8 @@ function toRow(x: any): MainnetRecordRow {
         merkle_root: anchored ? x.merkle_root ?? null : null,
         cardano_tx_hash: anchored ? x.cardano_tx_hash ?? null : null,
         payload_hash: with0x(x.payload_hash),        // ledger stores bare hex; chain JSON had 0x
+        batch_index: anchored && x.l1_batch_index != null ? Number(x.l1_batch_index) : null,
+        parent_record_id: x.parent_id ?? null,
     };
 }
 
@@ -104,6 +111,10 @@ export type RecordQuery = {
     status?: string; record_type?: string;
     minBlock?: number | null; maxBlock?: number | null;
     find?: string;            // block number, payload_id, tx hash or record_id
+    farmer?: string;          // every record of one farmer (the farmer's versions and its agri / credit records)
+    batch?: number | null;    // the records sealed in one Cardano anchor batch
+    before?: string;          // keyset cursor "block:record_id:version": rows strictly after it in list order
+    noCount?: boolean;        // skip the total (unfiltered lists use the chain counter instead)
     limit?: number;           // rows returned (newest first); total is always the full match count
 };
 export const DEFAULT_ROW_LIMIT = 2000;
@@ -134,6 +145,22 @@ function buildWhere(q: RecordQuery): { sql: string; args: unknown[] } | null {
     if (rt) parts.push(`record_type = ${arg(rt)}`);
     if (q.minBlock != null) parts.push(`block_number >= ${arg(q.minBlock)}`);
     if (q.maxBlock != null) parts.push(`block_number <= ${arg(q.maxBlock)}`);
+    const farmer = q.farmer?.trim().toLowerCase();
+    if (farmer) {
+        if (!UUID.test(farmer)) return null;
+        // farmer rows carry their own id in farmer_id too; idx_payload_farmer serves both
+        parts.push(`(farmer_id = ${arg(farmer)} or (record_type = 'farmer' and record_id = ${arg(farmer)}))`);
+    }
+    if (q.batch != null) {
+        if (!Number.isInteger(q.batch) || q.batch < 0) return null;
+        parts.push(`payload_id in (select payload_id from l1_anchor_queue where batch_index = ${arg(q.batch)})`);
+    }
+    if (q.before) {
+        const m = q.before.match(/^(\d+):([0-9a-f-]{36}):(\d+)$/);
+        if (!m) return null;
+        const b = arg(Number(m[1])), r = arg(m[2]), v = arg(Number(m[3]));
+        parts.push(`(block_number < ${b} or (block_number = ${b} and (record_id > ${r} or (record_id = ${r} and version > ${v}))))`);
+    }
 
     const find = q.find?.trim().toLowerCase();
     if (find) {
@@ -156,6 +183,10 @@ function queryString(q: RecordQuery): string {
     if (q.minBlock != null) p.set("start", String(q.minBlock));
     if (q.maxBlock != null) p.set("end", String(q.maxBlock));
     if (q.find) p.set("find", q.find);
+    if (q.farmer) p.set("farmer", q.farmer);
+    if (q.batch != null) p.set("batch", String(q.batch));
+    if (q.before) p.set("before", q.before);
+    if (q.noCount) p.set("nocount", "1");
     p.set("limit", String(q.limit ?? DEFAULT_ROW_LIMIT));
     return p.toString();
 }
@@ -191,9 +222,10 @@ export async function queryMainnetRecords(q: RecordQuery): Promise<{ rows: Mainn
             const [rows, count] = await Promise.all([
                 pool.query(`select ${ROW_COLS} from extrinsic_payloads where ${w.sql}
                             order by block_number desc, record_id, version limit ${limit}`, w.args),
-                pool.query(`select count(*)::bigint as n from extrinsic_payloads where ${w.sql}`, w.args),
+                q.noCount ? Promise.resolve(null)
+                    : pool.query(`select count(*)::bigint as n from extrinsic_payloads where ${w.sql}`, w.args),
             ]);
-            const out = { rows: rows.rows.map(toRow), total: Number(count.rows[0].n) };
+            const out = { rows: rows.rows.map(toRow), total: count ? Number(count.rows[0].n) : -1 };
             if (S.lastGood.size > 200) S.lastGood.clear();
             S.lastGood.set(key, out);
             return out;
@@ -235,6 +267,9 @@ export async function chainTotalRecords(): Promise<number | null> {
 /** Home-page numbers + chart series, computed on the host (a few KB) and served to everyone. */
 export type MainnetSummary = {
     totalEvents: number; totalBlocks: number; anchored: number; fallbackLatestBlock: number;
+    /** Confirmed rows in the ledger (the anchored share is measured against this, not the chain counter). */
+    ledgerTotal?: number;
+    byType?: { farmer: number; agri_record: number; credit_app: number };
     transactionChartData: ReturnType<typeof buildChartSeries>["transactionChartData"];
     distributionChartData: ReturnType<typeof buildChartSeries>["distributionChartData"];
 };
@@ -255,7 +290,10 @@ async function refreshSummary(): Promise<void> {
                 pool.query(`select count(*)::bigint as total,
                                    count(*) filter (where l1_anchored)::bigint as anchored,
                                    count(distinct block_number)::bigint as blocks,
-                                   max(block_number)::bigint as latest
+                                   max(block_number)::bigint as latest,
+                                   count(*) filter (where record_type = 'farmer')::bigint as farmer,
+                                   count(*) filter (where record_type = 'agri_record')::bigint as agri,
+                                   count(*) filter (where record_type = 'credit_app')::bigint as credit
                               from extrinsic_payloads where submission_status = 'CONFIRMED'`),
                 chainTotalRecords(),
                 needChart
@@ -282,6 +320,8 @@ async function refreshSummary(): Promise<void> {
                 totalBlocks: Number(c.blocks),
                 anchored: Number(c.anchored),
                 fallbackLatestBlock: Number(c.latest ?? 0),
+                ledgerTotal: Number(c.total),
+                byType: { farmer: Number(c.farmer), agri_record: Number(c.agri), credit_app: Number(c.credit) },
                 transactionChartData: S.chart?.v.transactionChartData ?? [],
                 distributionChartData: S.chart?.v.distributionChartData ?? [],
             };

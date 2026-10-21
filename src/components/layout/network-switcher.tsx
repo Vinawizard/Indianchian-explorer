@@ -1,11 +1,10 @@
 "use client";
-
 import { useEffect, useState } from "react";
 import { DEFAULT_NETWORK, NETWORK_COOKIE, isChainNetwork, type ChainNetwork } from "@/lib/network";
 
 const OPTIONS: { value: ChainNetwork; label: string }[] = [
-    { value: "mainnet", label: "MAINNET" },
-    { value: "preview", label: "PREVIEW" },
+    { value: "mainnet", label: "Mainnet" },
+    { value: "preview", label: "Preview" },
 ];
 
 function readCookie(): ChainNetwork {
@@ -14,42 +13,22 @@ function readCookie(): ChainNetwork {
     return m && isChainNetwork(m[1]) ? m[1] : DEFAULT_NETWORK;
 }
 
-export function NetworkSwitcher({ className }: { className?: string }) {
+/** Mainnet / Preview. The selection is the style's 1px accent line, like every other selection. */
+export function NetworkSwitcher() {
     const [network, setNetwork] = useState<ChainNetwork>(DEFAULT_NETWORK);
-    const [mounted, setMounted] = useState(false);
-
-    useEffect(() => {
-        setNetwork(readCookie());
-        setMounted(true);
-    }, []);
-
+    useEffect(() => { setNetwork(readCookie()); }, []);
     const select = (value: ChainNetwork) => {
         if (value === network) return;
         document.cookie = `${NETWORK_COOKIE}=${value}; path=/; max-age=31536000; SameSite=Lax`;
-        setNetwork(value);
-        // Full reload so the server snapshot, feeds and polls all re-resolve
-        // against the selected network.
-        window.location.reload();
+        window.location.reload();   // server data, feeds and polls all re-resolve for the network
     };
-
     return (
-        <div className={`flex items-stretch border border-white/10 bg-white/5 ${className || ""}`} role="group" aria-label="Select network">
-            {OPTIONS.map((opt, i) => {
-                const isActive = mounted && network === opt.value;
-                return (
-                    <button
-                        key={opt.value}
-                        onClick={() => select(opt.value)}
-                        aria-pressed={isActive}
-                        className={`flex flex-1 justify-center items-center px-4 py-3 text-[10px] sm:text-xs font-mono uppercase tracking-widest transition-all ${i > 0 ? "border-l border-white/10" : ""} ${isActive
-                            ? "bg-white/10 text-white border-b-2 border-b-accent"
-                            : "text-muted-foreground hover:text-white hover:bg-white/5 border-b-2 border-b-transparent"
-                            }`}
-                    >
-                        <span>{opt.label}</span>
-                    </button>
-                );
-            })}
+        <div role="group" aria-label="Network" className="flex h-9 items-stretch gap-4 border-b border-transparent text-[13px]">
+            {OPTIONS.map((o) => (
+                <button key={o.value} type="button" onClick={() => select(o.value)} aria-pressed={network === o.value} className="tab font-medium">
+                    {o.label}
+                </button>
+            ))}
         </div>
     );
 }

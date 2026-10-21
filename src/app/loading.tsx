@@ -1,15 +1,11 @@
-import { HomeDashboardSkeleton } from "@/components/dashboard/home-dashboard-skeleton";
-
 export default function Loading() {
     return (
-        <div className="container mx-auto px-4 lg:px-8 py-8 relative">
-            <div className="grid-pattern" />
-            <section className="mb-12 relative pt-8">
-                <div className="relative">
-                    <div className="h-16 w-2/3 max-w-xl bg-white/5 animate-pulse mb-4" />
-                </div>
-            </section>
-            <HomeDashboardSkeleton />
+        <div className="shell" aria-busy="true" aria-label="Loading">
+            <div className="pt-8 pb-6"><div className="skeleton h-7 w-56" /><div className="skeleton mt-3 h-4 w-96 max-w-full" /></div>
+            <div className="panel h-[120px]" />
+            <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-12">
+                <div className="panel h-[420px] xl:col-span-7" /><div className="panel h-[420px] xl:col-span-5" />
+            </div>
         </div>
     );
 }

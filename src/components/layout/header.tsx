@@ -1,146 +1,81 @@
 "use client";
-
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import Image from "next/image";
-import { Layers, Activity, Zap, Menu, X } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
+import { Menu, Search, X } from "lucide-react";
 import { SearchBar } from "./search-bar";
 import { NetworkSwitcher } from "./network-switcher";
-import { useState } from "react";
 
-const NAV_ITEMS = [
-    { label: "Home", href: "/", icon: Activity },
-    { label: "Events", href: "/events", icon: Layers },
+export const NAV = [
+    { href: "/", label: "Overview", match: (p: string) => p === "/" },
+    { href: "/records", label: "Records", match: (p: string) => p.startsWith("/record") || p.startsWith("/event") },
+    { href: "/blocks", label: "Blocks", match: (p: string) => p.startsWith("/block") },
+    { href: "/anchors", label: "Cardano anchors", match: (p: string) => p.startsWith("/anchor") },
 ];
 
 export function Header() {
-    const pathname = usePathname();
-    const [mobileOpen, setMobileOpen] = useState(false);
+    const pathname = usePathname() || "/";
+    const [menu, setMenu] = useState(false);
+    const [search, setSearch] = useState(false);
+    useEffect(() => { setMenu(false); setSearch(false); }, [pathname]);
 
     return (
-        <>
-            <header className={`sticky top-0 z-50 w-full transition-all duration-300 ${mobileOpen
-                    ? "bg-black border-b border-white/10 h-20"
-                    : "border-b border-white/5 bg-black/80 backdrop-blur-xl h-20"
-                }`}>
-                <div className="container mx-auto px-4 lg:px-8 h-full flex items-center justify-between gap-4">
+        <header className="sticky top-0 z-40 border-b border-line bg-ground">
+            <div className="shell flex h-14 items-center gap-6">
+                <Link href="/" className="flex shrink-0 items-center gap-3" aria-label="IndianChain Explorer, home">
+                    <Image src="/trivolve-logo.png" alt="Trivolve Tech" width={98} height={32} priority className="h-8 w-auto" />
+                    <span aria-hidden className="h-5 w-px bg-line" />
+                    <span className="font-brand text-[13px] leading-none tracking-[0.02em] text-ink">Explorer</span>
+                </Link>
 
-                    {/* Logo / Brand - always visible or specific mobile version */}
-                    <div className="flex items-center gap-4 flex-1 lg:flex-none">
-                        <Link href="/" className="flex flex-shrink-0 items-center gap-3 group" onClick={() => setMobileOpen(false)}>
-                            <Image
-                                src="/trivolve-logo.png"
-                                alt="Trivolve Tech Logo"
-                                width={160}
-                                height={40}
-                                className={`${mobileOpen ? 'h-7 md:h-8' : 'h-8 md:h-10'} w-auto object-contain transition-all`}
-                            />
+                <nav aria-label="Main" className="hidden h-full items-stretch gap-6 lg:flex">
+                    {NAV.map((n) => (
+                        <Link key={n.href} href={n.href} aria-current={n.match(pathname) ? "page" : undefined} className="tab text-[14px] font-medium">
+                            {n.label}
                         </Link>
-                    </div>
+                    ))}
+                </nav>
 
-                    {/* Desktop Navigation (lg and above) */}
-                    {!mobileOpen && (
-                        <nav className="hidden lg:flex items-center gap-2">
-                            {NAV_ITEMS.map((item) => {
-                                const isActive = pathname === item.href;
-                                const Icon = item.icon;
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        className={`relative px-6 py-2 text-[10px] text-heading uppercase tracking-widest transition-all z-10 flex items-center gap-2 ${isActive ? "text-white" : "text-muted-foreground hover:text-white"
-                                            }`}
-                                    >
-                                        {isActive && (
-                                            <motion.div
-                                                layoutId="header-active-tab"
-                                                className="absolute inset-0 bg-white/5 border-b-2 border-accent z-[-1]"
-                                                transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                                            />
-                                        )}
-                                        <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-accent' : 'text-muted-foreground'}`} />
-                                        <span>{item.label}</span>
-                                    </Link>
-                                );
-                            })}
-                        </nav>
-                    )}
-
-                    {/* Search Bar — visible from 768px inline in the header (Desktop) */}
-                    {!mobileOpen && (
-                        <div className="flex-1 max-w-md hidden lg:block">
-                            <SearchBar />
-                        </div>
-                    )}
-
-                    {/* Right side actions */}
-                    <div className="flex items-center gap-3">
-                        <NetworkSwitcher className="hidden lg:flex" />
-                        {/* Hamburger/Close — visible below lg */}
-                        <button
-                            className={`lg:hidden flex items-center justify-center w-10 h-10 rounded-none border transition-all ${mobileOpen
-                                    ? "border-white/20 bg-white/10 text-white"
-                                    : "border-white/10 bg-white/5 text-muted-foreground hover:text-foreground hover:border-white/20"
-                                }`}
-                            onClick={() => setMobileOpen((v) => !v)}
-                            aria-label="Toggle menu"
-                        >
-                            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-                        </button>
-                    </div>
+                <div className="ml-auto hidden items-center gap-3 md:flex">
+                    <SearchBar className="w-[300px] xl:w-[360px]" />
+                    <NetworkSwitcher />
                 </div>
 
-                {/* Legacy Mobile Search — Remove this as we integrated it above */}
-                {/* <div className="md:hidden border-t border-border/50 p-3 bg-card/30">
-                    <SearchBar />
-                </div> */}
-            </header>
+                <div className="ml-auto flex items-center md:hidden">
+                    <button type="button" className="inline-flex h-10 w-10 items-center justify-center text-muted hover:text-ink" aria-label="Search" aria-expanded={search} onClick={() => { setSearch((v) => !v); setMenu(false); }}>
+                        <Search className="h-[18px] w-[18px]" aria-hidden />
+                    </button>
+                    <button type="button" className="inline-flex h-10 w-10 items-center justify-center text-muted hover:text-ink" aria-label={menu ? "Close menu" : "Open menu"} aria-expanded={menu} onClick={() => { setMenu((v) => !v); setSearch(false); }}>
+                        {menu ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
+                    </button>
+                </div>
+                <div className="hidden md:flex lg:hidden">
+                    <button type="button" className="inline-flex h-10 w-10 items-center justify-center text-muted hover:text-ink" aria-label={menu ? "Close menu" : "Open menu"} aria-expanded={menu} onClick={() => setMenu((v) => !v)}>
+                        {menu ? <X className="h-5 w-5" aria-hidden /> : <Menu className="h-5 w-5" aria-hidden />}
+                    </button>
+                </div>
+            </div>
 
-            {/* Mobile Slide-down Menu */}
-            <AnimatePresence>
-                {mobileOpen && (
-                    <motion.div
-                        key="mobile-menu"
-                        initial={{ opacity: 0, y: -20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ duration: 0.2, ease: "easeOut" }}
-                        className="fixed inset-0 top-20 z-40 lg:hidden bg-black"
-                    >
-                        <nav className="container mx-auto px-6 py-8 flex flex-col gap-6">
-                            {/* Search and Network inside mobile menu */}
-                            <div className="flex flex-col gap-4 mb-2">
-                                <div className="w-full">
-                                    <NetworkSwitcher className="w-full" />
-                                </div>
-                                <SearchBar />
-                            </div>
-                            
-                            <div className="flex flex-col gap-4">
-                                {NAV_ITEMS.map((item) => {
-                                const isActive = pathname === item.href;
-                                const Icon = item.icon;
-                                return (
-                                    <Link
-                                        key={item.href}
-                                        href={item.href}
-                                        onClick={() => setMobileOpen(false)}
-                                        className={`flex items-center gap-4 px-5 py-4 border-l-2 text-xs font-mono uppercase tracking-widest transition-all ${isActive
-                                            ? "bg-white/5 border-accent text-white"
-                                            : "border-transparent text-muted-foreground hover:bg-white/5 hover:text-white hover:border-white/20"
-                                            }`}
-                                    >
-                                        <Icon className={`w-4 h-4 ${isActive ? 'text-accent' : 'text-muted-foreground'}`} />
-                                        {item.label}
-                                    </Link>
-                                );
-                            })}
-                            </div>
-                        </nav>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-        </>
+            {search && (
+                <div className="border-t border-line md:hidden">
+                    <div className="shell py-3"><SearchBar autoFocus className="w-full" /></div>
+                </div>
+            )}
+            {menu && (
+                <div className="border-t border-line lg:hidden">
+                    <nav aria-label="Main" className="shell flex flex-col py-2">
+                        {NAV.map((n) => (
+                            <Link key={n.href} href={n.href} aria-current={n.match(pathname) ? "page" : undefined}
+                                className={`flex h-12 items-center text-[15px] ${n.match(pathname) ? "text-ink" : "text-muted hover:text-ink"}`}>
+                                {n.match(pathname) && <span aria-hidden className="mr-3 h-4 w-px bg-accent" />}
+                                {n.label}
+                            </Link>
+                        ))}
+                        <div className="py-3 md:hidden"><NetworkSwitcher /></div>
+                    </nav>
+                </div>
+            )}
+        </header>
     );
 }

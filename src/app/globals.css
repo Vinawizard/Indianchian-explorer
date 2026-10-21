@@ -1,154 +1,145 @@
 @import "tailwindcss";
 
-@plugin "tailwindcss-animate";
-
 @custom-variant dark (&:is(.dark *));
 
-@theme {
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-roboto-mono);
-  --font-heading: var(--font-silkscreen);
+/*
+ * IndianChain Explorer design tokens (see DESIGN.md).
+ * `inline` matters: next/font puts --font-inter etc. on <html>; inline makes the utilities
+ * reference those variables directly instead of resolving them once on :root (the old
+ * plain @theme resolved them to nothing, so the site rendered in the system font).
+ */
+@theme inline {
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-roboto-mono), ui-monospace, monospace;
+  --font-brand: var(--font-silkscreen), var(--font-inter), sans-serif;
 
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-
+  --color-ground: var(--ground);
+  --color-surface: var(--surface);
+  --color-raised: var(--raised);
+  --color-line: var(--line);
+  --color-rule: var(--rule);
+  --color-control: var(--control);
+  --color-ink: var(--ink);
   --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-
+  --color-faint: var(--faint);
   --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
+  --color-link: var(--link);
+  --color-positive: var(--positive);
+  --color-positive-bg: var(--positive-bg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-negative: var(--negative);
+  --color-negative-bg: var(--negative-bg);
 
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-
-  --radius-lg: var(--radius);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-sm: calc(var(--radius) - 4px);
+  /* legacy names still used by a few shared helpers */
+  --color-background: var(--ground);
+  --color-foreground: var(--ink);
+  --color-border: var(--line);
+  --color-muted-foreground: var(--muted);
 }
 
-/* Base Variable Layers */
 :root {
-  --background: #000000;
-  --foreground: #ffffff;
-  --card: #0a0a0a;
-  --card-foreground: #ffffff;
-  --popover: #0a0a0a;
-  --popover-foreground: #ffffff;
-  --primary: #ffffff;
-  --primary-foreground: #000000;
-  --secondary: #111111;
-  --secondary-foreground: #ffffff;
-  --muted: #1a1a1a;
-  --muted-foreground: #888888;
-  --accent: #0018fe;
-  --accent-foreground: #ffffff;
-  --destructive: #ff0000;
-  --destructive-foreground: #ffffff;
-  --border: #222222;
-  --input: #111111;
-  --ring: #ffffff;
-  --radius: 0px;
-}
+  color-scheme: dark;
+  --ground: #000000;
+  --surface: #0a0a0b;
+  --raised: #141416;
+  --line: #1f1f22;      /* structural 1px lines */
+  --rule: #161618;      /* row rules inside a panel */
+  --control: #3a3a3f;   /* outlines of interactive controls */
+  --ink: #f5f5f6;
+  --muted: #b4b4b8;     /* secondary text, 9.8:1 */
+  --faint: #8d8d93;     /* meta text, 6.2:1 */
+  --accent: #0018fe;    /* Trivolve blue: selection line, focus, primary mark, the data hue */
+  --link: #8c97ff;      /* the brand blue lifted for text on black, 7.4:1 */
+  --positive: #3fc07a;
+  --positive-bg: #12251a;
+  --warning: #e0a63a;
+  --warning-bg: #2a2010;
+  --negative: #ef6b7f;
+  --negative-bg: #2c161b;
 
-.dark {
-  --background: #000000;
-  --foreground: #ffffff;
-  --card: #0a0a0a;
-  --card-foreground: #ffffff;
-  --popover: #0a0a0a;
-  --popover-foreground: #ffffff;
-  --primary: #ffffff;
-  --primary-foreground: #000000;
-  --secondary: #111111;
-  --secondary-foreground: #ffffff;
-  --muted: #1a1a1a;
-  --muted-foreground: #888888;
-  --accent: #0018fe;
-  --accent-foreground: #ffffff;
-  --destructive: #ff0000;
-  --destructive-foreground: #ffffff;
-  --border: #222222;
-  --input: #111111;
-  --ring: #ffffff;
+  --shell: 1200px;
+  --gutter: 24px;
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
+  * { border-color: var(--line); }
+
+  html { background: var(--ground); }
 
   body {
-    @apply bg-background text-foreground;
-    background-image:
-      radial-gradient(circle at 2px 2px, rgba(255, 255, 255, 0.05) 1px, transparent 0);
-    background-size: 32px 32px;
+    background: var(--ground);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv11", "ss01";
   }
 
-  /* Structural plus grid pattern */
-  .grid-pattern {
-    position: fixed;
-    inset: 0;
-    background-image:
-      linear-gradient(to right, rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-    background-size: 64px 64px;
-    z-index: -1;
-    pointer-events: none;
+  ::selection { background: var(--accent); color: #fff; }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  a { text-underline-offset: 3px; }
+
+  input::placeholder { color: var(--faint); }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--ground); }
+  ::-webkit-scrollbar-thumb { background: #26262a; border: 3px solid var(--ground); }
+  ::-webkit-scrollbar-thumb:hover { background: #34343a; }
+
+  @media (max-width: 640px) {
+    :root { --gutter: 16px; }
   }
 
-  /* Card override to keep them rounded as per design */
-  .card-premium {
-    @apply bg-card border border-border rounded-2xl overflow-hidden;
-  }
-
-  /* Premium custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    background: #222222;
-    border-radius: 99px;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    background: #333333;
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }
   }
 }
 
-@layer utilities {
-  .glow-blue {
-    background: radial-gradient(circle, rgba(0, 24, 254, 0.15) 0%, transparent 70%);
-    filter: blur(64px);
+@layer components {
+  /* One page column for every screen: header, content and footer share its edges. */
+  .shell { width: 100%; max-width: calc(var(--shell) + 2 * var(--gutter)); margin-inline: auto; padding-inline: var(--gutter); }
+
+  .num { font-variant-numeric: tabular-nums; }
+  .mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 13px; letter-spacing: -0.01em; }
+
+  .panel { background: var(--surface); border: 1px solid var(--line); }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+  .panel-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+
+  /* Tables: rules and alignment, 12px grey sentence-case headers, no zebra. */
+  .table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .table th { height: 36px; padding: 0 16px; text-align: left; font-size: 12px; font-weight: 500; color: var(--faint); border-bottom: 1px solid var(--line); white-space: nowrap; }
+  .table td { height: 44px; padding: 0 16px; border-bottom: 1px solid var(--rule); white-space: nowrap; color: var(--ink); }
+  .table tr:last-child td { border-bottom: 0; }
+  .table tbody tr { transition: background-color 120ms ease-out; }
+  .table tbody tr:hover { background: var(--raised); }
+  .table .r { text-align: right; }
+
+  .link { color: var(--link); text-decoration: none; }
+  .link:hover { text-decoration: underline; }
+
+  /* The style's one move: a selection is a 1px accent line exactly under its label. */
+  .tab { position: relative; display: inline-flex; align-items: center; height: 100%; color: var(--muted); transition: color 120ms ease-out; }
+  .tab:hover { color: var(--ink); }
+  .tab[aria-current="page"], .tab[aria-selected="true"], .tab[aria-pressed="true"] { color: var(--ink); }
+  .tab[aria-current="page"]::after, .tab[aria-selected="true"]::after, .tab[aria-pressed="true"]::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px; background: var(--accent);
   }
 
-  .glow-red {
-    background: radial-gradient(circle, rgba(255, 0, 0, 0.12) 0%, transparent 70%);
-    filter: blur(64px);
-  }
+  .control { height: 36px; background: var(--ground); border: 1px solid var(--control); color: var(--ink); padding: 0 12px; font-size: 13px; transition: border-color 120ms ease-out; }
+  .control:hover { border-color: #55555c; }
+  .control:focus-visible { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
 
-  .text-heading {
-    @apply font-heading tracking-tight;
-  }
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 36px; padding: 0 14px; font-size: 13px; font-weight: 500; border: 1px solid var(--control); color: var(--ink); background: transparent; transition: background-color 120ms ease-out, border-color 120ms ease-out, transform 80ms ease-out; }
+  .btn:hover { background: var(--raised); border-color: #55555c; }
+  .btn:active { transform: translateY(1px); }
+  .btn-primary { background: var(--ink); color: #000; border-color: var(--ink); }
+  .btn-primary:hover { background: #ffffff; border-color: #ffffff; }
+  .btn:disabled { opacity: 0.4; pointer-events: none; }
+
+  .skeleton { background: var(--raised); }
 }

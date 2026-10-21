@@ -1,346 +1,123 @@
-"use client";
-import React from "react";
-
-import { use, useEffect, useState } from "react";
-import { Copy, Check, Hash, CheckCircle2, Table, Code2, Box, ChevronRight } from "lucide-react";
-import { motion } from "framer-motion";
 import Link from "next/link";
+import type { Metadata } from "next";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { resolveNetworkFromCookies } from "@/lib/network-server";
+import { getBlockDetail } from "@/lib/block-data";
+import { queryMainnetRecords } from "@/lib/mainnet-records";
+import { fmtInt, shortHash, utc } from "@/lib/format";
+import { PageHeader } from "@/components/ui/page-header";
+import { KV } from "@/components/ui/kv";
+import { Hash } from "@/components/ui/hash";
+import { Status } from "@/components/ui/status";
+import { TimeAgo } from "@/components/ui/time-ago";
+import { Empty } from "@/components/ui/empty";
+import { RecordsTable } from "@/components/records/records-table";
 
-interface Extrinsic {
-    index: number;
-    hash: string;
-    section: string;
-    method: string;
-    args: any;
-    signer: string | null;
-    status: "success" | "failed" | "unknown";
+export const revalidate = 0;
+
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
+    const { id } = await params;
+    return { title: /^\d+$/.test(id) ? `Block ${Number(id).toLocaleString("en-US")}` : "Block" };
 }
 
-interface BlockData {
-    number: number;
-    hash: string;
-    parentHash: string;
-    stateRoot: string;
-    extrinsicsRoot: string;
-    extrinsics: Extrinsic[];
-}
+export default async function BlockPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const network = await resolveNetworkFromCookies();
+    const n = /^\d+$/.test(id) ? Number(id) : NaN;
+    const crumbs = [{ label: "Blocks", href: "/blocks" }, { label: Number.isFinite(n) ? fmtInt(n) : id }];
 
-function CallDataViewer({ args }: { args: any }) {
-    const [view, setView] = useState<"TABLE" | "JSON">("TABLE");
-
-    const isIdLike = (v: string) => v.length > 20 || /^[0-9a-f-]{8,}$/i.test(v);
-
-    const renderValueRow = (label: string, value: unknown, rowKey: string) => {
-        const str = value === null || value === undefined ? null : String(value);
-        return (
-            <div
-                key={rowKey}
-                className="flex border-t border-white/5 py-4 px-6 items-center hover:bg-white/[0.02]"
-            >
-                <div className="w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-widest pl-6">
-                    {label}
-                </div>
-                <div
-                    className={`w-2/3 text-sm font-mono break-all ${
-                        str && isIdLike(str) ? "text-accent" : "text-white/80"
-                    }`}
-                >
-                    {str !== null ? str : <span className="opacity-30">—</span>}
-                </div>
-            </div>
-        );
-    };
-
-    const renderTableArgs = (argData: any, prefix = "", keyPath = "root"): React.ReactNode => {
-        if (argData === null || argData === undefined) {
-            return (
-                <div key={keyPath} className="p-4 text-white/50 font-mono text-sm">
-                    null
-                </div>
-            );
-        }
-
-        if (typeof argData !== "object") {
-            return renderValueRow(prefix || "VALUE", argData, keyPath);
-        }
-
-        if (Array.isArray(argData)) {
-            return (
-                <>
-                    {argData.map((item, i) => {
-                        const label = prefix ? `${prefix}[${i}]` : `[${i}]`;
-                        const itemKey = `${keyPath}[${i}]`;
-                        if (item !== null && typeof item === "object") {
-                            return (
-                                <React.Fragment key={itemKey}>
-                                    {renderTableArgs(item, label, itemKey)}
-                                </React.Fragment>
-                            );
-                        }
-                        return renderValueRow(label, item, itemKey);
-                    })}
-                </>
-            );
-        }
-
-        return (
-            <>
-                {Object.entries(argData).map(([k, v], i) => {
-                    const fullKey = prefix ? `${prefix}.${k}` : k;
-                    const itemKey = `${keyPath}.${k}-${i}`;
-                    if (v !== null && typeof v === "object") {
-                        return (
-                            <React.Fragment key={itemKey}>
-                                {renderTableArgs(v, fullKey, itemKey)}
-                            </React.Fragment>
-                        );
-                    }
-                    return renderValueRow(fullKey, v, itemKey);
-                })}
-            </>
-        );
-    };
-
-    return (
-        <div className="flex flex-col w-full">
-            <div className="flex items-center justify-between py-4 px-6 border-t border-white/5">
-                <div className="text-[10px] font-heading text-muted-foreground uppercase tracking-widest flex items-center gap-2 w-1/3">
-                    <Code2 className="w-3 h-3 text-accent" /> CALL_DATA
-                </div>
-                <div className="w-2/3 flex justify-end">
-                    <div className="flex items-center bg-white/5 border border-white/10 p-1 rounded-full">
-                        <button 
-                            onClick={() => setView("TABLE")}
-                            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-heading font-bold uppercase tracking-widest transition-colors ${view === "TABLE" ? "bg-white text-black" : "text-white/50 hover:text-white"}`}
-                        >
-                            <Table className="w-3 h-3" /> TABLE
-                        </button>
-                        <button 
-                            onClick={() => setView("JSON")}
-                            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-[10px] font-heading font-bold uppercase tracking-widest transition-colors ${view === "JSON" ? "bg-white text-black" : "text-white/50 hover:text-white"}`}
-                        >
-                            {`{ }`} JSON
-                        </button>
-                    </div>
-                </div>
-            </div>
-            {/* View Area */}
-            <div className="bg-[#050505] w-full">
-                {view === "TABLE" ? (
-                    <div>
-                        {Array.isArray(args) ? (
-                            args.length > 0 ? (
-                                args.map((arg, idx) => (
-                                    <React.Fragment key={`arg-${idx}`}>
-                                        {renderTableArgs(arg, String(idx), `arg-${idx}`)}
-                                    </React.Fragment>
-                                ))
-                            ) : (
-                                <div className="p-6 text-white/40 text-sm font-mono border-t border-white/5">
-                                    No arguments
-                                </div>
-                            )
-                        ) : (
-                            renderTableArgs(args, "", "args")
-                        )}
-                    </div>
-                ) : (
-                    <div className="p-6 border-t border-white/5">
-                        <pre className="text-xs text-green-400 font-mono overflow-x-auto">
-                            {JSON.stringify(args, null, 2)}
-                        </pre>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
-
-export default function BlockPage({ params }: { params: Promise<{ id: string }> }) {
-    const { id } = use(params);
-    const [block, setBlock] = useState<BlockData | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [copiedHash, setCopiedHash] = useState<string | null>(null);
-
-    useEffect(() => {
-        const fetchBlock = async () => {
-            try {
-                const res = await fetch(`/api/chain/block/${id}`);
-                const data = await res.json();
-                if (data.status === "ok") {
-                    setBlock(data.block);
-                }
-            } catch (error) {
-                console.error("Error fetching block:", error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchBlock();
-    }, [id]);
-
-    const copyToClipboard = (text: string) => {
-        navigator.clipboard.writeText(text);
-        setCopiedHash(text);
-        setTimeout(() => setCopiedHash(null), 2000);
-    };
-
-    if (loading) {
-        return <div className="min-h-screen bg-black flex items-center justify-center font-heading text-accent tracking-[0.2em]">LOADING_BLOCK...</div>;
-    }
+    let block = null as Awaited<ReturnType<typeof getBlockDetail>>;
+    let failed = false;
+    if (Number.isFinite(n)) { try { block = await getBlockDetail(network, n); } catch { failed = true; } }
 
     if (!block) {
-        return <div className="min-h-screen bg-black flex items-center justify-center font-heading text-red-500 tracking-[0.2em]">BLOCK_NOT_FOUND</div>;
+        return (
+            <div className="shell">
+                <PageHeader crumbs={crumbs} title={Number.isFinite(n) ? <>Block <span className="num">{fmtInt(n)}</span></> : "Block"} />
+                <section className="panel">
+                    {failed ? (
+                        <Empty title="The node did not answer" action={<Link href={`/block/${id}`} className="btn">Try again</Link>}>
+                            {network === "preview" ? "The Preview testnet is offline." : "IndianChain could not be reached just now."}
+                        </Empty>
+                    ) : (
+                        <Empty title={Number.isFinite(n) ? "This block does not exist yet" : "That is not a block number"} action={<Link href="/blocks" className="btn">Latest blocks</Link>}>
+                            Block numbers are whole numbers up to the current height. You can also search by block hash in the header.
+                        </Empty>
+                    )}
+                </section>
+            </div>
+        );
     }
 
+    const records = network === "mainnet"
+        ? await queryMainnetRecords({ find: String(n), limit: 500 }).catch(() => ({ rows: [], total: 0 }))
+        : { rows: [], total: 0 };
+
     return (
-        <div className="min-h-screen bg-[#020202] py-12 w-full font-sans">
-            <div className="max-w-[1200px] w-[95%] mx-auto relative z-10">
-                
-                {/* Breadcrumb section */}
-                <div className="flex items-center gap-2 mb-10 text-[11px] font-bold uppercase tracking-widest">
-                    <Link href="/" className="text-accent hover:text-white transition-colors px-2 py-0.5">INDIANCHAIN</Link>
-                    <div className="text-white/30 px-2 py-0.5">/</div>
-                    <Link href="/" className="text-accent hover:text-white transition-colors px-2 py-0.5">BLOCKS</Link>
-                    <div className="text-white/30 px-2 py-0.5">/</div>
-                    <div className="text-white px-2 py-0.5">#{id}</div>
+        <div className="shell">
+            <PageHeader
+                crumbs={crumbs}
+                title={<>Block <span className="num">{fmtInt(block.number)}</span></>}
+                meta={
+                    <span className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                        {block.finalized ? <Status tone="positive">Finalized</Status> : <Status>Finalizing</Status>}
+                        <span>{block.timestamp ? <><TimeAgo iso={block.timestamp} /> · </> : null}{block.extrinsics.length} extrinsics · {fmtInt(records.rows.length)} records</span>
+                    </span>
+                }
+                actions={
+                    <>
+                        <Link href={`/block/${block.number - 1}`} aria-disabled={block.number === 0} className={`btn ${block.number === 0 ? "pointer-events-none opacity-40" : ""}`}><ChevronLeft className="h-4 w-4" aria-hidden />Previous</Link>
+                        <Link href={`/block/${block.number + 1}`} aria-disabled={block.number >= block.bestHead} className={`btn ${block.number >= block.bestHead ? "pointer-events-none opacity-40" : ""}`}>Next<ChevronRight className="h-4 w-4" aria-hidden /></Link>
+                    </>
+                }
+            />
+
+            <section className="panel" aria-labelledby="overview">
+                <div className="panel-head"><h2 id="overview" className="panel-title">Block</h2></div>
+                <KV rows={[
+                    { label: "Block hash", value: <Hash value={block.hash} full /> },
+                    { label: "Parent", value: block.number > 0 ? <Hash value={block.parentHash} href={`/block/${block.number - 1}`} full /> : "—" },
+                    { label: "Produced at", value: <span className="num">{utc(block.timestamp)}</span> },
+                    { label: "Finality", value: block.finalized ? <span>Final. The chain has finalized up to block <span className="num">{fmtInt(block.finalizedHead)}</span>.</span> : <span>Not final yet. Finalized head is <span className="num">{fmtInt(block.finalizedHead)}</span>.</span> },
+                    { label: "State root", value: <Hash value={block.stateRoot} full /> },
+                    { label: "Extrinsics root", value: <Hash value={block.extrinsicsRoot} full /> },
+                ]} />
+            </section>
+
+            {network === "mainnet" && (
+                <section className="panel mt-6" aria-labelledby="records">
+                    <div className="panel-head"><h2 id="records" className="panel-title">Records in this block</h2><span className="num text-[13px] text-faint">{fmtInt(records.rows.length)}</span></div>
+                    {records.rows.length
+                        ? <RecordsTable rows={records.rows} cols={["record", "version", "farmer", "tx", "anchor"]} caption="Records in this block" />
+                        : <p className="px-4 py-5 text-[14px] text-muted">No records were submitted in this block. It carries only the chain&apos;s own extrinsics.</p>}
+                </section>
+            )}
+
+            <section className="panel mt-6" aria-labelledby="extrinsics">
+                <div className="panel-head"><h2 id="extrinsics" className="panel-title">Extrinsics</h2><span className="num text-[13px] text-faint">{block.extrinsics.length}</span></div>
+                <div className="overflow-x-auto">
+                    <table className="table">
+                        <caption className="sr-only">Extrinsics</caption>
+                        <thead><tr><th scope="col" className="r">#</th><th scope="col">Call</th><th scope="col">Hash</th><th scope="col">Signer</th><th scope="col">Result</th></tr></thead>
+                        <tbody>
+                            {block.extrinsics.map((x) => (
+                                <tr key={x.index}>
+                                    <td className="r num text-muted">{x.index}</td>
+                                    <td className="whitespace-normal py-2">
+                                        <details>
+                                            <summary className="cursor-pointer list-none"><span className="mono text-ink">{x.section}.{x.method}</span> <span className="text-[12px] text-faint">arguments</span></summary>
+                                            <pre className="mono mt-2 max-h-72 max-w-[640px] overflow-auto bg-ground p-3 text-[12px] leading-5 text-muted">{JSON.stringify(x.args, null, 2)}</pre>
+                                        </details>
+                                    </td>
+                                    <td><Hash value={x.hash} head={8} tail={6} /></td>
+                                    <td>{x.signer ? <span className="mono text-muted" title={x.signer}>{shortHash(x.signer, 6, 6)}</span> : <span className="text-faint">Inherent</span>}</td>
+                                    <td>{x.status === "success" ? <Status tone="positive">Success</Status> : x.status === "failed" ? <Status tone="negative">Failed</Status> : <Status>No result event</Status>}</td>
+                                </tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
-
-                {/* BLOCK OVERVIEW */}
-                <div className="mb-12">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-1 h-5 bg-white" />
-                        <h2 className="text-white text-[13px] font-heading font-bold uppercase tracking-[0.3em] px-1 py-1">
-                            BLOCK_OVERVIEW
-                        </h2>
-                    </div>
-
-                    <div className="bg-[#0a0a0a] border border-white/5 rounded-3xl overflow-hidden divide-y divide-white/5">
-                        
-                        <div className="flex flex-col md:flex-row py-5 px-8 hover:bg-white/[0.02] items-start md:items-center">
-                            <div className="w-full md:w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2 mb-2 md:mb-0">
-                                <Box className="w-3.5 h-3.5 text-white/30" /> BLOCK_NUMBER
-                            </div>
-                            <div className="w-full md:w-2/3 text-lg font-mono text-white/60">
-                                #{block.number}
-                            </div>
-                        </div>
-
-                        <div className="flex flex-col md:flex-row py-5 px-8 hover:bg-white/[0.02] items-start md:items-center">
-                            <div className="w-full md:w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-[0.2em] mb-2 md:mb-0">
-                                STATUS
-                            </div>
-                            <div className="w-full md:w-2/3 flex items-center">
-                                <div className="border border-green-900/50 bg-green-950/30 text-green-500 text-[9px] font-bold px-3 py-1 flex items-center gap-1.5 rounded-none uppercase tracking-widest">
-                                    <Check className="w-3 h-3" /> FINALIZED
-                                </div>
-                            </div>
-                        </div>
-
-                        {[
-                            { label: "BLOCK_HASH", icon: Hash, value: block.hash },
-                            { label: "PARENT_HASH", icon: ChevronRight, value: block.parentHash },
-                            { label: "STATE_ROOT", icon: null, value: block.stateRoot },
-                            { label: "EXTRINSICS_ROOT", icon: null, value: block.extrinsicsRoot }
-                        ].map((row, i) => (
-                            <div key={i} className="flex flex-col md:flex-row py-5 px-8 hover:bg-white/[0.02] items-start xl:items-center">
-                                <div className="w-full md:w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2 mb-2 md:mb-0">
-                                    {row.icon && <row.icon className="w-3.5 h-3.5 text-white/30" />} {row.label}
-                                </div>
-                                <div className="w-full md:w-2/3 flex items-center gap-4">
-                                    <span className="font-mono text-[13px] text-white/80 break-all">{row.value}</span>
-                                    {row.icon && (
-                                        <button onClick={() => copyToClipboard(row.value)} className="p-1.5 text-white/30 hover:text-accent transition-colors flex-shrink-0">
-                                            {copiedHash === row.value ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                                        </button>
-                                    )}
-                                </div>
-                            </div>
-                        ))}
-
-                        <div className="flex flex-col md:flex-row py-5 px-8 hover:bg-white/[0.02] items-start md:items-center">
-                            <div className="w-full md:w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2 mb-2 md:mb-0">
-                                <Box className="w-3.5 h-3.5 text-white/30" /> EXTRINSICS
-                            </div>
-                            <div className="w-full md:w-2/3 text-[11px] font-bold text-white/50 uppercase tracking-widest">
-                                <span className="text-white text-lg mr-2 font-mono">{block.extrinsics.length}</span> TRANSACTIONS IN THIS BLOCK
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* EXTRINSICS LOG */}
-                <div className="mb-12">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-1 h-5 bg-white" />
-                        <h2 className="text-white text-[13px] font-heading font-bold uppercase tracking-[0.3em] px-1 py-1">
-                            EXTRINSICS_LOG
-                        </h2>
-                    </div>
-
-                    <div className="flex flex-col gap-6">
-                        {block.extrinsics.map((ext) => (
-                            <div key={ext.hash} className="bg-[#0a0a0a] border border-white/5 rounded-[2rem] overflow-hidden flex flex-col">
-                                
-                                {/* Extrinsic Header */}
-                                <div className="flex items-center gap-4 px-6 py-4 bg-white/[0.02] border-b border-white/5">
-                                    <span className="text-[10px] font-heading font-bold text-white/60 tracking-widest uppercase">
-                                        EXT_{ext.index}
-                                    </span>
-                                    <span className="text-[10px] font-mono tracking-widest text-white/30 bg-white/5 px-3 py-1 rounded">
-                                        {ext.section.toUpperCase()}.{ext.method.toUpperCase()}
-                                    </span>
-                                    {ext.status === "success" ? (
-                                        <div className="border border-green-900/50 bg-green-950/40 text-green-500 text-[8px] font-bold px-2 py-0.5 flex items-center gap-1 rounded-sm uppercase tracking-widest ml-1">
-                                            <Check className="w-2.5 h-2.5" /> SUCCESS
-                                        </div>
-                                    ) : (
-                                        <div className="border border-red-900/50 bg-red-950/40 text-red-500 text-[8px] font-bold px-2 py-0.5 flex items-center gap-1 rounded-sm uppercase tracking-widest ml-1">
-                                            FAILED
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Extrinsic Content */}
-                                <div className="flex flex-col">
-                                    {/* HASH row */}
-                                    <div className="flex border-b border-white/5 py-5 px-6 items-center">
-                                        <div className="w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
-                                            <Hash className="w-3 h-3 text-white/30" /> HASH
-                                        </div>
-                                        <div className="w-2/3 flex items-center gap-4">
-                                            <span className="font-mono text-sm text-white/70 break-all">{ext.hash}</span>
-                                            <button onClick={() => copyToClipboard(ext.hash)} className="p-1 text-white/30 hover:text-white transition-colors">
-                                                {copiedHash === ext.hash ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* SIGNER row */}
-                                    {ext.signer && (
-                                        <div className="flex border-b border-white/5 py-5 px-6 items-center">
-                                            <div className="w-1/3 text-[10px] font-heading text-muted-foreground uppercase tracking-[0.2em] flex items-center gap-2">
-                                                <Hash className="w-3 h-3 text-white/30" /> SIGNER
-                                            </div>
-                                            <div className="w-2/3 flex items-center gap-4">
-                                                <span className="font-mono text-sm text-white/70 break-all">{ext.signer}</span>
-                                                <button onClick={() => copyToClipboard(ext.signer!)} className="p-1 text-white/30 hover:text-white transition-colors">
-                                                    {copiedHash === ext.signer ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-
-                                    {/* Interactive CALL_DATA viewer */}
-                                    <CallDataViewer args={ext.args} />
-                                </div>
-                                
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-            </div>
+            </section>
         </div>
     );
 }
