@@ -16,7 +16,7 @@ export function CopyButton({ value, label = "Copy" }: { value: string; label?: s
             aria-label={done ? "Copied" : label}
             title={done ? "Copied" : label}
         >
-            {done ? <Check className="h-3.5 w-3.5 text-green" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
+            {done ? <Check className="h-3.5 w-3.5 text-blue-text" aria-hidden /> : <Copy className="h-3.5 w-3.5" aria-hidden />}
             <span className="sr-only" aria-live="polite">{done ? "Copied" : ""}</span>
         </button>
     );

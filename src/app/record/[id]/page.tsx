@@ -28,14 +28,14 @@ function parse(id: string): { recordId: string; version: number | null } | null 
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
     const p = parse((await params).id);
-    return { title: p ? `Record ${shortId(p.recordId)}${p.version ? ` v${p.version}` : ""}` : "Record" };
+    return { title: p ? `Event ${shortId(p.recordId)}${p.version ? ` v${p.version}` : ""}` : "Event" };
 }
 
 export default async function RecordPage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
     const network = await resolveNetworkFromCookies();
     if (network !== "mainnet") {
-        return <div className="page"><PageHeader crumbs={[{ label: "Records", href: "/records" }]} title="Record" /><div className="card"><Empty title="Mainnet only" /></div></div>;
+        return <div className="page"><PageHeader crumbs={[{ label: "Network events", href: "/events" }]} title="Event" /><div className="card"><Empty title="Mainnet only" /></div></div>;
     }
     const p = parse(id);
     if (!p) notFound();
@@ -54,13 +54,13 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
     return (
         <div className="page">
             <PageHeader
-                crumbs={[{ label: "Records", href: "/records" }, { label: typeLabel, href: `/records?type=${r.record_type}` }, { label: shortId(rid) }]}
+                crumbs={[{ label: "Network events", href: "/events" }, { label: typeLabel, href: `/events?type=${r.record_type}` }, { label: shortId(rid) }]}
                 title={<>{typeLabel} <span className="num font-normal text-white/60">v{r.version}</span></>}
                 meta={
                     <>
                         <Status tone="positive">Finalized</Status>
-                        {anchored ? <Status tone="positive">Anchored</Status> : <Status tone="warning">Anchor pending</Status>}
-                        <span className="text-white/60">Block <Link href={`/block/${r.block_number}`} className="num link">#{fmtInt(r.block_number)}</Link> · <TimeAgo iso={r.confirmed_at} /></span>
+                        {anchored ? <Status tone="positive">Anchored</Status> : <Status>Anchor pending</Status>}
+                        <span className="text-[10px] uppercase tracking-[0.1em] text-muted">Block <Link href={`/block/${r.block_number}`} className="num link">#{r.block_number}</Link> · <TimeAgo iso={r.confirmed_at} /></span>
                         {r.version !== latest.version && <Link href={recordHref(rid, latest.version)} className="chip chip-blue">Latest is v{latest.version}</Link>}
                     </>
                 }
@@ -69,22 +69,22 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                 <div className="min-w-0 space-y-6 lg:col-span-8">
                     <section className="card" aria-labelledby="rec">
-                        <div className="card-head"><div><h2 id="rec" className="section-title">Record</h2><p className="card-sub">{typeLabel} · version {r.version}</p></div></div>
+                        <div className="card-head"><div><h2 id="rec" className="section-title">Event</h2><p className="card-sub">{typeLabel} · version {r.version}</p></div></div>
                         <KV rows={[
-                            { label: "Record ID", value: <Hash value={rid} full /> },
+                            { label: "Event ID", value: <Hash value={rid} full /> },
                             { label: "Type", value: typeLabel },
                             { label: "Version", value: <span className="num">{r.version}</span> },
-                            ...(r.farmer_id && r.record_type !== "farmer" ? [{ label: "Farmer", value: <span className="inline-flex flex-wrap items-center gap-3"><Hash value={r.farmer_id} href={`/record/${r.farmer_id}`} head={13} tail={12} /><Link href={`/records?farmer=${r.farmer_id}`} className="label hover:text-white">All records</Link></span> }] : []),
-                            ...(r.record_type === "farmer" ? [{ label: "Linked records", value: <Link href={`/records?farmer=${rid}`} className="link">Agricultural and credit records</Link> }] : []),
+                            ...(r.farmer_id && r.record_type !== "farmer" ? [{ label: "Farmer", value: <span className="inline-flex flex-wrap items-center gap-3"><Hash value={r.farmer_id} href={`/record/${r.farmer_id}`} head={13} tail={12} /><Link href={`/events?farmer=${r.farmer_id}`} className="label transition-colors hover:text-white">All events</Link></span> }] : []),
+                            ...(r.record_type === "farmer" ? [{ label: "Linked events", value: <Link href={`/events?farmer=${rid}`} className="link">Agricultural and credit events</Link> }] : []),
                             ...(r.parent_record_id && r.parent_record_id !== r.farmer_id ? [{ label: "Linked to", value: <Hash value={r.parent_record_id} href={`/record/${r.parent_record_id}`} head={13} tail={12} /> }] : []),
                             { label: "Recorded at", value: <span className="num">{utc(r.timestamp)}</span> },
                         ]} />
                     </section>
 
                     <section className="card" aria-labelledby="chain">
-                        <div className="card-head"><div><h2 id="chain" className="section-title">IndianChain</h2><p className="card-sub">Block {fmtInt(r.block_number)} · extrinsic {r.tx_index ?? "—"}</p></div></div>
+                        <div className="card-head"><div><h2 id="chain" className="section-title">IndianChain</h2><p className="card-sub">Block {r.block_number} · extrinsic {r.tx_index ?? "—"}</p></div></div>
                         <KV rows={[
-                            { label: "Block", value: <Link href={`/block/${r.block_number}`} className="num link">#{fmtInt(r.block_number)}</Link> },
+                            { label: "Block", value: <Link href={`/block/${r.block_number}`} className="num link">#{r.block_number}</Link> },
                             { label: "Finalized at", value: <span className="num">{utc(r.confirmed_at)}</span> },
                             { label: "Transaction", value: <Hash value={r.tx_hash} full /> },
                             { label: "Extrinsic", value: <span className="num">{r.tx_index ?? "—"}</span> },
@@ -111,7 +111,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                                 { label: "Anchored at", value: <span className="num">{utc(batch?.confirmed_at)}</span> },
                             ]} />
                         ) : (
-                            <div className="flex items-center gap-3 px-6 py-6"><Status tone="warning">Pending</Status><span className="text-[13px] text-white/60">Included in the next anchor batch.</span></div>
+                            <div className="flex items-center gap-3 px-8 pb-8"><Status>Pending</Status><span className="text-[10px] uppercase tracking-[0.1em] text-muted">Included in the next anchor batch</span></div>
                         )}
                     </section>
                 </div>
@@ -126,13 +126,13 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                                 return (
                                     <li key={v.payload_id}>
                                         <Link href={recordHref(rid, v.version)} aria-current={on ? "page" : undefined}
-                                            className={`grid grid-cols-[44px_1fr_auto] items-center gap-3 px-6 py-3.5 transition-colors duration-200 ${on ? "bg-[linear-gradient(90deg,rgba(0,24,254,0.22),transparent_75%)] shadow-[inset_2px_0_0_#5c6eff]" : "hover:bg-[linear-gradient(90deg,rgba(0,24,254,0.12),transparent_70%)]"}`}>
-                                            <span className={`num text-[14px] font-semibold ${on ? "text-white" : "text-white/50"}`}>v{v.version}</span>
+                                            className={`grid grid-cols-[44px_1fr_auto] items-center gap-3 px-8 py-4 transition-colors duration-200 ${on ? "bg-[linear-gradient(90deg,rgba(0,24,254,0.16),transparent_75%)] shadow-[inset_2px_0_0_var(--blue-line)]" : "hover:bg-[linear-gradient(90deg,rgba(0,24,254,0.1),transparent_70%)]"}`}>
+                                            <span className={`num text-[14px] ${on ? "text-white" : "text-white/50"}`}>v{v.version}</span>
                                             <span className="min-w-0">
-                                                <span className="num block text-[13px] text-white/80">#{fmtInt(v.block_number)}</span>
-                                                <span className="block text-[12px] text-faint"><TimeAgo iso={v.confirmed_at} /></span>
+                                                <span className="num block text-[12px] text-white/80">#{v.block_number}</span>
+                                                <span className="block text-[10px] uppercase tracking-[0.1em] text-muted"><TimeAgo iso={v.confirmed_at} /></span>
                                             </span>
-                                            <Status tone={va ? "positive" : "warning"}>{va ? "Anchored" : "Pending"}</Status>
+                                            <Status tone={va ? "positive" : "neutral"}>{va ? "Anchored" : "Pending"}</Status>
                                         </Link>
                                     </li>
                                 );
@@ -142,7 +142,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
 
                     <details className="card group">
                         <summary className="card-head cursor-pointer list-none">
-                            <div><h2 className="section-title">JSON</h2><p className="card-sub">Raw record</p></div>
+                            <div><h2 className="section-title">JSON</h2><p className="card-sub">Json_export</p></div>
                             <span className="label group-open:hidden">Show</span>
                             <span className="label hidden group-open:inline">Hide</span>
                         </summary>

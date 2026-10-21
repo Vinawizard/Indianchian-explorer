@@ -8,7 +8,7 @@ import { SearchBar } from "@/components/layout/search-bar";
 import { MetricCards } from "@/components/home/metric-cards";
 import { LiveFeed } from "@/components/home/live-feed";
 import { TrendChart } from "@/components/charts/trend-chart";
-import { SERIES } from "@/components/charts/palette";
+import { ACTIVITY, INK, SERIES, TINT } from "@/components/charts/palette";
 import { Empty } from "@/components/ui/empty";
 
 export const revalidate = 15;
@@ -18,10 +18,10 @@ const settle = async <T,>(p: Promise<T>, fallback: T): Promise<T> => { try { ret
 
 function Hero() {
     return (
-        <section className="wash-y spot relative mt-6 overflow-hidden rounded-[22px] border border-white/10 px-6 pb-12 pt-14 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:pb-14 sm:pt-16">
+        <section className="wash-y spot relative mt-6 overflow-hidden rounded-[16px] border border-white/10 px-6 pb-12 pt-14 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:pb-14 sm:pt-16">
             <h1 className="t-hero text-white">
                 <span className="dot font-extrabold">IndianChain</span>{" "}
-                <span className="block font-medium text-white/90 sm:inline">Explorer</span>
+                <span className="block text-white/90 sm:inline">Explorer</span>
             </h1>
             <div className="mx-auto mt-9 max-w-[640px] text-left"><SearchBar large /></div>
         </section>
@@ -35,7 +35,7 @@ export default async function Home() {
         return (
             <div className="page">
                 <Hero />
-                <div className="card mt-8"><Empty title={up ? "Preview" : "Preview network offline"} action={<Link href="/records" className="btn">Records</Link>} /></div>
+                <div className="card mt-8"><Empty title={up ? "Preview" : "Preview network offline"} action={<Link href="/events" className="btn">Events</Link>} /></div>
             </div>
         );
     }
@@ -62,13 +62,13 @@ export default async function Home() {
             </div>
             {daily.length > 0 && (
                 <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                    <TrendChart title="Network activity" subtitle="Records finalized per day" mode="step" days={daily.map((x) => x.day)}
-                        series={[{ key: "all", label: "Records", color: "#3d55ff", values: daily.map((x) => x.farmer + x.agri_record + x.credit_app) }]} />
-                    <TrendChart title="Record distribution" subtitle="Farmer · agricultural · credit" mode="smooth" legend days={daily.map((x) => x.day)}
+                    <TrendChart title="Network activity" subtitle="Global transactions & protocol events" mode="step" days={daily.map((x) => x.day)}
+                        series={[{ key: "all", label: "Events", color: ACTIVITY, width: 2, tint: TINT.blue, fill: 0.3, ink: INK.blue, values: daily.map((x) => x.farmer + x.agri_record + x.credit_app) }]} />
+                    <TrendChart title="Record distribution" subtitle="Sector-specific data visualization" mode="smooth" days={daily.map((x) => x.day)}
                         series={[
-                            { key: "farmer", label: "Farmer", color: SERIES.farmer, values: daily.map((x) => x.farmer) },
-                            { key: "agri", label: "Agricultural", color: SERIES.agri_record, values: daily.map((x) => x.agri_record) },
-                            { key: "credit", label: "Credit", color: SERIES.credit_app, values: daily.map((x) => x.credit_app) },
+                            { key: "farmer", label: "Farmer", color: SERIES.farmer, width: 1.25, fill: 0.1, values: daily.map((x) => x.farmer) },
+                            { key: "agri", label: "Agri", color: SERIES.agri_record, width: 2, tint: TINT.blue, fill: 0.3, ink: INK.blue, values: daily.map((x) => x.agri_record) },
+                            { key: "credit", label: "Credit", color: SERIES.credit_app, width: 1.5, fill: 0.16, ink: INK.red, values: daily.map((x) => x.credit_app) },
                         ]} />
                 </div>
             )}

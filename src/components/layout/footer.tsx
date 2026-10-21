@@ -10,8 +10,8 @@ export function Footer() {
                     <p className="label">Building the decentralized future</p>
                 </div>
                 <div className="flex flex-col gap-3 sm:items-end">
-                    <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-[13px] text-faint">
-                        <Link href="/records" className="hover:text-white">Records</Link>
+                    <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] uppercase tracking-[0.1em] text-muted">
+                        <Link href="/events" className="hover:text-white">Events</Link>
                         <Link href="/anchors" className="hover:text-white">Anchors</Link>
                         <a href="https://ic-node.trivolvetech.com/integration-api/docs" target="_blank" rel="noopener noreferrer" className="hover:text-white">API</a>
                     </nav>

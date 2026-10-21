@@ -3,31 +3,26 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * IndianChain Explorer: the original Trivolve design language (true black, Trivolve blue and red,
- * uppercase headings, small tracked labels, dark cards), refined: fonts that actually load, readable
- * label sizes, AA contrast for blue/red text, one card and one table style everywhere.
- * `@theme inline` makes the font utilities reference next/font's variables on <html>.
+ * IndianChain Explorer: the original explorer's type and table language (the platform sans the
+ * original actually rendered in, 10px tracked uppercase labels, outlined chips in Trivolve blue,
+ * `#` block numbers, square chevrons), set inside dark see-through glass over the Trivolve backdrop.
  */
 @theme inline {
-  --font-sans: var(--font-inter), "Helvetica Neue", Helvetica, ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-grotesk), var(--font-inter), sans-serif;
-  --font-mono: var(--font-roboto-mono), ui-monospace, monospace;
-  --font-dot: var(--font-doto), var(--font-roboto-mono), monospace;
+  /* The original's fonts never loaded, so it rendered in the platform UI sans: keep exactly that. */
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  --font-dot: var(--font-doto), ui-monospace, monospace;
 
   --color-ground: var(--ground);
-  --color-surface: var(--surface);
-  --color-raised: var(--raised);
-  --color-line: var(--line);
-  --color-rule: var(--rule);
   --color-ink: var(--ink);
   --color-muted: var(--muted);
-  --color-faint: var(--faint);
+  --color-faint: var(--muted);
+  --color-line: var(--line);
   --color-blue: var(--blue);
   --color-blue-text: var(--blue-text);
+  --color-blue-line: var(--blue-line);
   --color-red: var(--red);
   --color-red-text: var(--red-text);
-  --color-green: var(--green);
-  --color-amber: var(--amber);
 
   --color-background: var(--ground);
   --color-foreground: var(--ink);
@@ -39,23 +34,15 @@
 :root {
   color-scheme: dark;
   --ground: #000000;
-  --surface: #0a0a0a;
-  --raised: #121212;
-  --line: #222222;
-  --rule: #171717;
   --ink: #ffffff;
-  --muted: #a8a8a8;
-  --faint: #8a8a8a;
-  --blue: #0018fe;       /* Trivolve blue: active marks, buttons, bars */
-  --blue-text: #7383ff;  /* the same blue lifted for text on black (6.4:1) */
-  --red: #ff1f1f;        /* Trivolve red */
-  --red-text: #ff6b6b;
-  --green: #4ade80;
-  --amber: #f5b142;
+  --muted: #888888;      /* the original muted text (5.9:1 on black) */
+  --line: rgba(255, 255, 255, 0.08);
+  --blue: #0018fe;       /* Trivolve blue: fills, buttons, active marks */
+  --blue-line: #2d45ff;  /* the same blue lifted to 3.4:1 for strokes and bars */
+  --blue-text: #6b7aff;  /* and to 5.9:1 for text on black */
+  --red: #ff0000;
+  --red-text: #ff5c5c;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
-  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  /* the Trivolve rim: blue light at the top-left, red at the bottom-right */
-  --rim: linear-gradient(135deg, rgba(92, 110, 255, 0.75), rgba(255, 255, 255, 0.10) 30%, rgba(255, 255, 255, 0.04) 60%, rgba(255, 72, 72, 0.6));
   /* trivolvetech.com: the plus-sign grid and the blue -> black -> red wash */
   --plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='136' height='136'%3E%3Cpath d='M68 63v10M63 68h10' stroke='%23ffffff' stroke-opacity='0.09' stroke-width='1'/%3E%3C/svg%3E");
   --wash-x: linear-gradient(85.91deg, rgba(0, 24, 254, 0.4) -19%, rgba(0, 0, 0, 0.4) 53.51%, rgba(255, 0, 0, 0.357) 118.99%);
@@ -63,15 +50,15 @@
 }
 
 @layer base {
-  * { border-color: rgba(255, 255, 255, 0.08); }
+  * { border-color: var(--line); }
   html { background: #000; }
   body {
     background: transparent; color: var(--ink);
-    font-family: var(--font-sans); font-size: 14px; line-height: 1.5; letter-spacing: -0.005em;
+    font-family: var(--font-sans); font-size: 14px; line-height: 1.5;
     -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
   }
-  /* Trivolve light on every page: blue from the top-left, red from the bottom-right, a cool mid glow,
-     the plus grid. Fixed to the viewport, so glass anywhere on the page always refracts brand colour. */
+  /* Trivolve light behind every page: blue from the top-left, red from the bottom-right, the plus
+     grid. Fixed to the viewport, so the glass boxes always have colour to frost. */
   body::before {
     content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
     background:
@@ -84,8 +71,8 @@
     background-size: 136px 136px, auto, auto, auto, auto, auto;
   }
   ::selection { background: var(--blue); color: #fff; }
-  :focus-visible { outline: 2px solid #5c6eff; outline-offset: 2px; border-radius: 6px; }
-  input::placeholder { color: rgba(255, 255, 255, 0.52); }
+  :focus-visible { outline: 2px solid var(--blue-line); outline-offset: 2px; border-radius: 4px; }
+  input::placeholder { color: rgba(255, 255, 255, 0.5); }
   ::-webkit-scrollbar { width: 8px; height: 8px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.12); border-radius: 99px; }
@@ -95,119 +82,121 @@
 }
 
 @layer components {
-  .page { width: 100%; max-width: 1280px; margin-inline: auto; padding-inline: 16px; }
+  /* Wide like the original (full width, 32px gutters), capped for very large screens */
+  .page { width: 100%; max-width: 1680px; margin-inline: auto; padding-inline: 16px; }
   @media (min-width: 1024px) { .page { padding-inline: 32px; } }
 
-  /* ---------- Type. Outer brand layer in Space Grotesk; everything inside the boxes in Inter,
-     set like the original explorer: plain uppercase titles, widely tracked small subtitles. ---------- */
-  .font-display { font-family: var(--font-display); }
-  .t-hero { font-family: var(--font-display); font-size: 34px; line-height: 1.05; letter-spacing: -0.01em; font-weight: 500; text-transform: uppercase; }
-  @media (min-width: 640px) { .t-hero { font-size: 46px; } }
-  .t-figure { font-family: var(--font-display); font-size: 30px; line-height: 1; letter-spacing: -0.03em; font-weight: 500; font-variant-numeric: tabular-nums; }
-  @media (min-width: 1024px) { .t-figure { font-size: 38px; } }
-  .t-title { font-size: 26px; line-height: 1.15; letter-spacing: -0.02em; font-weight: 400; text-transform: uppercase; }
-  @media (min-width: 640px) { .t-title { font-size: 32px; } }
-  .heading { text-transform: uppercase; font-weight: 400; letter-spacing: -0.015em; color: #fff; }
-  .label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.2em; color: #7f88a8; }
+  /* ---------- Type: the original explorer's sizes ---------- */
+  .t-hero { font-size: 34px; line-height: 1.05; letter-spacing: -0.04em; font-weight: 400; text-transform: uppercase; }
+  @media (min-width: 640px) { .t-hero { font-size: 48px; } }
+  .t-title { font-size: 36px; line-height: 1; letter-spacing: -0.05em; font-weight: 400; text-transform: uppercase; }
+  @media (min-width: 640px) { .t-title { font-size: 48px; } }
+  .t-figure { font-size: 30px; line-height: 1; letter-spacing: -0.025em; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .section-title { font-size: 20px; line-height: 1.2; font-weight: 400; text-transform: uppercase; letter-spacing: -0.05em; color: #fff; }
+  .card-sub { margin-top: 8px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); }
+  .label { font-size: 10px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); }
   .num { font-variant-numeric: tabular-nums; }
-  .mono { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: -0.01em; }
+  /* hashes and IDs: the original set them in the same sans, small and dim */
+  .mono { font-size: 12px; font-variant-numeric: tabular-nums; }
+  .code { font-family: var(--font-mono); font-size: 11px; line-height: 24px; }
   .dot { font-family: var(--font-dot); font-weight: 800; letter-spacing: 0.01em; }
 
-  /* ---------- Boxes: smooth dark surfaces, a faint Trivolve edge, no milky glass ---------- */
+  /* ---------- Boxes: dark see-through glass. The backdrop shows through, darker and frosted;
+     only a hairline rim says where the glass is. ---------- */
   .card {
-    position: relative; isolation: isolate; overflow: hidden; border-radius: 22px;
-    background:
-      radial-gradient(420px circle at var(--mx, -600px) var(--my, -600px), rgba(0, 24, 254, 0.07), transparent 65%),
-      linear-gradient(160deg, rgba(0, 24, 254, 0.05), transparent 35%, transparent 70%, rgba(255, 0, 0, 0.04)),
-      #0b0b0e;
-    box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.9);
+    position: relative; isolation: isolate; overflow: hidden; border-radius: 16px;
+    background: linear-gradient(180deg, rgba(5, 6, 14, 0.38), rgba(0, 0, 0, 0.5));
+    -webkit-backdrop-filter: blur(24px) saturate(160%); backdrop-filter: blur(24px) saturate(160%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 30px 60px -32px rgba(0, 0, 0, 0.9);
   }
   .card::before {
     content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; padding: 1px; pointer-events: none;
     background:
-      radial-gradient(300px circle at var(--mx, -600px) var(--my, -600px), rgba(110, 125, 255, 0.55), transparent 70%),
-      linear-gradient(150deg, rgba(92, 110, 255, 0.34), rgba(255, 255, 255, 0.07) 28%, rgba(255, 255, 255, 0.05) 70%, rgba(255, 72, 72, 0.3));
+      radial-gradient(280px circle at var(--mx, -600px) var(--my, -600px), rgba(120, 135, 255, 0.6), transparent 70%),
+      linear-gradient(155deg, rgba(110, 125, 255, 0.32), rgba(255, 255, 255, 0.07) 26%, rgba(255, 255, 255, 0.035) 64%, rgba(255, 72, 72, 0.22));
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
   }
   .card > * { position: relative; }
-  /* Box header as in the original: title, tracked subtitle, generous padding, no rule */
-  .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 28px 32px 22px; }
-  .section-title { font-size: 20px; line-height: 1.2; font-weight: 400; text-transform: uppercase; letter-spacing: -0.015em; color: #fff; }
-  @media (min-width: 640px) { .section-title { font-size: 22px; } }
-  .card-sub { margin-top: 8px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.22em; color: #7f88a8; }
+  .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 24px 20px 20px; }
+  @media (min-width: 640px) { .card-head { padding: 32px 32px 24px; } }
 
-  /* ---------- Controls: dark glass, no white film ---------- */
+  /* small controls on the same glass */
   .glass {
     position: relative;
-    background: rgba(12, 12, 18, 0.6);
-    -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
-    border: 1px solid rgba(255, 255, 255, 0.09);
-    box-shadow: 0 10px 28px -12px rgba(0, 0, 0, 0.7);
-  }
-  .glass-rim::before {
-    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
-    background: linear-gradient(150deg, rgba(92, 110, 255, 0.5), rgba(255, 255, 255, 0.06) 35%, rgba(255, 255, 255, 0.04) 65%, rgba(255, 72, 72, 0.45));
-    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
+    background: rgba(0, 0, 0, 0.4);
+    -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
-  /* ---------- Tables: whole-row targets, light sweep on hover, fading dividers ---------- */
+  /* ---------- Tables: the original events table, row = one target ---------- */
   .table { width: 100%; border-collapse: separate; border-spacing: 0; }
-  .table th { height: 46px; padding: 0 16px; text-align: left; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.2em; color: #7f88a8; white-space: nowrap; background: rgba(255, 255, 255, 0.02); }
-  .table td { height: 60px; padding: 0 16px; font-size: 14px; color: rgba(255, 255, 255, 0.9); white-space: nowrap; }
-  .table th:first-child, .table td:first-child { padding-left: 32px; }
-  .table th:last-child, .table td:last-child { padding-right: 32px; }
+  .table th { padding: 20px 16px; text-align: left; font-size: 10px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); white-space: nowrap; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
+  .table th .h { display: inline-flex; align-items: center; gap: 10px; }
+  .table th svg { width: 14px; height: 14px; color: var(--blue-text); flex: none; }
+  .table td { padding: 20px 16px; font-size: 12px; color: rgba(255, 255, 255, 0.6); white-space: nowrap; vertical-align: middle; }
+  .table th:first-child, .table td:first-child { padding-left: 20px; }
+  .table th:last-child, .table td:last-child { padding-right: 20px; }
+  @media (min-width: 640px) {
+    .table th:first-child, .table td:first-child { padding-left: 32px; }
+    .table th:last-child, .table td:last-child { padding-right: 32px; }
+  }
   .table tbody tr { position: relative; transition: background-color 200ms ease; }
-  .table tbody tr::after { content: ""; position: absolute; left: 32px; right: 32px; bottom: 0; height: 1px; pointer-events: none;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07) 10%, rgba(255, 255, 255, 0.07) 90%, transparent); }
+  .table tbody tr::after { content: ""; position: absolute; left: 32px; right: 32px; bottom: 0; height: 1px; pointer-events: none; background: rgba(255, 255, 255, 0.05); }
   .table tbody tr:last-child::after { display: none; }
-  .table tbody tr:hover { background: linear-gradient(90deg, rgba(0, 24, 254, 0.16), rgba(0, 24, 254, 0.04) 45%, transparent 85%); }
   .table tbody tr td:first-child { box-shadow: inset 2px 0 0 transparent; transition: box-shadow 200ms ease; }
-  .table tbody tr:hover td:first-child { box-shadow: inset 2px 0 0 #5c6eff; }
+  @media (hover: hover) and (pointer: fine) {
+    .table tbody tr:hover { background: linear-gradient(90deg, rgba(0, 24, 254, 0.13), rgba(0, 24, 254, 0.03) 45%, transparent 80%); }
+    .table tbody tr:hover td:first-child { box-shadow: inset 2px 0 0 var(--blue-line); }
+  }
   .table .r { text-align: right; }
-  .table .dim { color: rgba(255, 255, 255, 0.6); }
+  /* block number as in the original: a small dim # and the height in white */
+  .blk { display: inline-flex; align-items: baseline; gap: 6px; font-size: 14px; color: #fff; font-variant-numeric: tabular-nums; }
+  .blk::before { content: "#"; font-size: 10px; color: var(--muted); }
   .row-link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
   .table .z { position: relative; z-index: 2; }
-  .row-arrow { opacity: 0; transform: translateX(-6px); color: rgba(255, 255, 255, 0.4); transition: opacity 200ms ease, transform 240ms var(--ease-out), color 200ms ease; }
-  .table tbody tr:hover .row-arrow { opacity: 1; transform: none; color: #a3adff; }
-  @keyframes arrive { 0% { background: rgba(0, 24, 254, 0.32); } 100% { background: transparent; } }
-  .row-new { animation: arrive 1200ms var(--ease-out); }
+  /* the original's square chevron at the end of each row */
+  .row-go { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin-left: auto; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); color: rgba(255, 255, 255, 0.35); transition: color 200ms ease, border-color 200ms ease, transform 240ms var(--ease-out); }
+  @media (hover: hover) and (pointer: fine) {
+    .table tbody tr:hover .row-go { color: var(--blue-text); border-color: var(--blue-line); transform: translateX(2px); }
+    .row-copy { opacity: 0; transition: opacity 160ms ease; }
+    .table tbody tr:hover .row-copy, .row-copy:focus-visible { opacity: 1; }
+  }
 
-  .link { color: #8f9bff; transition: color 150ms ease; }
-  .link:hover { color: #b8c0ff; }
+  .link { color: var(--blue-text); transition: color 150ms ease; }
+  .link:hover { color: #fff; }
 
-  /* ---------- Status: a lit dot and a word (quiet), capsule only where it must stand out ---------- */
-  .status { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 500; white-space: nowrap; }
-  .status::before { content: ""; width: 7px; height: 7px; border-radius: 99px; background: currentColor; box-shadow: 0 0 10px currentColor; }
-  .s-green { color: #5ee39a; } .s-amber { color: #f6be5e; } .s-red { color: #ff7a7a; } .s-blue { color: #8f9bff; } .s-grey { color: rgba(255, 255, 255, 0.6); }
-  .chip { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 10px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap; border: 1px solid transparent; }
-  .chip-green { color: #6ee7a0; background: rgba(74, 222, 128, 0.1); border-color: rgba(74, 222, 128, 0.2); }
-  .chip-blue { color: #b8c0ff; background: rgba(0, 24, 254, 0.22); border-color: rgba(92, 110, 255, 0.45); }
-  .chip-amber { color: #f8c46b; background: rgba(245, 177, 66, 0.1); border-color: rgba(245, 177, 66, 0.22); }
-  .chip-red { color: #ff8a8a; background: rgba(255, 31, 31, 0.12); border-color: rgba(255, 31, 31, 0.26); }
-  .chip-grey { color: rgba(255, 255, 255, 0.78); background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.09); }
+  /* ---------- Chips: the original outlined badges ---------- */
+  .chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 4px; font-size: 10px; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; color: rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.12); }
+  .chip svg { width: 12px; height: 12px; flex: none; }
+  .chip-blue { color: var(--blue-text); background: rgba(0, 24, 254, 0.08); border-color: rgba(45, 69, 255, 0.45); }
+  .chip-sector { color: var(--blue-text); }
+  .chip-red { color: var(--red-text); background: rgba(255, 0, 0, 0.06); border-color: rgba(255, 0, 0, 0.3); }
+  .tag-latest { display: inline-flex; align-items: center; height: 16px; padding: 0 6px; border-radius: 3px; background: var(--blue); color: #fff; font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; }
 
-  /* ---------- Buttons, fields, icon buttons ---------- */
-  .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 18px; border-radius: 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #fff;
-    background: rgba(14, 14, 20, 0.7);
-    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.7);
-    transition: border-color 180ms ease, box-shadow 180ms ease, transform 160ms var(--ease-out), background-color 180ms ease; }
-  .btn:hover { border-color: rgba(120, 135, 255, 0.55); box-shadow: 0 0 0 3px rgba(0, 24, 254, 0.14), 0 10px 24px -12px rgba(0, 24, 254, 0.55); }
+  /* ---------- Buttons and fields, from the original filter bar ---------- */
+  .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 20px; border-radius: 8px; font-size: 10px; font-weight: 400; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(255, 255, 255, 0.8); white-space: nowrap;
+    background: rgba(0, 0, 0, 0.4); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    transition: color 180ms ease, border-color 180ms ease, background-color 180ms ease, transform 160ms var(--ease-out); }
+  .btn:hover { color: #fff; border-color: var(--blue-line); }
   .btn:active { transform: scale(0.97); }
-  .btn-blue { background: linear-gradient(180deg, #2a42ff, #0018fe); border-color: rgba(160, 172, 255, 0.55); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 10px 26px -8px rgba(0, 24, 254, 0.75); }
-  .btn-blue:hover { border-color: rgba(200, 208, 255, 0.8); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 0 4px rgba(0, 24, 254, 0.2), 0 12px 30px -8px rgba(0, 24, 254, 0.9); }
+  .btn-blue { background: var(--blue); border-color: var(--blue); color: #fff; }
+  .btn-blue:hover { background: #1a30ff; border-color: #1a30ff; box-shadow: 0 10px 28px -10px rgba(0, 24, 254, 0.9); }
+  .btn-text { background: none; border-color: transparent; color: var(--muted); -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .btn-text:hover { border-color: transparent; color: #fff; }
   .btn-white { background: #fff; color: #000; border-color: #fff; }
 
-  .field { height: 44px; width: 100%; padding: 0 14px; border-radius: 12px; font-size: 14px; font-weight: 400; letter-spacing: -0.005em; text-transform: none; color: #fff; font-family: var(--font-sans);
-    background: rgba(12, 12, 18, 0.7); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.1); transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease; }
-  .field:hover { border-color: rgba(255, 255, 255, 0.24); }
-  .field:focus-visible { outline: none; border-color: #5c6eff; box-shadow: 0 0 0 4px rgba(0, 24, 254, 0.22); }
-  select.field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-opacity='.6' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
-  select.field option { background: #111; }
+  .field { height: 43px; width: 100%; padding: 0 16px; border-radius: 8px; font-size: 10px; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; color: #fff; font-family: var(--font-sans);
+    background: rgba(0, 0, 0, 0.4); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1); transition: border-color 180ms ease, box-shadow 180ms ease; }
+  .field:hover { border-color: rgba(255, 255, 255, 0.2); }
+  .field:focus-visible { outline: none; border-color: var(--blue-line); box-shadow: 0 0 0 3px rgba(0, 24, 254, 0.25); }
+  .field::placeholder { color: rgba(255, 255, 255, 0.4); }
+  select.field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-opacity='.5' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
+  select.field option { background: #0a0a0a; }
 
-  .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex: none; border-radius: 9px; color: rgba(255, 255, 255, 0.55); background: rgba(12, 12, 18, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms var(--ease-out); }
-  .icon-btn:hover { color: #fff; border-color: rgba(92, 110, 255, 0.7); background: rgba(0, 24, 254, 0.2); }
+  .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex: none; border-radius: 8px; color: rgba(255, 255, 255, 0.55); background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.1); transition: color 160ms ease, border-color 160ms ease, transform 160ms var(--ease-out); }
+  .icon-btn:hover { color: #fff; border-color: var(--blue-line); }
   .icon-btn:active { transform: scale(0.94); }
 
   /* ---------- The Trivolve wash panels (hero, stats band) ---------- */
@@ -218,19 +207,17 @@
     background: radial-gradient(380px circle at var(--mx, -500px) var(--my, -500px), rgba(92, 110, 255, 0.10), transparent 65%); }
   .spot > * { position: relative; z-index: 1; }
 
-  /* chart entrances, once: the line draws itself, the ring segments sweep in */
-  .chart-line { stroke-dasharray: 1; stroke-dashoffset: 0; animation: draw 1000ms var(--ease-out) both; }
+  /* chart entrance on load and on a range change: the line draws once, the area fades in */
+  .chart-line { stroke-dasharray: 1; stroke-dashoffset: 0; animation: draw 900ms var(--ease-out) both; }
   @keyframes draw { from { stroke-dashoffset: 1; } }
-  .chart-area { animation: fadein 800ms ease-out both; }
+  .chart-area { animation: fadein 700ms ease-out both; }
   @keyframes fadein { from { opacity: 0; } }
 
-  .tag { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255, 255, 255, 0.62); white-space: nowrap; }
-
   @media (prefers-reduced-transparency: reduce) {
-    .card, .glass, .btn, .field { -webkit-backdrop-filter: none; backdrop-filter: none; background: #121218; }
+    .card, .glass, .btn, .field { -webkit-backdrop-filter: none; backdrop-filter: none; background: #0b0b10; }
   }
   @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    .card { background: rgba(14, 14, 20, 0.95); }
-    .glass, .btn, .field { background: #17171e; }
+    .card { background: rgba(6, 6, 12, 0.94); }
+    .glass, .btn, .field { background: #0b0b10; }
   }
 }

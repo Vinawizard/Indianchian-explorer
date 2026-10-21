@@ -1,6 +1,6 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, FileText, Hash as HashIcon, User } from "lucide-react";
 import { resolveNetworkFromCookies } from "@/lib/network-server";
 import { getBlockDetail } from "@/lib/block-data";
 import { queryMainnetRecords } from "@/lib/mainnet-records";
@@ -13,6 +13,7 @@ import { TimeAgo } from "@/components/ui/time-ago";
 import { Empty } from "@/components/ui/empty";
 import { RecordsTable } from "@/components/records/records-table";
 import { JsonView } from "@/components/ui/json-view";
+import { Th } from "@/components/ui/th";
 
 export const revalidate = 0;
 
@@ -54,11 +55,11 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
         <div className="page">
             <PageHeader
                 crumbs={crumbs}
-                title={<>Block <span className="num font-normal text-white/60">#{fmtInt(block.number)}</span></>}
+                title={<>Block <span className="num text-white/60">#{block.number}</span></>}
                 meta={
                     <>
                         {block.finalized ? <Status tone="positive">Finalized</Status> : <Status>Finalizing</Status>}
-                        <span className="text-white/60">{block.timestamp && <><TimeAgo iso={block.timestamp} /> · </>}{block.extrinsics.length} extrinsics · {fmtInt(records.rows.length)} records</span>
+                        <span className="text-white/60">{block.timestamp && <><TimeAgo iso={block.timestamp} /> · </>}{block.extrinsics.length} extrinsics · {fmtInt(records.rows.length)} events</span>
                     </>
                 }
                 actions={
@@ -82,10 +83,10 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
 
             {network === "mainnet" && (
                 <section className="card mt-6" aria-labelledby="records">
-                    <div className="card-head"><div><h2 id="records" className="section-title">Records</h2><p className="card-sub">{fmtInt(records.rows.length)} in this block</p></div></div>
+                    <div className="card-head"><div><h2 id="records" className="section-title">Events</h2><p className="card-sub">{fmtInt(records.rows.length)} in this block</p></div></div>
                     {records.rows.length
-                        ? <RecordsTable rows={records.rows} cols={["record", "version", "farmer", "anchor"]} caption="Records in this block" />
-                        : <p className="label px-6 py-6">No records in this block</p>}
+                        ? <RecordsTable rows={records.rows} cols={["event", "sector", "version", "farmer", "anchor"]} caption="Events in this block" />
+                        : <p className="label px-8 pb-8">No events in this block</p>}
                 </section>
             )}
 
@@ -94,7 +95,7 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
                 <div className="overflow-x-auto">
                     <table className="table">
                         <caption className="sr-only">Extrinsics</caption>
-                        <thead><tr><th scope="col" className="r">#</th><th scope="col">Call</th><th scope="col">Hash</th><th scope="col">Signer</th><th scope="col">Result</th></tr></thead>
+                        <thead><tr><th scope="col" className="r">#</th><Th icon={FileText}>Call</Th><Th icon={HashIcon}>Hash</Th><Th icon={User}>Signer</Th><Th icon={CheckCircle2}>Result</Th></tr></thead>
                         <tbody>
                             {block.extrinsics.map((x) => (
                                 <tr key={x.index}>
@@ -102,11 +103,11 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
                                     <td className="whitespace-normal py-2">
                                         <details>
                                             <summary className="cursor-pointer list-none"><span className="mono text-white">{x.section}.{x.method}</span> <span className="label ml-2">Args</span></summary>
-                                            <div className="mt-2 max-w-[680px] border border-line"><JsonView data={x.args} maxHeight={300} /></div>
+                                            <div className="mt-2 max-w-[680px] overflow-hidden rounded-[8px] border border-white/10"><JsonView data={x.args} maxHeight={300} /></div>
                                         </details>
                                     </td>
                                     <td><Hash value={x.hash} head={8} tail={6} /></td>
-                                    <td>{x.signer ? <span className="mono text-muted" title={x.signer}>{shortHash(x.signer, 6, 6)}</span> : <span className="tag">Inherent</span>}</td>
+                                    <td>{x.signer ? <span className="mono text-muted" title={x.signer}>{shortHash(x.signer, 6, 6)}</span> : <span className="chip">Inherent</span>}</td>
                                     <td>{x.status === "success" ? <Status tone="positive">Success</Status> : x.status === "failed" ? <Status tone="negative">Failed</Status> : <Status>Unknown</Status>}</td>
                                 </tr>
                             ))}

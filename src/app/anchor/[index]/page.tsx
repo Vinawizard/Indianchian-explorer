@@ -45,7 +45,7 @@ export default async function AnchorPage({ params }: { params: Promise<{ index: 
                 meta={
                     <>
                         <Status tone="positive">Confirmed</Status>
-                        <span className="text-white/60">{fmtInt(batch.record_count)} records{mix ? ` · ${mix}` : ""} · <TimeAgo iso={batch.confirmed_at} /></span>
+                        <span className="text-white/60">{fmtInt(batch.record_count)} events{mix ? ` · ${mix}` : ""} · <TimeAgo iso={batch.confirmed_at} /></span>
                     </>
                 }
                 actions={
@@ -62,18 +62,18 @@ export default async function AnchorPage({ params }: { params: Promise<{ index: 
                     { label: "Anchored at", value: <span className="num">{utc(batch.confirmed_at)}</span> },
                     ...(batch.cardano_block_number ? [{ label: "Cardano block", value: <span className="num">{fmtInt(batch.cardano_block_number)}</span> }] : []),
                     { label: "Merkle root", value: <Hash value={batch.merkle_root} full /> },
-                    ...(batch.records_hash ? [{ label: "Records hash", value: <Hash value={batch.records_hash} full /> }] : []),
+                    ...(batch.records_hash ? [{ label: "Events hash", value: <Hash value={batch.records_hash} full /> }] : []),
                     ...(batch.manifest_hash ? [{ label: "Manifest digest", value: <Hash value={batch.manifest_hash} full /> }] : []),
-                    { label: "IndianChain blocks", value: <span className="num">{batch.l2_from_block != null ? <Link href={`/block/${batch.l2_from_block}`} className="link">{fmtInt(batch.l2_from_block)}</Link> : "—"}{batch.l2_to_block != null && batch.l2_to_block !== batch.l2_from_block && <> – <Link href={`/block/${batch.l2_to_block}`} className="link">{fmtInt(batch.l2_to_block)}</Link></>}</span> },
+                    { label: "IndianChain blocks", value: <span className="num">{batch.l2_from_block != null ? <Link href={`/block/${batch.l2_from_block}`} className="link">#{batch.l2_from_block}</Link> : "—"}{batch.l2_to_block != null && batch.l2_to_block !== batch.l2_from_block && <> – <Link href={`/block/${batch.l2_to_block}`} className="link">#{batch.l2_to_block}</Link></>}</span> },
                     ...(batch.anchor_script_address ? [{ label: "Anchor contract", value: <Hash value={batch.anchor_script_address} head={14} tail={10} /> }] : []),
-                    { label: "Metadata", value: <span className="tag">Label 1804 · v{batch.metadata_version}</span> },
+                    { label: "Metadata", value: <span className="chip">Label 1804 · v{batch.metadata_version}</span> },
                 ]} />
             </section>
             <section className="card mt-6" aria-labelledby="sealed">
-                <div className="card-head"><div><h2 id="sealed" className="section-title">Sealed records</h2><p className="card-sub">{fmtInt(records.rows.length)} in this batch</p></div></div>
+                <div className="card-head"><div><h2 id="sealed" className="section-title">Sealed events</h2><p className="card-sub">{fmtInt(records.rows.length)} in this batch</p></div></div>
                 {records.rows.length
-                    ? <RecordsTable rows={records.rows} cols={["record", "version", "farmer", "block"]} caption="Records sealed in this anchor" />
-                    : <Empty title="Could not load records" />}
+                    ? <RecordsTable rows={records.rows} cols={["block", "event", "sector", "version", "farmer"]} caption="Events sealed in this anchor" />
+                    : <Empty title="Could not load events" />}
             </section>
         </div>
     );

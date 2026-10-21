@@ -44,7 +44,7 @@ export async function resolveSearch(raw: string, network: ChainNetwork): Promise
         const { rows } = await queryMainnetRecords({ find: q, limit: 1, noCount: true });
         if (rows[0]) return rows[0].record_id === q ? `/record/${q}` : `/record/${rows[0].record_id}_${rows[0].version}`;
         const farmer = await queryMainnetRecords({ farmer: q, limit: 1, noCount: true });
-        if (farmer.rows[0]) return `/records?farmer=${q}`;
+        if (farmer.rows[0]) return `/events?farmer=${q}`;
         return null;
     }
     const hex = q.startsWith("0x") ? q.slice(2) : q;

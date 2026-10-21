@@ -1,13 +1,14 @@
 /**
- * Chart colours, validated with the dataviz skill's checker on the #0a0a0a card surface
- * (lightness band, chroma floor, CVD and normal-vision separation, 3:1 contrast all pass).
- * Trivolve blue and red are lifted just enough to stay visible as marks on black.
+ * Chart colours from the original explorer: farmer white, agricultural Trivolve blue, credit
+ * Trivolve red. The blue stroke is lifted to #2d45ff so the line clears 3:1 on black; fills keep
+ * the brand values.
  */
 export const SERIES = {
-    farmer: "#4a5cff",       // Trivolve blue
-    agri_record: "#16a2b5",  // teal, the original explorer's cyan
-    credit_app: "#ff4242",   // Trivolve red
+    farmer: "#ffffff",
+    agri_record: "#2d45ff",
+    credit_app: "#ff2a2a",
 } as const;
-export const BAR = SERIES.farmer;
-export const GRID = "rgba(255,255,255,0.07)";
-export const TICK = "rgba(255,255,255,0.5)";
+export const ACTIVITY = "#2d45ff";
+/** area fills keep the brand blue; tooltip figures use the text-safe tints */
+export const TINT = { blue: "#0018fe" } as const;
+export const INK = { white: "#ffffff", blue: "#6b7aff", red: "#ff5c5c" } as const;

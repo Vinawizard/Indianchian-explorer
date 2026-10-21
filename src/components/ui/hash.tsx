@@ -3,7 +3,7 @@ import { CopyButton } from "./copy-button";
 import { shortHash } from "@/lib/format";
 
 /**
- * A hash or ID in mono. `full` prints it whole and lets it wrap (detail pages); otherwise it is
+ * A hash or ID, small and tabular as in the original. `full` prints it whole and lets it wrap (detail pages); otherwise it is
  * shortened in the middle with the whole value in the tooltip. Copy is always one click away.
  */
 export function Hash({ value, href, external, full, copy = true, head, tail, className = "" }: {
@@ -11,7 +11,7 @@ export function Hash({ value, href, external, full, copy = true, head, tail, cla
 }) {
     if (!value) return <span className="text-faint">—</span>;
     const text = full ? value : shortHash(value, head, tail);
-    const body = <span className={`mono ${full ? "break-all !text-[12.5px]" : "whitespace-nowrap"}`} title={full ? undefined : value}>{text}</span>;
+    const body = <span className={`mono ${full ? "break-all" : "whitespace-nowrap"}`} title={full ? undefined : value}>{text}</span>;
     return (
         <span className={`inline-flex items-center gap-1 min-w-0 ${className}`}>
             {href ? (

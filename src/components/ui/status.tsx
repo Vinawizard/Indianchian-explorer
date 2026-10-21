@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
+import { CheckCircle2, Clock, XCircle } from "lucide-react";
 
 type Tone = "positive" | "warning" | "negative" | "neutral" | "blue";
-const CLS: Record<Tone, string> = { positive: "s-green", warning: "s-amber", negative: "s-red", neutral: "s-grey", blue: "s-blue" };
 
-/** A lit dot and a word: status stays readable without a filled chip on every row. */
+/** The original explorer's status badge: an outlined chip, Trivolve blue when done, quiet while waiting. */
 export function Status({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
-    return <span className={`status ${CLS[tone]}`}>{children}</span>;
+    if (tone === "positive" || tone === "blue") return <span className="chip chip-blue"><CheckCircle2 aria-hidden />{children}</span>;
+    if (tone === "negative") return <span className="chip chip-red"><XCircle aria-hidden />{children}</span>;
+    return <span className="chip"><Clock aria-hidden />{children}</span>;
 }

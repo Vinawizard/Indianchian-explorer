@@ -1,28 +1,24 @@
 import type { Metadata } from "next";
-import { Doto, Inter, Roboto_Mono, Space_Grotesk } from "next/font/google";
+import { Doto } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { PreviewNotice } from "@/components/layout/preview-notice";
 import { Spotlight } from "@/components/ui/spotlight";
 
-// Inter for everything inside the boxes (the original explorer's look, like Trivolve's Helvetica);
-// Space Grotesk only for the outer brand layer (nav, hero, stats band); Roboto Mono for hashes.
-const inter = Inter({ variable: "--font-inter", subsets: ["latin"], display: "swap", axes: ["opsz"] });
-const grotesk = Space_Grotesk({ variable: "--font-grotesk", subsets: ["latin"], display: "swap" });
-const mono = Roboto_Mono({ variable: "--font-roboto-mono", subsets: ["latin"], display: "swap" });
-// Trivolve's dot-matrix display voice (trivolvetech.com uses OffBit Dot; Doto is the open-licence match).
+// Text is the platform UI sans, as the original explorer rendered (see globals.css).
+// Trivolve's dot-matrix voice for the IndianChain wordmark only (trivolvetech.com uses OffBit Dot; Doto is the open-licence match).
 const doto = Doto({ weight: ["800"], variable: "--font-doto", subsets: ["latin"], display: "swap" });
 
 export const metadata: Metadata = {
     title: { default: "IndianChain Explorer", template: "%s · IndianChain Explorer" },
-    description: "IndianChain mainnet explorer by Trivolve Tech: blocks, records and their Cardano anchors.",
+    description: "IndianChain mainnet explorer by Trivolve Tech: blocks, events and their Cardano anchors.",
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
     return (
         // Font variables live on <html> so every token that references them resolves.
-        <html lang="en" className={`dark ${inter.variable} ${grotesk.variable} ${mono.variable} ${doto.variable}`}>
+        <html lang="en" className={`dark ${doto.variable}`}>
             <body className="min-h-screen flex flex-col">
                 <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 btn btn-white">
                     Skip to content
