@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Segmented } from "@/components/ui/segmented";
+import { DotTitle } from "@/components/ui/dot-text";
 import { compact, dayLabel, niceMax, smoothPath, stepPath, type Pt } from "./paths";
 
 /** `tint` colours the area (defaults to the line colour), `ink` the figure in the tooltip. */
@@ -65,10 +66,10 @@ export function TrendChart({ title, subtitle, days, series, mode }: {
 
     return (
         <section className="card flex h-full flex-col" aria-label={title}>
-            <div className="flex flex-col items-start gap-4 px-5 py-6 sm:flex-row sm:justify-between sm:px-8 sm:py-8">
+            <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-5 px-5 py-6 sm:px-8 sm:py-8">
                 <div className="min-w-0">
-                    <h2 className="section-title">{title}</h2>
-                    <p className="card-sub">{subtitle}</p>
+                    <h2><DotTitle text={title} /></h2>
+                    <p className="card-sub !mt-3">{subtitle}</p>
                 </div>
                 <Segmented label={`${title} range`} size="sm" value={range} onChange={setRange} options={RANGES} />
             </div>

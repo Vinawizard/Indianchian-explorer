@@ -14,6 +14,7 @@ import { Status } from "@/components/ui/status";
 import { Segmented } from "@/components/ui/segmented";
 import { CardanoIcon } from "@/components/ui/cardano-icon";
 import { Th } from "@/components/ui/th";
+import { DotTitle } from "@/components/ui/dot-text";
 import { RecordsTable } from "@/components/records/records-table";
 
 type B = { number: number; hash: string; extrinsicsCount: number; timestamp: string | null };
@@ -47,10 +48,10 @@ export function LiveFeed({ blocks: initialBlocks, finalized: initialFinalized, r
 
     return (
         <section aria-labelledby="feed" className="card">
-            <div className="flex flex-col items-start gap-4 px-5 py-6 sm:flex-row sm:justify-between sm:px-8 sm:py-8">
+            <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-5 px-5 py-6 sm:px-8 sm:py-8">
                 <div>
-                    <h2 id="feed" className="section-title">Live feed</h2>
-                    <p className="card-sub">Updates every ~6 seconds with network consensus</p>
+                    <h2 id="feed"><DotTitle text="Live feed" /></h2>
+                    <p className="card-sub !mt-3">Updates every ~6 seconds with network consensus</p>
                 </div>
                 <Segmented label="Feed" size="sm" value={tab} onChange={setTab}
                     options={[{ value: "blocks", label: "Blocks" }, { value: "events", label: "Events" }, { value: "anchors", label: "Anchors" }]} />

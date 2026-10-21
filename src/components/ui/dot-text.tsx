@@ -36,3 +36,19 @@ export function DotText({ text, cell = 4, className = "", label, descender }: {
         </svg>
     );
 }
+
+/**
+ * A section title in the dot matrix: one DotText per word on the 4px grid, wrapping between words
+ * (a 16px word gap is 4 cells, the same space DotText leaves inside a line). The words stay
+ * readable to assistive tech through the visually hidden copy.
+ */
+export function DotTitle({ text, className = "" }: { text: string; className?: string }) {
+    return (
+        <>
+            <span className="sr-only">{text}</span>
+            <span aria-hidden className={`flex flex-wrap gap-x-4 gap-y-3 text-white ${className}`}>
+                {text.split(" ").map((w, i) => <DotText key={i} text={w} cell={4} />)}
+            </span>
+        </>
+    );
+}
