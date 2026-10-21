@@ -1,6 +1,6 @@
-import { DotText } from "./dot-text";
+import { DotCounter } from "./dot-counter";
 
-/** A figure in the wordmark's dot matrix, drawn on the 4px dot grid (see DotText). */
+/** A figure in the wordmark's dot matrix on the 4px grid; changed digits drop in (see DotCounter). */
 export function DotNum({ value, className = "" }: { value: string; className?: string }) {
-    return <DotText text={value} cell={4} label={value} descender className={className} />;
+    return <DotCounter value={value} className={className} />;
 }

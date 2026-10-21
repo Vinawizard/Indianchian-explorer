@@ -8,10 +8,11 @@ const SPACE = 3;                           // cells; with the previous glyph's g
  * device pixels at 100%, 125%, 150% and 200% zoom, so every dot lands the same (the font itself
  * at most sizes does not). Digits keep their full width, so figures do not shift as they change.
  */
-export function DotText({ text, cell = 4, className = "", label, descender }: {
-    text: string; cell?: 4 | 5 | 8; className?: string; label?: string; descender?: boolean;
+export function DotText({ text, cell = 4, className = "", label, descender, fine }: {
+    text: string; cell?: 4 | 5 | 8; className?: string; label?: string; descender?: boolean; fine?: boolean;
 }) {
-    const dot = +(cell * 0.8).toFixed(2);
+    // fine: 60% dots (2.4px on the 4px grid, exactly 3 device px at 125%) for lighter titles
+    const dot = +(cell * (fine ? 0.6 : 0.8)).toFixed(2);
     const d: string[] = [];
     let x = 0;
     for (const ch of text.toUpperCase()) {
@@ -38,16 +39,16 @@ export function DotText({ text, cell = 4, className = "", label, descender }: {
 }
 
 /**
- * A section title in the dot matrix: one DotText per word on the 4px grid, wrapping between words
- * (a 16px word gap is 4 cells, the same space DotText leaves inside a line). The words stay
- * readable to assistive tech through the visually hidden copy.
+ * A section title in the dot matrix: one DotText per word on the 4px grid in fine (60%) dots, so
+ * titles stay lighter than the headline figures; wraps between words (a 16px word gap is 4 cells).
+ * The words stay readable to assistive tech through the visually hidden copy.
  */
 export function DotTitle({ text, className = "" }: { text: string; className?: string }) {
     return (
         <>
             <span className="sr-only">{text}</span>
-            <span aria-hidden className={`flex flex-wrap gap-x-4 gap-y-3 text-white ${className}`}>
-                {text.split(" ").map((w, i) => <DotText key={i} text={w} cell={4} />)}
+            <span aria-hidden className={`flex flex-wrap gap-x-4 gap-y-3 text-white/90 ${className}`}>
+                {text.split(" ").map((w, i) => <DotText key={i} text={w} cell={4} fine />)}
             </span>
         </>
     );

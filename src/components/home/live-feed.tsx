@@ -22,7 +22,21 @@ type Tab = "blocks" | "events" | "anchors";
 const fmt = (n: number) => n.toLocaleString("en-US");
 const EASE = [0.23, 1, 0.32, 1] as const;
 
-/** The live feed: blocks refresh every block (a new block slides in at the top), plus events and anchors. */
+/** The newest block number: digits that differ from the previous block roll down into place, rippling left to right. */
+function RollNumber({ value, from }: { value: number; from: number | null }) {
+    const now = String(value), was = from == null ? now : String(from).padStart(now.length, " ");
+    let wave = 0;
+    return (
+        <span>{[...now].map((d, i) => (from != null && was[i] !== d
+            ? <span key={i} className="roll"><span style={{ animationDelay: `${wave++ * 45}ms` }}>{d}</span></span>
+            : <span key={i}>{d}</span>))}</span>
+    );
+}
+
+/**
+ * The live feed: blocks refresh every block. The rows glide down one place, the new block fades in
+ * at the top, the LATEST tag slides up to it and its changed digits roll in. Plus events and anchors.
+ */
 export function LiveFeed({ blocks: initialBlocks, finalized: initialFinalized, records, anchors, network }: {
     blocks: B[]; finalized: number | null; records: MainnetRecordRow[]; anchors: AnchorBatch[]; network: ChainNetwork;
 }) {
@@ -31,13 +45,19 @@ export function LiveFeed({ blocks: initialBlocks, finalized: initialFinalized, r
     const [finalized, setFinalized] = useState(initialFinalized);
     const reduce = useReducedMotion();
     const busy = useRef(false);
+    const top = useRef(initialBlocks[0]?.number ?? 0);
+    const [rollFrom, setRollFrom] = useState<number | null>(null);
     useEffect(() => {
         const tick = async () => {
             if (document.hidden || busy.current) return;
             busy.current = true;
             try {
                 const j = await (await fetch(`/api/chain/blocks?count=${initialBlocks.length || 8}&network=${network}`, { cache: "no-store" })).json();
-                if (j.status === "ok") { setBlocks(j.blocks); setFinalized(j.finalized ?? null); }
+                if (j.status === "ok") {
+                    const nb: B[] = j.blocks;
+                    if ((nb[0]?.number ?? 0) > top.current) { setRollFrom(top.current); top.current = nb[0].number; }
+                    setBlocks(nb); setFinalized(j.finalized ?? null);
+                }
             } catch { /* keep the last list */ } finally { busy.current = false; }
         };
         const t = setInterval(tick, 6000);
@@ -69,14 +89,13 @@ export function LiveFeed({ blocks: initialBlocks, finalized: initialFinalized, r
                             <tbody>
                                 <AnimatePresence initial={false}>
                                     {blocks.map((b, i) => (
-                                        <motion.tr key={b.number}
-                                            initial={reduce ? { opacity: 0 } : { opacity: 0, transform: "translateY(-6px)" }}
-                                            animate={reduce ? { opacity: 1 } : { opacity: 1, transform: "translateY(0px)" }}
-                                            transition={{ duration: 0.22, ease: EASE }}>
+                                        <motion.tr key={b.number} layout="position"
+                                            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                                            transition={reduce ? { duration: 0 } : { opacity: { duration: 0.3, ease: EASE }, layout: { duration: 0.42, ease: EASE } }}>
                                             <td>
                                                 <span className="inline-flex items-center gap-3">
-                                                    <Link href={`/block/${b.number}`} className="row-link blk">{b.number}</Link>
-                                                    {i === 0 && <span className="tag-latest">Latest</span>}
+                                                    <Link href={`/block/${b.number}`} className="row-link blk">{i === 0 ? <RollNumber key={b.number} value={b.number} from={rollFrom} /> : b.number}</Link>
+                                                    {i === 0 && <motion.span layoutId="latest-tag" className="tag-latest" transition={reduce ? { duration: 0 } : { duration: 0.42, ease: EASE }}>Latest</motion.span>}
                                                 </span>
                                             </td>
                                             <td className="hidden sm:table-cell"><TimeAgo iso={b.timestamp} /></td>

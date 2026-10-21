@@ -224,6 +224,16 @@
     background: radial-gradient(380px circle at var(--mx, -500px) var(--my, -500px), rgba(92, 110, 255, 0.10), transparent 65%); }
   .spot > * { position: relative; z-index: 1; }
 
+  /* dot-matrix figures: changed digits fall through, column by column (DotCounter) */
+  .dot-in { animation: dot-in 520ms var(--ease-out) both; }
+  .dot-out { animation: dot-out 360ms var(--ease-out) both; }
+  @keyframes dot-in { from { transform: translateY(calc(var(--fall) * -1)); opacity: 0; } 40% { opacity: 1; } to { transform: translateY(0); opacity: 1; } }
+  @keyframes dot-out { from { transform: translateY(0); opacity: 1; } to { transform: translateY(var(--fall)); opacity: 0; } }
+  /* the live feed's newest block number: changed digits roll down into place */
+  .roll { display: inline-block; overflow: hidden; vertical-align: bottom; }
+  .roll > span { display: inline-block; animation: roll-in 460ms var(--ease-out) both; }
+  @keyframes roll-in { from { transform: translateY(-100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
   /* chart entrance on load and on a range change: the line draws once, the area fades in */
   .chart-line { stroke-dasharray: 1; stroke-dashoffset: 0; animation: draw 900ms var(--ease-out) both; }
   @keyframes draw { from { stroke-dashoffset: 1; } }
