@@ -13,6 +13,14 @@ export type BlockDetail = {
     extrinsics: BlockExtrinsic[];
 };
 
+/** toHuman() groups digits ("1,772,921,209,084"); a call's numbers read better plain. */
+function plain(v: unknown): unknown {
+    if (typeof v === "string" && /^\d{1,3}(,\d{3})+$/.test(v)) return v.replace(/,/g, "");
+    if (Array.isArray(v)) return v.map(plain);
+    if (v && typeof v === "object") return Object.fromEntries(Object.entries(v).map(([k, x]) => [k, plain(x)]));
+    return v;
+}
+
 /** One block, read live from an IndianChain node. Null when the chain has no such block yet. */
 export async function getBlockDetail(network: ChainNetwork, n: number): Promise<BlockDetail | null> {
     const api = await getApi(network);
@@ -35,7 +43,9 @@ export async function getBlockDetail(network: ChainNetwork, n: number): Promise<
         if (section === "dataRegistry" && method === "storeData") {
             args = { key: ext.method.args[0].toHuman(), data: tryParseJson(hexToString(ext.method.args[1].toString())) };
         } else {
-            args = ext.method.args.map((a) => a.toHuman());
+            // named as in the chain's metadata (payload_hash, version, ...), as the original's call data table showed them
+            const names = ext.method.meta.args.map((m) => m.name.toString());
+            args = Object.fromEntries(ext.method.args.map((a, i) => [names[i] ?? String(i), plain(a.toHuman())]));
         }
         if (section === "timestamp" && method === "set") {
             const ms = Number(ext.method.args[0].toString());

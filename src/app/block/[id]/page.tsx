@@ -1,10 +1,10 @@
 import Link from "next/link";
 import type { Metadata } from "next";
-import { CheckCircle2, ChevronLeft, ChevronRight, FileText, Hash as HashIcon, User } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { resolveNetworkFromCookies } from "@/lib/network-server";
 import { getBlockDetail } from "@/lib/block-data";
 import { queryMainnetRecords } from "@/lib/mainnet-records";
-import { fmtInt, shortHash, utc } from "@/lib/format";
+import { fmtInt, utc } from "@/lib/format";
 import { PageHeader } from "@/components/ui/page-header";
 import { KV } from "@/components/ui/kv";
 import { Hash } from "@/components/ui/hash";
@@ -12,8 +12,7 @@ import { Status } from "@/components/ui/status";
 import { TimeAgo } from "@/components/ui/time-ago";
 import { Empty } from "@/components/ui/empty";
 import { RecordsTable } from "@/components/records/records-table";
-import { JsonView } from "@/components/ui/json-view";
-import { Th } from "@/components/ui/th";
+import { Extrinsics } from "@/components/block/extrinsics";
 
 export const revalidate = 0;
 
@@ -92,28 +91,7 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
 
             <section className="card mt-6" aria-labelledby="extrinsics">
                 <div className="card-head"><div><h2 id="extrinsics" className="section-title">Extrinsics</h2><p className="card-sub">{block.extrinsics.length} calls</p></div></div>
-                <div className="overflow-x-auto">
-                    <table className="table">
-                        <caption className="sr-only">Extrinsics</caption>
-                        <thead><tr><th scope="col" className="r">#</th><Th icon={FileText}>Call</Th><Th icon={HashIcon}>Hash</Th><Th icon={User}>Signer</Th><Th icon={CheckCircle2}>Result</Th></tr></thead>
-                        <tbody>
-                            {block.extrinsics.map((x) => (
-                                <tr key={x.index}>
-                                    <td className="r num text-muted">{x.index}</td>
-                                    <td className="whitespace-normal py-2">
-                                        <details>
-                                            <summary className="cursor-pointer list-none"><span className="mono text-white">{x.section}.{x.method}</span> <span className="label ml-2">Args</span></summary>
-                                            <div className="mt-2 max-w-[680px] overflow-hidden rounded-[8px] border border-white/10"><JsonView data={x.args} maxHeight={300} /></div>
-                                        </details>
-                                    </td>
-                                    <td><Hash value={x.hash} head={8} tail={6} /></td>
-                                    <td>{x.signer ? <span className="mono text-muted" title={x.signer}>{shortHash(x.signer, 6, 6)}</span> : <span className="chip">Inherent</span>}</td>
-                                    <td>{x.status === "success" ? <Status tone="positive">Success</Status> : x.status === "failed" ? <Status tone="negative">Failed</Status> : <Status>Unknown</Status>}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                <Extrinsics items={block.extrinsics} />
             </section>
         </div>
     );
