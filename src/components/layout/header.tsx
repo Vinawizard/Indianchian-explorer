@@ -63,7 +63,7 @@ export function Header() {
             </div>
 
             {open && (
-                <div className="fixed inset-0 top-[72px] z-40 bg-black/85 backdrop-blur-[30px] lg:hidden">
+                <div className="fixed inset-0 top-[72px] z-40 overflow-y-auto overscroll-contain bg-black/85 backdrop-blur-[30px] lg:hidden">
                     <div className="page flex flex-col gap-6 py-6">
                         <SearchBar />
                         <NetworkSwitcher className="w-full" />

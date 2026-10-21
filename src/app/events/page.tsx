@@ -113,15 +113,15 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
                 </label>
                 <label className="flex min-w-[120px] flex-1 flex-col">
                     <span className={lbl}>Block start</span>
-                    <input name="start" inputMode="numeric" pattern="[0-9]*" defaultValue={start ?? ""} placeholder="000,000" className="field num" />
+                    <input name="start" inputMode="numeric" pattern="[0-9]*" defaultValue={start ?? ""} placeholder="000,000" autoComplete="off" className="field num" />
                 </label>
                 <label className="flex min-w-[120px] flex-1 flex-col">
                     <span className={lbl}>Block end</span>
-                    <input name="end" inputMode="numeric" pattern="[0-9]*" defaultValue={end ?? ""} placeholder="999,999" className="field num" />
+                    <input name="end" inputMode="numeric" pattern="[0-9]*" defaultValue={end ?? ""} placeholder="999,999" autoComplete="off" className="field num" />
                 </label>
                 <label className="flex min-w-[200px] flex-[1.4] flex-col">
                     <span className={lbl}>Farmer ID</span>
-                    <input name="farmer" defaultValue="" placeholder="Farmer UUID" spellCheck={false} autoComplete="off" className="field" />
+                    <input name="farmer" defaultValue="" placeholder="Farmer UUID…" spellCheck={false} autoComplete="off" className="field" />
                 </label>
                 <div className="flex h-[43px] items-center gap-3 md:ml-auto lg:ml-0">
                     <Link href="/events" className="btn btn-text !px-5">Reset</Link>

@@ -73,7 +73,7 @@ export function TrendChart({ title, subtitle, days, series, mode }: {
                 <Segmented label={`${title} range`} size="sm" value={range} onChange={setRange} options={RANGES} />
             </div>
             <div ref={box} className="relative flex-1 px-4 pb-6 sm:px-6"
-                tabIndex={0} onKeyDown={onKey} onBlur={() => setHover(null)} aria-label={`${title}: use the arrow keys to read each day`}>
+                role="group" tabIndex={0} onKeyDown={onKey} onBlur={() => setHover(null)} aria-label={`${title}: use the arrow keys to read each day`}>
                 <svg width={w} height={H} className="block max-w-full overflow-visible" role="img" aria-label={`${title}, last ${n} days`}>
                     <defs>
                         {paths.map((p) => (

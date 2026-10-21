@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Search } from "lucide-react";
 
@@ -10,6 +10,7 @@ import { Loader2, Search } from "lucide-react";
 export function SearchBar({ className = "", autoFocus, large }: { className?: string; autoFocus?: boolean; large?: boolean }) {
     const router = useRouter();
     const ref = useRef<HTMLInputElement>(null);
+    const id = useId();   // header, hero and the phone menu can each hold one: ids stay unique
     const [q, setQ] = useState("");
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -50,26 +51,26 @@ export function SearchBar({ className = "", autoFocus, large }: { className?: st
 
     return (
         <form role="search" onSubmit={submit} className={`relative ${className}`}>
-            <label htmlFor={autoFocus ? "search-m" : "search"} className="sr-only">Search blocks, records, farmers and transactions</label>
+            <label htmlFor={id} className="sr-only">Search blocks, events, farmers and transactions</label>
             <Search aria-hidden className={`pointer-events-none absolute top-1/2 z-10 -translate-y-1/2 text-white/45 ${large ? "left-4 h-5 w-5 text-white/60" : "left-3.5 h-4 w-4"}`} />
             <input
-                id={autoFocus ? "search-m" : "search"}
+                id={id}
                 ref={ref}
                 value={q}
                 onChange={(e) => { setQ(e.target.value); if (error) setError(null); }}
                 autoFocus={autoFocus}
                 autoComplete="off"
                 spellCheck={false}
-                placeholder="Search block / tx hash / event ID"
+                placeholder="Search block / tx hash / event ID…"
                 aria-invalid={!!error}
-                aria-describedby={error ? "search-error" : undefined}
+                aria-describedby={error ? `${id}-error` : undefined}
                 className={`field !normal-case !tracking-normal !text-[13px] pl-10 pr-10 placeholder:uppercase placeholder:tracking-[0.1em] placeholder:text-[10px] ${large ? "!h-[52px] !rounded-[12px] !pl-12 !text-[14px]" : "!h-[40px]"}`}
             />
             <span className="pointer-events-none absolute right-3 top-1/2 z-10 -translate-y-1/2">
                 {busy ? <Loader2 aria-hidden className="h-4 w-4 animate-spin text-faint" /> : <kbd className="hidden h-5 min-w-5 items-center justify-center rounded-[4px] border border-white/15 px-1.5 text-[10px] text-white/50 sm:inline-flex">/</kbd>}
             </span>
             {error && (
-                <p id="search-error" role="alert" className="glass absolute left-0 right-0 top-full z-50 mt-2 rounded-[8px] px-4 py-3 text-[10px] uppercase tracking-[0.1em] text-white/80">
+                <p id={`${id}-error`} role="alert" className="glass absolute left-0 right-0 top-full z-50 mt-2 rounded-[8px] px-4 py-3 text-[10px] uppercase tracking-[0.1em] text-white/80">
                     {error}
                 </p>
             )}

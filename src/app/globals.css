@@ -49,7 +49,9 @@
 
 @layer base {
   * { border-color: var(--line); }
-  html { background: #000; }
+  html { background: #000; -webkit-tap-highlight-color: transparent; }
+  a, button, select, input, summary { touch-action: manipulation; }
+  h1, h2, h3 { text-wrap: balance; }
   body {
     background: transparent; color: var(--ink);
     font-family: var(--font-sans); font-size: 14px; line-height: 1.5;
@@ -156,7 +158,7 @@
   .table th { padding: 20px 16px; text-align: left; font-size: 10px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.2em; color: var(--muted); white-space: nowrap; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
   .table th .h { display: inline-flex; align-items: center; gap: 10px; }
   .table th svg { width: 14px; height: 14px; color: var(--blue-text); flex: none; }
-  .table td { padding: 20px 16px; font-size: 12px; color: rgba(255, 255, 255, 0.6); white-space: nowrap; vertical-align: middle; }
+  .table td { padding: 20px 16px; font-size: 12px; color: rgba(255, 255, 255, 0.6); white-space: nowrap; vertical-align: middle; font-variant-numeric: tabular-nums; }
   .table th:first-child, .table td:first-child { padding-left: 20px; }
   .table th:last-child, .table td:last-child { padding-right: 20px; }
   @media (min-width: 640px) {
