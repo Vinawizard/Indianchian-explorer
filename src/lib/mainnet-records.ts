@@ -198,13 +198,14 @@ const REMOTE_TIMEOUT_MS = 25_000;
 type SharedState = {
     summary: { at: number; v: MainnetSummary } | null;
     chart: { at: number; v: ReturnType<typeof buildChartSeries> } | null;
+    daily: { at: number; v: DailyTypes[] } | null;
     refreshing: Promise<void> | null;
     timer: ReturnType<typeof setInterval> | null;
     lastGood: Map<string, { rows: MainnetRecordRow[]; total: number }>;
     remoteSummary: { at: number; v: MainnetSummary } | null;
 };
 const S: SharedState = ((globalThis as unknown as { __icMainnetDb?: SharedState }).__icMainnetDb ??= {
-    summary: null, chart: null, refreshing: null, timer: null, lastGood: new Map(), remoteSummary: null,
+    summary: null, chart: null, daily: null, refreshing: null, timer: null, lastGood: new Map(), remoteSummary: null,
 });
 
 /**
@@ -265,11 +266,14 @@ export async function chainTotalRecords(): Promise<number | null> {
 }
 
 /** Home-page numbers + chart series, computed on the host (a few KB) and served to everyone. */
+export type DailyTypes = { day: string; farmer: number; agri_record: number; credit_app: number };
 export type MainnetSummary = {
     totalEvents: number; totalBlocks: number; anchored: number; fallbackLatestBlock: number;
     /** Confirmed rows in the ledger (the anchored share is measured against this, not the chain counter). */
     ledgerTotal?: number;
     byType?: { farmer: number; agri_record: number; credit_app: number };
+    /** Records finalized per UTC day and type, the last 31 days (zeros filled), oldest first. */
+    daily?: DailyTypes[];
     transactionChartData: ReturnType<typeof buildChartSeries>["transactionChartData"];
     distributionChartData: ReturnType<typeof buildChartSeries>["distributionChartData"];
 };
@@ -278,14 +282,14 @@ function emptySummary(): MainnetSummary {
 }
 
 const SUMMARY_EVERY_MS = 15_000;       // background refresh — visitors never wait for it
-const CHART_EVERY_MS = 120_000;        // chart covers the latest 7 record-days; changes slowly
+const CHART_EVERY_MS = 600_000;        // per-day series: ~2 s of index reads, refreshed every 10 min in the background
 
 async function refreshSummary(): Promise<void> {
     if (S.refreshing) return S.refreshing;
     S.refreshing = (async () => {
         try {
             const pool = (await getPool())!;
-            const needChart = !S.chart || Date.now() - S.chart.at > CHART_EVERY_MS;
+            const needChart = !S.daily || Date.now() - S.daily.at > CHART_EVERY_MS;
             const [counts, chainTotal, chartRows] = await Promise.all([
                 pool.query(`select count(*)::bigint as total,
                                    count(*) filter (where l1_anchored)::bigint as anchored,
@@ -297,22 +301,30 @@ async function refreshSummary(): Promise<void> {
                               from extrinsic_payloads where submission_status = 'CONFIRMED'`),
                 chainTotalRecords(),
                 needChart
-                    // Same input the chart builder always got, restricted to the only rows it
-                    // uses: those in the latest 7 distinct record-days (UTC, as dayjs on this host).
-                    ? pool.query(`with d as (select distinct (timestamp at time zone 'UTC')::date as day
-                                               from extrinsic_payloads
-                                              where submission_status = 'CONFIRMED' and timestamp is not null
-                                              order by 1 desc limit 7)
-                                  select timestamp, tx_hash, record_type from extrinsic_payloads
-                                   where submission_status = 'CONFIRMED' and timestamp is not null
-                                     and (timestamp at time zone 'UTC')::date in (select day from d)`)
+                    // Records finalized per UTC day and type over the last 31 days. The day comes from
+                    // the block number (6 s slots, 100% production) counted back from the newest row's
+                    // block time, so the scan stays on idx_extrinsic_confirmed_block.
+                    ? pool.query(`with ref as (select block_number b, chain_timestamp t from extrinsic_payloads
+                                                where submission_status = 'CONFIRMED' order by block_number desc limit 1)
+                                  select to_char(((select t from ref) - ((select b from ref) - e.block_number) * interval '6 seconds') at time zone 'UTC', 'YYYY-MM-DD') as day,
+                                         e.record_type, count(*)::int as n
+                                    from extrinsic_payloads e
+                                   where e.submission_status = 'CONFIRMED' and e.block_number > (select b from ref) - 14400 * 32
+                                   group by 1, 2`)
                     : Promise.resolve(null),
             ]);
             if (chartRows) {
-                S.chart = {
-                    at: Date.now(),
-                    v: buildChartSeries(chartRows.rows.map((r: any) => ({ timestamp: iso(r.timestamp), tx_hash: r.tx_hash, record_type: r.record_type })), 7),
-                };
+                const byDay = new Map<string, DailyTypes>();
+                const today = new Date();
+                for (let i = 30; i >= 0; i--) {
+                    const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate() - i)).toISOString().slice(0, 10);
+                    byDay.set(d, { day: d, farmer: 0, agri_record: 0, credit_app: 0 });
+                }
+                for (const r of chartRows.rows as { day: string; record_type: string; n: number }[]) {
+                    const slot = byDay.get(r.day);
+                    if (slot && (r.record_type === "farmer" || r.record_type === "agri_record" || r.record_type === "credit_app")) slot[r.record_type] += Number(r.n);
+                }
+                S.daily = { at: Date.now(), v: [...byDay.values()] };
             }
             const c = counts.rows[0];
             const v: MainnetSummary = {
@@ -324,6 +336,7 @@ async function refreshSummary(): Promise<void> {
                 byType: { farmer: Number(c.farmer), agri_record: Number(c.agri), credit_app: Number(c.credit) },
                 transactionChartData: S.chart?.v.transactionChartData ?? [],
                 distributionChartData: S.chart?.v.distributionChartData ?? [],
+                daily: S.daily?.v ?? [],
             };
             if (v.totalEvents > 0) S.summary = { at: Date.now(), v };   // never replace good data with zeros
         } catch (e) {

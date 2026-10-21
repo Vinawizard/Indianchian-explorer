@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { resolveNetworkFromCookies } from "@/lib/network-server";
 import { getMainnetSummary, queryMainnetRecords } from "@/lib/mainnet-records";
-import { anchorsPerDay, listAnchors } from "@/lib/mainnet-anchors";
+import { listAnchors } from "@/lib/mainnet-anchors";
 import { listBlocks } from "@/lib/block-data";
 import { previewOnline } from "@/lib/preview-status";
 import { SearchBar } from "@/components/layout/search-bar";
 import { MetricCards } from "@/components/home/metric-cards";
 import { LiveFeed } from "@/components/home/live-feed";
-import { NetworkActivity } from "@/components/charts/network-activity";
-import { Distribution } from "@/components/charts/distribution";
+import { TrendChart } from "@/components/charts/trend-chart";
+import { SERIES } from "@/components/charts/palette";
 import { Empty } from "@/components/ui/empty";
 
 export const revalidate = 15;
@@ -40,13 +40,13 @@ export default async function Home() {
         );
     }
 
-    const [summary, records, anchors, days, blocks] = await Promise.all([
+    const [summary, records, anchors, blocks] = await Promise.all([
         settle(getMainnetSummary(), null),
         settle(queryMainnetRecords({ limit: 8, noCount: true }), { rows: [], total: 0 }),
         settle(listAnchors(8), { batches: [], total: 0 }),
-        settle(anchorsPerDay(30), []),
         settle(listBlocks("mainnet", 8), { blocks: [], best: 0, finalized: 0 }),
     ]);
+    const daily = summary?.daily ?? [];
 
     return (
         <div className="page">
@@ -60,10 +60,18 @@ export default async function Home() {
                     finalized={blocks.finalized || null} records={records.rows} anchors={anchors.batches} network={network}
                 />
             </div>
-            <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
-                <NetworkActivity days={days} />
-                <Distribution counts={summary?.byType ?? null} />
-            </div>
+            {daily.length > 0 && (
+                <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
+                    <TrendChart title="Network activity" subtitle="Records finalized per day" mode="step" days={daily.map((x) => x.day)}
+                        series={[{ key: "all", label: "Records", color: "#3d55ff", values: daily.map((x) => x.farmer + x.agri_record + x.credit_app) }]} />
+                    <TrendChart title="Record distribution" subtitle="Farmer · agricultural · credit" mode="smooth" legend days={daily.map((x) => x.day)}
+                        series={[
+                            { key: "farmer", label: "Farmer", color: SERIES.farmer, values: daily.map((x) => x.farmer) },
+                            { key: "agri", label: "Agricultural", color: SERIES.agri_record, values: daily.map((x) => x.agri_record) },
+                            { key: "credit", label: "Credit", color: SERIES.credit_app, values: daily.map((x) => x.credit_app) },
+                        ]} />
+                </div>
+            )}
         </div>
     );
 }

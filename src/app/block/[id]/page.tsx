@@ -70,7 +70,7 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
             />
 
             <section className="card" aria-labelledby="overview">
-                <div className="card-head"><h2 id="overview" className="section-title">Overview</h2></div>
+                <div className="card-head"><div><h2 id="overview" className="section-title">Block overview</h2><p className="card-sub">{block.finalized ? "Finalized" : "Finalizing"} · {utc(block.timestamp)}</p></div></div>
                 <KV rows={[
                     { label: "Block hash", value: <Hash value={block.hash} full /> },
                     { label: "Parent", value: block.number > 0 ? <Hash value={block.parentHash} href={`/block/${block.number - 1}`} full /> : "—" },
@@ -82,7 +82,7 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
 
             {network === "mainnet" && (
                 <section className="card mt-6" aria-labelledby="records">
-                    <div className="card-head"><h2 id="records" className="section-title">Records</h2><span className="chip chip-grey num">{fmtInt(records.rows.length)}</span></div>
+                    <div className="card-head"><div><h2 id="records" className="section-title">Records</h2><p className="card-sub">{fmtInt(records.rows.length)} in this block</p></div></div>
                     {records.rows.length
                         ? <RecordsTable rows={records.rows} cols={["record", "version", "farmer", "anchor"]} caption="Records in this block" />
                         : <p className="label px-6 py-6">No records in this block</p>}
@@ -90,7 +90,7 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
             )}
 
             <section className="card mt-6" aria-labelledby="extrinsics">
-                <div className="card-head"><h2 id="extrinsics" className="section-title">Extrinsics</h2><span className="chip chip-grey num">{block.extrinsics.length}</span></div>
+                <div className="card-head"><div><h2 id="extrinsics" className="section-title">Extrinsics</h2><p className="card-sub">{block.extrinsics.length} calls</p></div></div>
                 <div className="overflow-x-auto">
                     <table className="table">
                         <caption className="sr-only">Extrinsics</caption>

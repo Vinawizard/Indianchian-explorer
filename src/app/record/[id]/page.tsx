@@ -69,7 +69,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
                 <div className="min-w-0 space-y-6 lg:col-span-8">
                     <section className="card" aria-labelledby="rec">
-                        <div className="card-head"><h2 id="rec" className="section-title">Record</h2></div>
+                        <div className="card-head"><div><h2 id="rec" className="section-title">Record</h2><p className="card-sub">{typeLabel} · version {r.version}</p></div></div>
                         <KV rows={[
                             { label: "Record ID", value: <Hash value={rid} full /> },
                             { label: "Type", value: typeLabel },
@@ -82,7 +82,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                     </section>
 
                     <section className="card" aria-labelledby="chain">
-                        <div className="card-head"><h2 id="chain" className="section-title">IndianChain</h2></div>
+                        <div className="card-head"><div><h2 id="chain" className="section-title">IndianChain</h2><p className="card-sub">Block {fmtInt(r.block_number)} · extrinsic {r.tx_index ?? "—"}</p></div></div>
                         <KV rows={[
                             { label: "Block", value: <Link href={`/block/${r.block_number}`} className="num link">#{fmtInt(r.block_number)}</Link> },
                             { label: "Finalized at", value: <span className="num">{utc(r.confirmed_at)}</span> },
@@ -95,7 +95,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
 
                     <section className="card" aria-labelledby="cardano">
                         <div className="card-head">
-                            <h2 id="cardano" className="section-title">Cardano anchor</h2>
+                            <div><h2 id="cardano" className="section-title">Cardano anchor</h2><p className="card-sub">{anchored && r.batch_index != null ? `Batch ${fmtInt(r.batch_index)}` : "Pending"}</p></div>
                             {anchored && (
                                 <div className="flex flex-wrap gap-2">
                                     <a href={`${VERIFY_API}/api/mainnet/records/${rid}/proof?version=${r.version}`} target="_blank" rel="noopener noreferrer" className="btn !h-9">Verify proof<ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></a>
@@ -118,7 +118,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
 
                 <aside className="min-w-0 space-y-6 lg:col-span-4">
                     <section className="card" aria-labelledby="versions">
-                        <div className="card-head"><h2 id="versions" className="section-title">Versions</h2><span className="chip chip-grey num">{versions.length}</span></div>
+                        <div className="card-head"><div><h2 id="versions" className="section-title">Versions</h2><p className="card-sub">{versions.length} on chain</p></div></div>
                         <ol>
                             {[...versions].reverse().map((v) => {
                                 const on = v.version === r.version;
@@ -141,8 +141,8 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                     </section>
 
                     <details className="card group">
-                        <summary className="card-head cursor-pointer list-none border-b-0 group-open:border-b">
-                            <h2 className="section-title">JSON</h2>
+                        <summary className="card-head cursor-pointer list-none">
+                            <div><h2 className="section-title">JSON</h2><p className="card-sub">Raw record</p></div>
                             <span className="label group-open:hidden">Show</span>
                             <span className="label hidden group-open:inline">Hide</span>
                         </summary>

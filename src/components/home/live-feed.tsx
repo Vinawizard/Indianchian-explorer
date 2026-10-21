@@ -50,7 +50,7 @@ export function LiveFeed({ blocks: initialBlocks, finalized: initialFinalized, r
     return (
         <section aria-labelledby="feed">
             <div className="mb-5 flex flex-wrap items-center justify-between gap-4">
-                <h2 id="feed" className="flex items-center gap-3 text-[20px] font-medium uppercase tracking-[0.02em] text-white">
+                <h2 id="feed" className="flex items-center gap-3 text-[22px] font-normal uppercase tracking-[-0.015em] text-white">
                     <Activity className="h-5 w-5 text-[#8f9bff]" strokeWidth={2} aria-hidden /> Live feed
                     <span className="glass ml-1 inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-[11px] font-semibold tracking-[0.1em] text-white/85">
                         <span aria-hidden className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#ff4848] shadow-[0_0_8px_#ff4848]" />Live

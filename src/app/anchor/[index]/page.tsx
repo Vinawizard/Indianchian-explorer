@@ -56,7 +56,7 @@ export default async function AnchorPage({ params }: { params: Promise<{ index: 
                 }
             />
             <section className="card" aria-labelledby="batch">
-                <div className="card-head"><h2 id="batch" className="section-title">Transaction</h2></div>
+                <div className="card-head"><div><h2 id="batch" className="section-title">Anchor transaction</h2><p className="card-sub">Cardano mainnet · metadata label 1804</p></div></div>
                 <KV rows={[
                     { label: "Cardano transaction", value: batch.cardano_tx_hash ? <Hash value={batch.cardano_tx_hash} href={cardanoscanTx(network, batch.cardano_tx_hash)} external full /> : "—" },
                     { label: "Anchored at", value: <span className="num">{utc(batch.confirmed_at)}</span> },
@@ -70,7 +70,7 @@ export default async function AnchorPage({ params }: { params: Promise<{ index: 
                 ]} />
             </section>
             <section className="card mt-6" aria-labelledby="sealed">
-                <div className="card-head"><h2 id="sealed" className="section-title">Records</h2><span className="chip chip-grey num">{fmtInt(records.rows.length)}</span></div>
+                <div className="card-head"><div><h2 id="sealed" className="section-title">Sealed records</h2><p className="card-sub">{fmtInt(records.rows.length)} in this batch</p></div></div>
                 {records.rows.length
                     ? <RecordsTable rows={records.rows} cols={["record", "version", "farmer", "block"]} caption="Records sealed in this anchor" />
                     : <Empty title="Could not load records" />}

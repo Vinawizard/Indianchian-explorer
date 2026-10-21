@@ -9,9 +9,10 @@
  * `@theme inline` makes the font utilities reference next/font's variables on <html>.
  */
 @theme inline {
-  --font-sans: var(--font-grotesk), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-spacemono), ui-monospace, monospace;
-  --font-dot: var(--font-doto), var(--font-spacemono), monospace;
+  --font-sans: var(--font-inter), "Helvetica Neue", Helvetica, ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-grotesk), var(--font-inter), sans-serif;
+  --font-mono: var(--font-roboto-mono), ui-monospace, monospace;
+  --font-dot: var(--font-doto), var(--font-roboto-mono), monospace;
 
   --color-ground: var(--ground);
   --color-surface: var(--surface);
@@ -97,72 +98,69 @@
   .page { width: 100%; max-width: 1280px; margin-inline: auto; padding-inline: 16px; }
   @media (min-width: 1024px) { .page { padding-inline: 32px; } }
 
-  /* ---------- Type (Space Grotesk / Space Mono / Doto), measured in Playwright ---------- */
-  .t-hero { font-size: 34px; line-height: 1.05; letter-spacing: -0.01em; font-weight: 500; text-transform: uppercase; }
+  /* ---------- Type. Outer brand layer in Space Grotesk; everything inside the boxes in Inter,
+     set like the original explorer: plain uppercase titles, widely tracked small subtitles. ---------- */
+  .font-display { font-family: var(--font-display); }
+  .t-hero { font-family: var(--font-display); font-size: 34px; line-height: 1.05; letter-spacing: -0.01em; font-weight: 500; text-transform: uppercase; }
   @media (min-width: 640px) { .t-hero { font-size: 46px; } }
-  .t-title { font-size: 26px; line-height: 1.15; letter-spacing: -0.01em; font-weight: 500; text-transform: uppercase; }
-  @media (min-width: 640px) { .t-title { font-size: 30px; } }
-  .t-figure { font-size: 30px; line-height: 1; letter-spacing: -0.03em; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .t-figure { font-family: var(--font-display); font-size: 30px; line-height: 1; letter-spacing: -0.03em; font-weight: 500; font-variant-numeric: tabular-nums; }
   @media (min-width: 1024px) { .t-figure { font-size: 38px; } }
-  .heading { text-transform: uppercase; font-weight: 500; letter-spacing: 0; color: var(--ink); }
-  .label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255, 255, 255, 0.55); }
+  .t-title { font-size: 26px; line-height: 1.15; letter-spacing: -0.02em; font-weight: 400; text-transform: uppercase; }
+  @media (min-width: 640px) { .t-title { font-size: 32px; } }
+  .heading { text-transform: uppercase; font-weight: 400; letter-spacing: -0.015em; color: #fff; }
+  .label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.2em; color: #7f88a8; }
   .num { font-variant-numeric: tabular-nums; }
-  .mono { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: -0.02em; }
+  .mono { font-family: var(--font-mono); font-size: 12.5px; letter-spacing: -0.01em; }
   .dot { font-family: var(--font-dot); font-weight: 800; letter-spacing: 0.01em; }
 
-  /* ---------- The Trivolve glass surface (every box on the site) ----------
-     no grey border: a gradient rim (blue -> red), a faint brand tint inside, frost, grain,
-     and a cursor light on the rim and the fill (--mx/--my from <Spotlight/>). */
+  /* ---------- Boxes: smooth dark surfaces, a faint Trivolve edge, no milky glass ---------- */
   .card {
-    position: relative; isolation: isolate; overflow: hidden; border-radius: 20px;
+    position: relative; isolation: isolate; overflow: hidden; border-radius: 22px;
     background:
-      radial-gradient(520px circle at var(--mx, -500px) var(--my, -500px), rgba(92, 110, 255, 0.10), transparent 60%),
-      linear-gradient(135deg, rgba(0, 24, 254, 0.10), rgba(10, 10, 14, 0) 40%, rgba(10, 10, 14, 0) 62%, rgba(255, 0, 0, 0.07)),
-      rgba(10, 10, 15, 0.55);
-    -webkit-backdrop-filter: blur(22px) saturate(160%); backdrop-filter: blur(22px) saturate(160%);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 24px 60px -24px rgba(0, 0, 0, 0.8);
+      radial-gradient(420px circle at var(--mx, -600px) var(--my, -600px), rgba(0, 24, 254, 0.07), transparent 65%),
+      linear-gradient(160deg, rgba(0, 24, 254, 0.05), transparent 35%, transparent 70%, rgba(255, 0, 0, 0.04)),
+      #0b0b0e;
+    box-shadow: 0 30px 60px -30px rgba(0, 0, 0, 0.9);
   }
   .card::before {
     content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; padding: 1px; pointer-events: none;
-    background: radial-gradient(360px circle at var(--mx, -500px) var(--my, -500px), rgba(255, 255, 255, 0.55), transparent 60%), var(--rim);
+    background:
+      radial-gradient(300px circle at var(--mx, -600px) var(--my, -600px), rgba(110, 125, 255, 0.55), transparent 70%),
+      linear-gradient(150deg, rgba(92, 110, 255, 0.34), rgba(255, 255, 255, 0.07) 28%, rgba(255, 255, 255, 0.05) 70%, rgba(255, 72, 72, 0.3));
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
   }
-  /* anti-banding grain, barely there (glassmorphism skill: opacity <= 0.06) */
-  .card::after {
-    content: ""; position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none;
-    background: var(--grain); background-size: 140px 140px; opacity: 0.035; mix-blend-mode: overlay;
-  }
   .card > * { position: relative; }
-  .card-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 64px; padding: 0 24px;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.09) 20%, rgba(255, 255, 255, 0.09) 80%, transparent) bottom / 100% 1px no-repeat; }
-  .section-title { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #fff; }
-  .section-title::before { content: ""; width: 3px; height: 15px; border-radius: 2px; flex: none; background: linear-gradient(180deg, #5c6eff, #ff4848); box-shadow: 0 0 10px rgba(92, 110, 255, 0.7); }
+  /* Box header as in the original: title, tracked subtitle, generous padding, no rule */
+  .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 28px 32px 22px; }
+  .section-title { font-size: 20px; line-height: 1.2; font-weight: 400; text-transform: uppercase; letter-spacing: -0.015em; color: #fff; }
+  @media (min-width: 640px) { .section-title { font-size: 22px; } }
+  .card-sub { margin-top: 8px; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.22em; color: #7f88a8; }
 
-  /* ---------- Glass for controls (functional layer) ---------- */
+  /* ---------- Controls: dark glass, no white film ---------- */
   .glass {
     position: relative;
-    background: linear-gradient(135deg, rgba(92, 110, 255, 0.10), rgba(255, 255, 255, 0.04) 50%, rgba(255, 72, 72, 0.07)), rgba(255, 255, 255, 0.04);
-    -webkit-backdrop-filter: blur(24px) saturate(170%); backdrop-filter: blur(24px) saturate(170%);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16), inset 0 -1px 0 rgba(0, 0, 0, 0.25), 0 10px 28px -8px rgba(0, 0, 0, 0.55);
+    background: rgba(12, 12, 18, 0.6);
+    -webkit-backdrop-filter: blur(18px) saturate(140%); backdrop-filter: blur(18px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    box-shadow: 0 10px 28px -12px rgba(0, 0, 0, 0.7);
   }
   .glass-rim::before {
     content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none; z-index: 2;
-    background: var(--rim);
+    background: linear-gradient(150deg, rgba(92, 110, 255, 0.5), rgba(255, 255, 255, 0.06) 35%, rgba(255, 255, 255, 0.04) 65%, rgba(255, 72, 72, 0.45));
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
   }
 
   /* ---------- Tables: whole-row targets, light sweep on hover, fading dividers ---------- */
   .table { width: 100%; border-collapse: separate; border-spacing: 0; }
-  .table th { height: 44px; padding: 0 16px; text-align: left; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.1em; color: rgba(255, 255, 255, 0.5); white-space: nowrap; background: rgba(255, 255, 255, 0.025); }
-  .table td { height: 58px; padding: 0 16px; font-size: 14px; color: rgba(255, 255, 255, 0.92); white-space: nowrap; }
-  .table th:first-child, .table td:first-child { padding-left: 24px; }
-  .table th:last-child, .table td:last-child { padding-right: 24px; }
+  .table th { height: 46px; padding: 0 16px; text-align: left; font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.2em; color: #7f88a8; white-space: nowrap; background: rgba(255, 255, 255, 0.02); }
+  .table td { height: 60px; padding: 0 16px; font-size: 14px; color: rgba(255, 255, 255, 0.9); white-space: nowrap; }
+  .table th:first-child, .table td:first-child { padding-left: 32px; }
+  .table th:last-child, .table td:last-child { padding-right: 32px; }
   .table tbody tr { position: relative; transition: background-color 200ms ease; }
-  .table tbody tr::after { content: ""; position: absolute; left: 24px; right: 24px; bottom: 0; height: 1px; pointer-events: none;
+  .table tbody tr::after { content: ""; position: absolute; left: 32px; right: 32px; bottom: 0; height: 1px; pointer-events: none;
     background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.07) 10%, rgba(255, 255, 255, 0.07) 90%, transparent); }
   .table tbody tr:last-child::after { display: none; }
-  .table tbody tr:hover { background: linear-gradient(90deg, rgba(0, 24, 254, 0.20), rgba(0, 24, 254, 0.05) 45%, rgba(255, 0, 0, 0.03) 85%, transparent); }
+  .table tbody tr:hover { background: linear-gradient(90deg, rgba(0, 24, 254, 0.16), rgba(0, 24, 254, 0.04) 45%, transparent 85%); }
   .table tbody tr td:first-child { box-shadow: inset 2px 0 0 transparent; transition: box-shadow 200ms ease; }
   .table tbody tr:hover td:first-child { box-shadow: inset 2px 0 0 #5c6eff; }
   .table .r { text-align: right; }
@@ -186,29 +184,29 @@
   .chip-blue { color: #b8c0ff; background: rgba(0, 24, 254, 0.22); border-color: rgba(92, 110, 255, 0.45); }
   .chip-amber { color: #f8c46b; background: rgba(245, 177, 66, 0.1); border-color: rgba(245, 177, 66, 0.22); }
   .chip-red { color: #ff8a8a; background: rgba(255, 31, 31, 0.12); border-color: rgba(255, 31, 31, 0.26); }
-  .chip-grey { color: rgba(255, 255, 255, 0.75); background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.1); }
+  .chip-grey { color: rgba(255, 255, 255, 0.78); background: rgba(255, 255, 255, 0.04); border-color: rgba(255, 255, 255, 0.09); }
 
   /* ---------- Buttons, fields, icon buttons ---------- */
   .btn { position: relative; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 40px; padding: 0 18px; border-radius: 12px; font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: #fff;
-    background: linear-gradient(135deg, rgba(92, 110, 255, 0.12), rgba(255, 255, 255, 0.04) 50%, rgba(255, 72, 72, 0.08)), rgba(255, 255, 255, 0.04);
-    -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.13); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 8px 20px -10px rgba(0, 0, 0, 0.6);
+    background: rgba(14, 14, 20, 0.7);
+    -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.7);
     transition: border-color 180ms ease, box-shadow 180ms ease, transform 160ms var(--ease-out), background-color 180ms ease; }
-  .btn:hover { border-color: rgba(143, 155, 255, 0.55); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18), 0 0 0 4px rgba(0, 24, 254, 0.12), 0 10px 24px -10px rgba(0, 24, 254, 0.6); }
+  .btn:hover { border-color: rgba(120, 135, 255, 0.55); box-shadow: 0 0 0 3px rgba(0, 24, 254, 0.14), 0 10px 24px -12px rgba(0, 24, 254, 0.55); }
   .btn:active { transform: scale(0.97); }
   .btn-blue { background: linear-gradient(180deg, #2a42ff, #0018fe); border-color: rgba(160, 172, 255, 0.55); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 10px 26px -8px rgba(0, 24, 254, 0.75); }
   .btn-blue:hover { border-color: rgba(200, 208, 255, 0.8); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.35), 0 0 0 4px rgba(0, 24, 254, 0.2), 0 12px 30px -8px rgba(0, 24, 254, 0.9); }
   .btn-white { background: #fff; color: #000; border-color: #fff; }
 
-  .field { height: 44px; width: 100%; padding: 0 14px; border-radius: 12px; font-size: 14px; color: #fff; font-family: var(--font-sans);
-    background: rgba(255, 255, 255, 0.045); -webkit-backdrop-filter: blur(20px) saturate(160%); backdrop-filter: blur(20px) saturate(160%);
-    border: 1px solid rgba(255, 255, 255, 0.12); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08); transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease; }
+  .field { height: 44px; width: 100%; padding: 0 14px; border-radius: 12px; font-size: 14px; font-weight: 400; letter-spacing: -0.005em; text-transform: none; color: #fff; font-family: var(--font-sans);
+    background: rgba(12, 12, 18, 0.7); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.1); transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease; }
   .field:hover { border-color: rgba(255, 255, 255, 0.24); }
-  .field:focus-visible { outline: none; border-color: #5c6eff; background: rgba(255, 255, 255, 0.07); box-shadow: 0 0 0 4px rgba(0, 24, 254, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1); }
+  .field:focus-visible { outline: none; border-color: #5c6eff; box-shadow: 0 0 0 4px rgba(0, 24, 254, 0.22); }
   select.field { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-opacity='.6' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
   select.field option { background: #111; }
 
-  .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex: none; border-radius: 9px; color: rgba(255, 255, 255, 0.55); background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.08); transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms var(--ease-out); }
+  .icon-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; flex: none; border-radius: 9px; color: rgba(255, 255, 255, 0.55); background: rgba(12, 12, 18, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease, transform 160ms var(--ease-out); }
   .icon-btn:hover { color: #fff; border-color: rgba(92, 110, 255, 0.7); background: rgba(0, 24, 254, 0.2); }
   .icon-btn:active { transform: scale(0.94); }
 
@@ -217,16 +215,14 @@
   .wash-y { background-image: var(--plus), var(--wash-y); background-size: 136px 136px, auto; }
   .spot { position: relative; isolation: isolate; }
   .spot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
-    background: radial-gradient(420px circle at var(--mx, -500px) var(--my, -500px), rgba(255, 255, 255, 0.07), transparent 60%); }
+    background: radial-gradient(380px circle at var(--mx, -500px) var(--my, -500px), rgba(92, 110, 255, 0.10), transparent 65%); }
   .spot > * { position: relative; z-index: 1; }
 
   /* chart entrances, once: the line draws itself, the ring segments sweep in */
-  .na-line { stroke-dasharray: 1; stroke-dashoffset: 0; animation: draw 900ms var(--ease-out) both; }
+  .chart-line { stroke-dasharray: 1; stroke-dashoffset: 0; animation: draw 1000ms var(--ease-out) both; }
   @keyframes draw { from { stroke-dashoffset: 1; } }
-  .na-area { animation: fadein 700ms ease-out both; }
+  .chart-area { animation: fadein 800ms ease-out both; }
   @keyframes fadein { from { opacity: 0; } }
-  .ring-seg { animation: ring 1000ms var(--ease-out) both; }
-  @keyframes ring { from { stroke-dasharray: 0 var(--c); } to { stroke-dasharray: var(--seg) var(--gap); } }
 
   .tag { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: rgba(255, 255, 255, 0.62); white-space: nowrap; }
 
