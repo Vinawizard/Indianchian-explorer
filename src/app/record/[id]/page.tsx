@@ -124,15 +124,15 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                                 const on = v.version === r.version;
                                 const va = v.batch_index != null || !!v.cardano_tx_hash;
                                 return (
-                                    <li key={v.payload_id} className="border-b border-rule last:border-b-0">
+                                    <li key={v.payload_id}>
                                         <Link href={recordHref(rid, v.version)} aria-current={on ? "page" : undefined}
-                                            className={`grid grid-cols-[48px_1fr_auto] items-center gap-3 border-l-2 px-5 py-3.5 transition-colors ${on ? "border-blue bg-white/[0.04]" : "border-transparent hover:bg-white/[0.02]"}`}>
+                                            className={`grid grid-cols-[44px_1fr_auto] items-center gap-3 px-6 py-3.5 transition-colors duration-200 ${on ? "bg-[linear-gradient(90deg,rgba(0,24,254,0.22),transparent_75%)] shadow-[inset_2px_0_0_#5c6eff]" : "hover:bg-[linear-gradient(90deg,rgba(0,24,254,0.12),transparent_70%)]"}`}>
                                             <span className={`num text-[14px] font-semibold ${on ? "text-white" : "text-white/50"}`}>v{v.version}</span>
                                             <span className="min-w-0">
                                                 <span className="num block text-[13px] text-white/80">#{fmtInt(v.block_number)}</span>
                                                 <span className="block text-[12px] text-faint"><TimeAgo iso={v.confirmed_at} /></span>
                                             </span>
-                                            <span aria-label={va ? "Anchored" : "Pending"} className={`h-2 w-2 ${va ? "bg-green" : "bg-amber"}`} />
+                                            <Status tone={va ? "positive" : "warning"}>{va ? "Anchored" : "Pending"}</Status>
                                         </Link>
                                     </li>
                                 );

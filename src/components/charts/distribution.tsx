@@ -10,7 +10,7 @@ const ROWS: { key: keyof Counts; label: string }[] = [
 /** Record distribution: a thin ring (2px surface gaps between segments) with the values labelled beside it. */
 export function Distribution({ counts }: { counts: Counts | null }) {
     const total = counts ? counts.farmer + counts.agri_record + counts.credit_app : 0;
-    const R = 66, SW = 12, C = 2 * Math.PI * R, GAP = 3;
+    const R = 70, SW = 10, C = 2 * Math.PI * R, GAP = 12;
     let offset = 0;
     return (
         <section className="card flex h-full flex-col" aria-labelledby="rd">
@@ -24,13 +24,15 @@ export function Distribution({ counts }: { counts: Counts | null }) {
                 <div className="flex flex-1 flex-col items-center justify-center gap-8 px-6 py-7 sm:flex-row sm:gap-10">
                     <div className="relative shrink-0">
                         <svg width={2 * R + SW + 4} height={2 * R + SW + 4} viewBox={`0 0 ${2 * R + SW + 4} ${2 * R + SW + 4}`} role="img" aria-label="Records by type">
+                            <defs><filter id="rd-glow" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.5" result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter></defs>
                             <g transform={`rotate(-90 ${R + SW / 2 + 2} ${R + SW / 2 + 2})`}>
                                 <circle cx={R + SW / 2 + 2} cy={R + SW / 2 + 2} r={R} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth={SW} />
                                 {ROWS.map(({ key }) => {
                                     const len = (counts[key] / total) * C;
                                     const seg = Math.max(0, len - GAP);
-                                    const el = <circle key={key} cx={R + SW / 2 + 2} cy={R + SW / 2 + 2} r={R} fill="none" stroke={SERIES[key]} strokeWidth={SW}
-                                        strokeDasharray={`${seg} ${C - seg}`} strokeDashoffset={-offset} />;
+                                    const el = <circle key={key} cx={R + SW / 2 + 2} cy={R + SW / 2 + 2} r={R} fill="none" stroke={SERIES[key]} strokeWidth={SW} strokeLinecap="round"
+                                        strokeDasharray={`${seg} ${C - seg}`} strokeDashoffset={-offset} className="ring-seg" filter="url(#rd-glow)"
+                                        style={{ ["--seg" as string]: `${seg}px`, ["--gap" as string]: `${C - seg}px`, ["--c" as string]: `${C}px` }} />;
                                     offset += len;
                                     return el;
                                 })}
@@ -46,11 +48,14 @@ export function Distribution({ counts }: { counts: Counts | null }) {
                             const v = counts[key];
                             const share = (v / total) * 100;
                             return (
-                                <li key={key} className="flex items-center gap-3">
-                                    <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: SERIES[key] }} />
-                                    <span className="flex-1 text-[13px] text-white/80">{label}</span>
-                                    <span className="num text-[13px] font-medium text-white">{v.toLocaleString("en-US")}</span>
-                                    <span className="num w-10 text-right text-[12px] text-white/50">{share < 10 ? share.toFixed(1) : Math.round(share)}%</span>
+                                <li key={key}>
+                                    <div className="flex items-center gap-3">
+                                        <span aria-hidden className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: SERIES[key], boxShadow: `0 0 10px ${SERIES[key]}` }} />
+                                        <span className="flex-1 text-[14px] text-white/80">{label}</span>
+                                        <span className="num text-[14px] font-medium text-white">{v.toLocaleString("en-US")}</span>
+                                        <span className="num w-11 text-right text-[12px] text-white/50">{share < 10 ? share.toFixed(1) : Math.round(share)}%</span>
+                                    </div>
+                                    <div className="ml-[22px] mt-2 h-[3px] rounded-full bg-white/[0.06]"><div className="h-full rounded-full" style={{ width: `${Math.max(1.5, share)}%`, background: SERIES[key] }} /></div>
                                 </li>
                             );
                         })}

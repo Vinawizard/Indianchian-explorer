@@ -61,9 +61,11 @@ export function NetworkActivity({ days }: { days: DayPoint[] }) {
                 <svg width={w} height={H} className="block max-w-full" role="img" aria-label={`Records anchored on Cardano per day, last ${range} days`}>
                     <defs>
                         <linearGradient id="na-fill" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor={BAR} stopOpacity="0.38" />
+                            <stop offset="0%" stopColor={BAR} stopOpacity="0.5" />
+                            <stop offset="70%" stopColor={BAR} stopOpacity="0.06" />
                             <stop offset="100%" stopColor={BAR} stopOpacity="0" />
                         </linearGradient>
+                        <filter id="na-glow" x="-10%" y="-30%" width="120%" height="160%"><feGaussianBlur stdDeviation="4" /></filter>
                     </defs>
                     {[0, 0.5, 1].map((f) => (
                         <g key={f}>
@@ -71,15 +73,16 @@ export function NetworkActivity({ days }: { days: DayPoint[] }) {
                             <text x={padL - 10} y={y(f * max) + 4} textAnchor="end" fontSize={11} fill={TICK} style={{ fontVariantNumeric: "tabular-nums" }}>{short(f * max)}</text>
                         </g>
                     ))}
-                    <path d={area} fill="url(#na-fill)" />
-                    <path d={line} fill="none" stroke={BAR} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+                    <path d={area} fill="url(#na-fill)" className="na-area" />
+                    <path d={line} fill="none" stroke={BAR} strokeWidth={4} strokeOpacity={0.55} filter="url(#na-glow)" />
+                    <path key={range} d={line} fill="none" stroke="#7d8cff" strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" pathLength={1} className="na-line" />
                     {data.map((d, i) => (i % step === (data.length - 1) % step) && (
                         <text key={d.day} x={x(i)} y={H - 8} textAnchor={i === data.length - 1 ? "end" : i === 0 ? "start" : "middle"} fontSize={11} fill={TICK}>{dayLabel(d.day)}</text>
                     ))}
                     {h && hover != null && (
                         <g pointerEvents="none">
                             <line x1={x(hover)} x2={x(hover)} y1={padT} y2={padT + ih} stroke="rgba(255,255,255,0.28)" strokeWidth={1} />
-                            <circle cx={x(hover)} cy={y(h.records)} r={5} fill={BAR} stroke="#0e0e12" strokeWidth={2} />
+                            <circle cx={x(hover)} cy={y(h.records)} r={9} fill={BAR} opacity={0.25} /><circle cx={x(hover)} cy={y(h.records)} r={4.5} fill="#fff" stroke={BAR} strokeWidth={2.5} />
                         </g>
                     )}
                     <rect x={padL} y={padT} width={iw} height={ih} fill="transparent" onPointerMove={onMove} onPointerLeave={() => setHover(null)} />

@@ -18,10 +18,10 @@ const settle = async <T,>(p: Promise<T>, fallback: T): Promise<T> => { try { ret
 
 function Hero() {
     return (
-        <section className="wash-y relative mt-6 overflow-hidden rounded-[22px] border border-white/10 px-6 pb-12 pt-14 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:pb-14 sm:pt-16">
+        <section className="wash-y spot relative mt-6 overflow-hidden rounded-[22px] border border-white/10 px-6 pb-12 pt-14 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:pb-14 sm:pt-16">
             <h1 className="t-hero text-white">
                 <span className="dot font-extrabold">IndianChain</span>{" "}
-                <span className="block font-medium tracking-[0.02em] text-white/90 sm:inline">Explorer</span>
+                <span className="block font-medium text-white/90 sm:inline">Explorer</span>
             </h1>
             <div className="mx-auto mt-9 max-w-[640px] text-left"><SearchBar large /></div>
         </section>

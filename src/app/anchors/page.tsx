@@ -7,6 +7,7 @@ import { fmtInt, shortHash, utc } from "@/lib/format";
 import { PageHeader } from "@/components/ui/page-header";
 import { TimeAgo } from "@/components/ui/time-ago";
 import { Empty } from "@/components/ui/empty";
+import { ArrowRight } from "lucide-react";
 
 export const revalidate = 20;
 export const metadata: Metadata = { title: "Cardano anchors" };
@@ -33,19 +34,20 @@ export default async function AnchorsPage({ searchParams }: { searchParams: Prom
                         <div className="overflow-x-auto">
                             <table className="table">
                                 <caption className="sr-only">Cardano anchor batches</caption>
-                                <thead><tr><th scope="col">Batch</th><th scope="col" className="r">Records</th><th scope="col" className="hidden lg:table-cell">Blocks</th><th scope="col" className="hidden xl:table-cell">Merkle root</th><th scope="col" className="hidden md:table-cell">Cardano transaction</th><th scope="col">Age</th></tr></thead>
+                                <thead><tr><th scope="col">Batch</th><th scope="col" className="r">Records</th><th scope="col" className="hidden lg:table-cell">Blocks</th><th scope="col" className="hidden xl:table-cell">Merkle root</th><th scope="col" className="hidden md:table-cell">Cardano transaction</th><th scope="col">Age</th><th scope="col" className="w-10"><span className="sr-only">Open</span></th></tr></thead>
                                 <tbody>
                                     {data.batches.map((b) => (
                                         <tr key={b.batch_index}>
-                                            <td><Link href={`/anchor/${b.batch_index}`} className="num font-semibold text-white hover:text-blue-text">#{fmtInt(b.batch_index)}</Link></td>
-                                            <td className="r num text-muted">{fmtInt(b.record_count)}</td>
+                                            <td><Link href={`/anchor/${b.batch_index}`} className="row-link num text-[15px] font-semibold text-white">#{fmtInt(b.batch_index)}</Link></td>
+                                            <td className="r num text-white/85">{fmtInt(b.record_count)}</td>
                                             <td className="num hidden text-white/60 lg:table-cell">
-                                                {b.l2_from_block != null ? <Link href={`/block/${b.l2_from_block}`} className="hover:text-ink">{fmtInt(b.l2_from_block)}</Link> : "—"}
-                                                {b.l2_to_block != null && b.l2_to_block !== b.l2_from_block && <> – <Link href={`/block/${b.l2_to_block}`} className="hover:text-ink">{fmtInt(b.l2_to_block)}</Link></>}
+                                                {b.l2_from_block != null ? <Link href={`/block/${b.l2_from_block}`} className="z hover:text-white">{fmtInt(b.l2_from_block)}</Link> : "—"}
+                                                {b.l2_to_block != null && b.l2_to_block !== b.l2_from_block && <> – <Link href={`/block/${b.l2_to_block}`} className="z hover:text-white">{fmtInt(b.l2_to_block)}</Link></>}
                                             </td>
                                             <td className="mono hidden text-white/50 xl:table-cell" title={b.merkle_root}>{shortHash(b.merkle_root, 10, 6)}</td>
-                                            <td className="hidden md:table-cell">{b.cardano_tx_hash ? <a href={cardanoscanTx(network, b.cardano_tx_hash)} target="_blank" rel="noopener noreferrer" className="mono link" title={b.cardano_tx_hash}>{shortHash(b.cardano_tx_hash, 8, 6)}</a> : <span className="text-faint">—</span>}</td>
-                                            <td className="text-muted"><span title={utc(b.confirmed_at)}><TimeAgo iso={b.confirmed_at} /></span></td>
+                                            <td className="hidden md:table-cell">{b.cardano_tx_hash ? <a href={cardanoscanTx(network, b.cardano_tx_hash)} target="_blank" rel="noopener noreferrer" className="z mono link" title={b.cardano_tx_hash}>{shortHash(b.cardano_tx_hash, 8, 6)}</a> : <span className="text-faint">—</span>}</td>
+                                            <td className="dim"><span title={utc(b.confirmed_at)}><TimeAgo iso={b.confirmed_at} /></span></td>
+                                            <td className="r"><ArrowRight className="row-arrow ml-auto h-4 w-4" aria-hidden /></td>
                                         </tr>
                                     ))}
                                 </tbody>

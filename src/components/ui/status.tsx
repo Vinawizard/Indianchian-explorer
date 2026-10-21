@@ -1,15 +1,9 @@
 import type { ReactNode } from "react";
-import { Check } from "lucide-react";
 
 type Tone = "positive" | "warning" | "negative" | "neutral" | "blue";
-const CLS: Record<Tone, string> = { positive: "chip-green", warning: "chip-amber", negative: "chip-red", neutral: "chip-grey", blue: "chip-blue" };
+const CLS: Record<Tone, string> = { positive: "s-green", warning: "s-amber", negative: "s-red", neutral: "s-grey", blue: "s-blue" };
 
-/** The original bordered status chip. */
+/** A lit dot and a word: status stays readable without a filled chip on every row. */
 export function Status({ tone = "neutral", children }: { tone?: Tone; children: ReactNode }) {
-    return (
-        <span className={`chip ${CLS[tone]}`}>
-            {tone === "positive" && <Check className="h-2.5 w-2.5" strokeWidth={3.5} aria-hidden />}
-            {children}
-        </span>
-    );
+    return <span className={`status ${CLS[tone]}`}>{children}</span>;
 }

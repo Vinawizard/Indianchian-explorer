@@ -8,6 +8,7 @@ import { Hash } from "@/components/ui/hash";
 import { Status } from "@/components/ui/status";
 import { TimeAgo } from "@/components/ui/time-ago";
 import { Empty } from "@/components/ui/empty";
+import { ArrowRight } from "lucide-react";
 
 export const revalidate = 0;
 export const metadata: Metadata = { title: "Blocks" };
@@ -35,16 +36,17 @@ export default async function BlocksPage({ searchParams }: { searchParams: Promi
                     <div className="overflow-x-auto">
                         <table className="table">
                             <caption className="sr-only">Blocks</caption>
-                            <thead><tr><th scope="col">Block</th><th scope="col">Age</th><th scope="col" className="hidden lg:table-cell">Timestamp (UTC)</th><th scope="col" className="hidden md:table-cell">Hash</th><th scope="col" className="r">Extrinsics</th><th scope="col">Status</th></tr></thead>
+                            <thead><tr><th scope="col">Block</th><th scope="col">Age</th><th scope="col" className="hidden lg:table-cell">Timestamp (UTC)</th><th scope="col" className="hidden md:table-cell">Hash</th><th scope="col" className="r">Extrinsics</th><th scope="col">Status</th><th scope="col" className="w-10"><span className="sr-only">Open</span></th></tr></thead>
                             <tbody>
                                 {data.blocks.map((b) => (
                                     <tr key={b.number}>
-                                        <td><Link href={`/block/${b.number}`} className="num font-semibold text-white hover:text-blue-text">#{fmtInt(b.number)}</Link></td>
-                                        <td className="text-muted"><TimeAgo iso={b.timestamp} /></td>
+                                        <td><Link href={`/block/${b.number}`} className="row-link num text-[15px] font-semibold text-white">{fmtInt(b.number)}</Link></td>
+                                        <td className="dim"><TimeAgo iso={b.timestamp} /></td>
                                         <td className="num hidden text-[13px] text-white/50 lg:table-cell">{utc(b.timestamp).replace(" UTC", "")}</td>
-                                        <td className="hidden md:table-cell"><Hash value={b.hash} head={12} tail={8} /></td>
-                                        <td className="r num text-muted">{b.extrinsics}</td>
+                                        <td className="hidden md:table-cell"><span className="z inline-flex"><Hash value={b.hash} head={12} tail={8} /></span></td>
+                                        <td className="r num text-white/80">{b.extrinsics}</td>
                                         <td>{b.number <= data!.finalized ? <Status tone="positive">Finalized</Status> : <Status>Finalizing</Status>}</td>
+                                        <td className="r"><ArrowRight className="row-arrow ml-auto h-4 w-4" aria-hidden /></td>
                                     </tr>
                                 ))}
                             </tbody>

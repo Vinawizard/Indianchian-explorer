@@ -40,10 +40,10 @@ export function MetricCards({ latestBlock, totalRecords, anchored, network }: Pr
         <section aria-label="Network figures" className="wash-x grid grid-cols-1 overflow-hidden rounded-[22px] border border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] sm:grid-cols-3">
             {cards.map(({ label, value, icon: Icon, href }, i) => (
                 <Link key={label} href={href}
-                    className={`group flex flex-col items-center gap-3.5 px-6 py-9 text-center transition-colors duration-200 hover:bg-white/[0.04] ${i > 0 ? "border-t border-white/10 sm:border-l sm:border-t-0" : ""}`}>
-                    <Icon className="h-5 w-5 text-white/80" strokeWidth={1.75} aria-hidden />
+                    className={`spot group flex flex-col items-center gap-3.5 px-6 py-10 text-center transition-colors duration-200 hover:bg-white/[0.03] ${i > 0 ? "border-t border-white/10 sm:border-l sm:border-t-0" : ""}`}>
+                    <Icon className="h-5 w-5 text-white/80 transition-transform duration-300 ease-out group-hover:-translate-y-0.5" strokeWidth={1.75} aria-hidden />
                     <span className="t-figure text-white">{value}</span>
-                    <span className="text-[12px] font-semibold uppercase tracking-[0.12em] text-white/75">{label}</span>
+                    <span className="text-[12px] font-medium uppercase tracking-[0.12em] text-white/75">{label}</span>
                 </Link>
             ))}
         </section>
