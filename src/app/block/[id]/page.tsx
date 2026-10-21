@@ -85,7 +85,7 @@ export default async function BlockPage({ params }: { params: Promise<{ id: stri
                 <section className="card mt-6" aria-labelledby="records">
                     <div className="card-head"><div><h2 id="records" className="section-title">Events</h2><p className="card-sub">{fmtInt(records.rows.length)} in this block</p></div></div>
                     {records.rows.length
-                        ? <RecordsTable rows={records.rows} cols={["event", "sector", "version", "farmer", "anchor"]} caption="Events in this block" />
+                        ? <RecordsTable rows={records.rows} cols={["event", "sector", "version", "time", "anchor"]} caption="Events in this block" />
                         : <p className="label px-8 pb-8">No events in this block</p>}
                 </section>
             )}

@@ -73,9 +73,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                         { label: "Event ID", value: <Hash value={rid} full /> },
                         { label: "Type", value: typeLabel },
                         { label: "Version", value: <span className="num">{r.version}</span> },
-                        ...(r.farmer_id && r.record_type !== "farmer" ? [{ label: "Farmer", value: <span className="inline-flex flex-wrap items-center gap-3"><Hash value={r.farmer_id} href={`/record/${r.farmer_id}`} head={13} tail={12} /><Link href={`/events?farmer=${r.farmer_id}`} className="label transition-colors hover:text-white">All events</Link></span> }] : []),
-                        ...(r.record_type === "farmer" ? [{ label: "Linked events", value: <Link href={`/events?farmer=${rid}`} className="link">Agricultural and credit events</Link> }] : []),
-                        ...(r.parent_record_id && r.parent_record_id !== r.farmer_id ? [{ label: "Linked to", value: <Hash value={r.parent_record_id} href={`/record/${r.parent_record_id}`} head={13} tail={12} /> }] : []),
+                        ...(r.farmer_id && r.record_type !== "farmer" ? [{ label: "Farmer ID", value: <Hash value={r.farmer_id} full /> }] : []),
                         { label: "Recorded at", value: <span className="num">{utc(r.timestamp)}</span> },
                     ]} />
                 </section>

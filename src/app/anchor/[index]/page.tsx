@@ -72,7 +72,7 @@ export default async function AnchorPage({ params }: { params: Promise<{ index: 
             <section className="card mt-6" aria-labelledby="sealed">
                 <div className="card-head"><div><h2 id="sealed" className="section-title">Sealed events</h2><p className="card-sub">{fmtInt(records.rows.length)} in this batch</p></div></div>
                 {records.rows.length
-                    ? <RecordsTable rows={records.rows} cols={["block", "event", "sector", "version", "farmer"]} caption="Events sealed in this anchor" />
+                    ? <RecordsTable rows={records.rows} cols={["block", "event", "sector", "version", "anchor"]} caption="Events sealed in this anchor" />
                     : <Empty title="Could not load events" />}
             </section>
         </div>

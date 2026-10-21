@@ -6,12 +6,10 @@ import { getMainnetSummary, queryMainnetRecords, type MainnetRecordRow } from "@
 import { supabase } from "@/lib/supabase";
 import { SUPABASE_CHAIN } from "@/lib/network";
 import { CARDANO_PROOF_OR_FILTER } from "@/lib/cardano-proof";
-import { fmtInt, shortId } from "@/lib/format";
+import { fmtInt } from "@/lib/format";
 import { PageHeader, StatBox } from "@/components/ui/page-header";
 import { RecordsTable } from "@/components/records/records-table";
 import { Empty } from "@/components/ui/empty";
-import { Hash } from "@/components/ui/hash";
-import { DotNum } from "@/components/ui/dot-num";
 
 export const revalidate = 0;
 export const maxDuration = 60;
@@ -37,11 +35,10 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
     const network = await resolveNetworkFromCookies();
     const type = one(sp.type) || one(sp.record_type);
     const status = one(sp.status);
-    const farmer = one(sp.farmer).trim().toLowerCase();
     let start = int(one(sp.start)), end = int(one(sp.end));
     if (start != null && end != null && start > end) [start, end] = [end, start];
     const before = one(sp.before);
-    const filtered = !!(type || status || start != null || end != null || farmer);
+    const filtered = !!(type || status || start != null || end != null);
 
     let rows: MainnetRecordRow[] = [];
     let total = -1, blocks = -1;
@@ -50,7 +47,7 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
         try {
             const r = await queryMainnetRecords({
                 record_type: type || undefined, status: status || undefined, minBlock: start, maxBlock: end,
-                farmer: farmer || undefined, before: before || undefined, limit: farmer ? 300 : PAGE, noCount: !filtered,
+                before: before || undefined, limit: PAGE, noCount: !filtered,
             });
             rows = r.rows; total = r.total;
             if (!filtered) {
@@ -64,15 +61,13 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
     }
 
     const last = rows[rows.length - 1];
-    const next = !farmer && rows.length === PAGE && last?.record_id ? `${last.block_number}:${last.record_id}:${last.version ?? 1}` : null;
+    const next = rows.length === PAGE && last?.record_id ? `${last.block_number}:${last.record_id}:${last.version ?? 1}` : null;
     const keep = (extra: Record<string, string | null>) => {
         const p = new URLSearchParams();
-        for (const [k, v] of Object.entries({ type, status, start: start?.toString() ?? "", end: end?.toString() ?? "", farmer, ...extra })) if (v) p.set(k, v);
+        for (const [k, v] of Object.entries({ type, status, start: start?.toString() ?? "", end: end?.toString() ?? "", ...extra })) if (v) p.set(k, v);
         const s = p.toString();
         return s ? `/events?${s}` : "/events";
     };
-
-    if (farmer) return <FarmerTrace farmer={farmer} rows={rows} failed={failed} />;
 
     const lbl = "mb-1 text-[10px] uppercase tracking-[0.2em] text-muted";
     return (
@@ -119,10 +114,6 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
                     <span className={lbl}>Block end</span>
                     <input name="end" inputMode="numeric" pattern="[0-9]*" defaultValue={end ?? ""} placeholder="999,999" autoComplete="off" className="field num" />
                 </label>
-                <label className="flex min-w-[200px] flex-[1.4] flex-col">
-                    <span className={lbl}>Farmer ID</span>
-                    <input name="farmer" defaultValue="" placeholder="Farmer UUID…" spellCheck={false} autoComplete="off" className="field" />
-                </label>
                 <div className="flex h-[43px] items-center gap-3 md:ml-auto lg:ml-0">
                     <Link href="/events" className="btn btn-text !px-5">Reset</Link>
                     <button type="submit" className="btn btn-blue !h-[43px] !px-8">Init_filter</button>
@@ -153,44 +144,6 @@ export default async function EventsPage({ searchParams }: { searchParams: Promi
                     </div>
                 </div>
             )}
-        </div>
-    );
-}
-
-/** Everything one farmer has on chain: the farmer record's versions and its agricultural and credit records. */
-function FarmerTrace({ farmer, rows, failed }: { farmer: string; rows: MainnetRecordRow[]; failed: boolean }) {
-    const count = (t: string) => rows.filter((r) => r.record_type === t).length;
-    const distinct = (t: string) => new Set(rows.filter((r) => r.record_type === t).map((r) => r.record_id)).size;
-    const anchored = rows.filter((r) => r.batch_index != null || r.cardano_tx_hash).length;
-    const order: Record<string, number> = { farmer: 0, agri_record: 1, credit_app: 2 };
-    const sorted = [...rows].sort((a, b) => (order[a.record_type] ?? 9) - (order[b.record_type] ?? 9) || (a.record_id ?? "").localeCompare(b.record_id ?? "") || (a.version ?? 0) - (b.version ?? 0));
-    return (
-        <div className="page">
-            <PageHeader
-                crumbs={[{ label: "IndianChain", href: "/" }, { label: "Network events", href: "/events" }, { label: `Farmer ${shortId(farmer)}` }]}
-                title="Farmer trace"
-                meta={<Hash value={farmer} full />}
-                actions={<Link href={`/record/${farmer}`} className="btn">Farmer record<ChevronRight className="h-4 w-4" aria-hidden /></Link>}
-            />
-            <section className="panel mb-10 grid grid-cols-2 overflow-hidden md:grid-cols-4 [&>*+*]:border-l [&>*]:border-white/10">
-                {[
-                    ["Farmer versions", count("farmer")],
-                    ["Agricultural", distinct("agri_record")],
-                    ["Credit", distinct("credit_app")],
-                    ["Anchored", anchored],
-                ].map(([l, v]) => (
-                    <div key={l as string} className="flex flex-col items-center gap-3 px-5 py-8 text-center">
-                        <DotNum value={fmtInt(v as number)} />
-                        <div className="text-[11px] uppercase tracking-[0.16em] text-white/70">{l}</div>
-                    </div>
-                ))}
-            </section>
-            <section className="card" aria-label="Farmer events">
-                {failed ? <Empty title="Events could not be loaded" />
-                    : rows.length === 0 ? <Empty title="No events on chain yet" />
-                    : <RecordsTable rows={sorted} cols={["block", "event", "sector", "version", "time", "anchor"]} caption={`Events of farmer ${farmer}`} />}
-            </section>
-            {rows.length >= 300 && <p className="label mt-4">First 300 versions</p>}
         </div>
     );
 }
