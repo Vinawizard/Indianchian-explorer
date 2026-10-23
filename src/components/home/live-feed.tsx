@@ -70,7 +70,7 @@ export function LiveFeed({ blocks: initialBlocks, finalized: initialFinalized, r
         <section aria-labelledby="feed" className="card">
             <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-5 px-5 py-6 sm:px-8 sm:py-8">
                 <div>
-                    <h2 id="feed"><DotTitle text="Live feed" /></h2>
+                    <h2 id="feed"><DotTitle text="On chain now" /></h2>
                     <p className="card-sub !mt-3">Updates every ~6 seconds with network consensus</p>
                 </div>
                 <Segmented label="Feed" size="sm" value={tab} onChange={setTab}
