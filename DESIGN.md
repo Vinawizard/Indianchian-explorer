@@ -8,8 +8,9 @@ Trivolve backdrop) and the details (contrast, hover, motion).
 
 - Text is the platform UI sans (`ui-sans-serif, system-ui`), which is what the original actually
   rendered: Segoe UI on Windows, SF on Mac. No web text fonts.
-- Doto (dot matrix) for the word "IndianChain" and for the headline figures (hero, stat boxes,
-  farmer trace), separators pulled in so each number reads as one. Tables keep the sans.
+- Doto's dot patterns, drawn as squares on whole-pixel grids: the wordmark (8px cell), hero figures
+  and landing section titles (4px; titles in 60% "fine" dots), stat-box figures (small grid,
+  `--cell-s`: 3px at 100%, 3.2px at 125%). Tables, keys and values keep the sans.
 - Page title 48px (36px on phones), uppercase, -0.05em. Card titles 20px uppercase, -0.05em.
 - Labels, table headers, card subtitles, breadcrumbs, chips, buttons and fields: 10px uppercase,
   tracked 0.1em–0.2em, `#888`.
@@ -30,8 +31,11 @@ No green or amber. Status is a chip: blue with a check when done, quiet grey wit
 
 ## Surfaces
 
-- `.card`: dark glass, `rgba(5,6,14,.38)` to `rgba(0,0,0,.5)`, `blur(24px) saturate(160%)`, a 1px rim
-  (blue top-left, red bottom-right, lit under the cursor). Radius 16px. No grey fills, no header bands.
+- `.card`: dark glass, `rgba(0,0,4,.56)` to `rgba(0,0,0,.68)`, `blur(16px) saturate(130%)`, a 1px rim
+  (blue top-left, red bottom-right). The cursor warms the rim in Trivolve blue, never white.
+  Measured: the glass is darker than the page beside it (0.5x luminance; it was 1.6x, a grey film
+  from the blurred plus marks), and the cursor glint is a third of what it was. Radius 16px.
+- Plus marks at 6% white; still glows blue 0.22 / red 0.12 on inner pages.
 - Backdrop: one fixed layer behind every page (`.backdrop`): black, a still Trivolve blue glow
   top-left and red bottom-right, the plus-sign grid. Boxes never carry their own gradient.
 - Landing page only (`.aurora`): the same light moving, four transform-only CSS loops (26-34 s).

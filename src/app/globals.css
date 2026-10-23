@@ -33,6 +33,7 @@
 
 :root {
   color-scheme: dark;
+  --cell-s: 3px;         /* small dot grid (stat boxes): 3px = 3/6/9 device px at 100/200/300% */
   --ground: #000000;
   --ink: #ffffff;
   --muted: #888888;      /* the original muted text (5.9:1 on black) */
@@ -44,8 +45,11 @@
   --red-text: #ff5c5c;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   /* trivolvetech.com: the plus-sign grid */
-  --plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='136' height='136'%3E%3Cpath d='M68 63v10M63 68h10' stroke='%23ffffff' stroke-opacity='0.09' stroke-width='1'/%3E%3C/svg%3E");
+  --plus: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='136' height='136'%3E%3Cpath d='M68 63v10M63 68h10' stroke='%23ffffff' stroke-opacity='0.06' stroke-width='1'/%3E%3C/svg%3E");
 }
+
+@media (resolution: 1.25dppx) { :root { --cell-s: 3.2px; } }   /* 4 device px */
+@media (resolution: 1.5dppx) { :root { --cell-s: 3.3334px; } }  /* 5 device px */
 
 @layer base {
   * { border-color: var(--line); }
@@ -75,8 +79,8 @@
 .backdrop { position: fixed; inset: 0; z-index: -1; pointer-events: none;
   background:
     var(--plus),
-    radial-gradient(900px 600px at 8% -6%, rgba(0, 24, 254, 0.28), transparent 62%),
-    radial-gradient(760px 520px at 100% 104%, rgba(255, 0, 0, 0.16), transparent 60%),
+    radial-gradient(900px 600px at 8% -6%, rgba(0, 24, 254, 0.22), transparent 62%),
+    radial-gradient(760px 520px at 100% 104%, rgba(255, 0, 0, 0.12), transparent 60%),
     #000;
   background-size: 136px 136px, auto, auto, auto; }
 
@@ -121,8 +125,9 @@
      only a hairline rim says where the glass is. ---------- */
   .card {
     position: relative; isolation: isolate; overflow: hidden; border-radius: 16px;
-    background: linear-gradient(180deg, rgba(4, 5, 12, 0.34), rgba(0, 0, 0, 0.46));
-    -webkit-backdrop-filter: blur(20px) saturate(150%); backdrop-filter: blur(20px) saturate(150%);
+    /* darker than the page behind it (measured), so the glass never reads as a grey film */
+    background: linear-gradient(180deg, rgba(0, 0, 4, 0.56), rgba(0, 0, 0, 0.68));
+    -webkit-backdrop-filter: blur(16px) saturate(130%); backdrop-filter: blur(16px) saturate(130%);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 30px 60px -32px rgba(0, 0, 0, 0.9);
   }
   /* .panel: the same rim with nothing inside it, for the landing hero: fully see-through */
@@ -131,8 +136,9 @@
   .card::before, .panel::before {
     content: ""; position: absolute; inset: 0; z-index: 3; border-radius: inherit; padding: 1px; pointer-events: none;
     background:
-      radial-gradient(280px circle at var(--mx, -600px) var(--my, -600px), rgba(120, 135, 255, 0.6), transparent 70%),
-      linear-gradient(155deg, rgba(110, 125, 255, 0.32), rgba(255, 255, 255, 0.07) 26%, rgba(255, 255, 255, 0.035) 64%, rgba(255, 72, 72, 0.22));
+      /* the cursor warms the rim in Trivolve blue (no white), softly */
+      radial-gradient(220px circle at var(--mx, -600px) var(--my, -600px), rgba(45, 69, 255, 0.42), transparent 70%),
+      linear-gradient(155deg, rgba(60, 80, 255, 0.28), rgba(255, 255, 255, 0.045) 26%, rgba(255, 255, 255, 0.025) 64%, rgba(255, 60, 60, 0.18));
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude;
   }
   .card > * { position: relative; }
@@ -142,7 +148,7 @@
   /* small controls on the same glass */
   .glass {
     position: relative;
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.52);
     -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%);
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
@@ -221,7 +227,7 @@
   /* ---------- Cursor light on the see-through panels ---------- */
   .spot { position: relative; isolation: isolate; }
   .spot::after { content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none; z-index: 0;
-    background: radial-gradient(380px circle at var(--mx, -500px) var(--my, -500px), rgba(92, 110, 255, 0.10), transparent 65%); }
+    background: radial-gradient(380px circle at var(--mx, -500px) var(--my, -500px), rgba(0, 24, 254, 0.07), transparent 65%); }
   .spot > * { position: relative; z-index: 1; }
 
   /* dot-matrix figures: changed digits fall through, column by column (DotCounter) */

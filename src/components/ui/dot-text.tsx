@@ -7,12 +7,15 @@ const SPACE = 3;                           // cells; with the previous glyph's g
  * Text drawn in Doto's dot matrix as exact squares on a cell grid. A 4px cell is a whole number of
  * device pixels at 100%, 125%, 150% and 200% zoom, so every dot lands the same (the font itself
  * at most sizes does not). Digits keep their full width, so figures do not shift as they change.
+ * `cell="s"` is the small grid: drawn in cell units and sized by --cell-s, which globals.css sets
+ * to a whole number of device pixels for each zoom (3px at 100%, 3.2px at 125%, ...).
  */
 export function DotText({ text, cell = 4, className = "", label, descender, fine }: {
-    text: string; cell?: 4 | 5 | 8; className?: string; label?: string; descender?: boolean; fine?: boolean;
+    text: string; cell?: 4 | 5 | 8 | "s"; className?: string; label?: string; descender?: boolean; fine?: boolean;
 }) {
+    const u = cell === "s" ? 1 : cell;           // drawing unit
     // fine: 60% dots (2.4px on the 4px grid, exactly 3 device px at 125%) for lighter titles
-    const dot = +(cell * (fine ? 0.6 : 0.8)).toFixed(2);
+    const dot = +(u * (fine ? 0.6 : 0.8)).toFixed(2);
     const d: string[] = [];
     let x = 0;
     for (const ch of text.toUpperCase()) {
@@ -24,14 +27,15 @@ export function DotText({ text, cell = 4, className = "", label, descender, fine
             c0 = lit[0] ?? 0; c1 = lit[lit.length - 1] ?? 0;
         }
         rows.forEach((r, ry) => {
-            for (let c = c0; c <= c1; c++) if (r[c] === "#") d.push(`M${(x + c - c0) * cell} ${ry * cell}h${dot}v${dot}h-${dot}z`);
+            for (let c = c0; c <= c1; c++) if (r[c] === "#") d.push(`M${(x + c - c0) * u} ${ry * u}h${dot}v${dot}h-${dot}z`);
         });
         x += c1 - c0 + 2;   // the glyph's columns plus one gap
     }
     const rowsUsed = (descender ?? /,/.test(text)) ? 8 : 7;
-    const w = Math.max(0, (x - 2) * cell + dot), h = (rowsUsed - 1) * cell + dot;
+    const w = Math.max(0, (x - 2) * u + dot), h = (rowsUsed - 1) * u + dot;
+    const size = cell === "s" ? { width: `calc(${w} * var(--cell-s))`, height: `calc(${h} * var(--cell-s))` } : undefined;
     return (
-        <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} shapeRendering="crispEdges" fill="currentColor"
+        <svg width={size ? undefined : w} height={size ? undefined : h} style={size} viewBox={`0 0 ${w} ${h}`} shapeRendering="crispEdges" fill="currentColor"
             className={`block ${className}`} role={label ? "img" : undefined} aria-label={label} aria-hidden={label ? undefined : true}>
             <path d={d.join("")} />
         </svg>
