@@ -72,6 +72,15 @@
   }
 }
 
+/* The still Trivolve light (the Events list): blue from the top-left, red from the bottom-right, the plus grid. */
+.backdrop { position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    var(--plus),
+    radial-gradient(900px 600px at 8% -6%, rgba(0, 24, 254, 0.22), transparent 62%),
+    radial-gradient(760px 520px at 100% 104%, rgba(255, 0, 0, 0.12), transparent 60%),
+    #000;
+  background-size: 136px 136px, auto, auto, auto; }
+
 /*
  * The Trivolve light behind every page, moving: blue, black and red drift on transform-only CSS
  * loops (24-31 s). Kept as dark as the old still backdrop (measured with Playwright on the
