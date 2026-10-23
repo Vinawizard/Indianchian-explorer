@@ -33,16 +33,17 @@ export function MetricCards({ latestBlock, totalRecords, anchored, network }: Pr
     }, [network]);
 
     const cards = [
-        { label: "Latest block", value: fmt(block), icon: Box, href: block ? `/block/${block}` : "/blocks" },
-        { label: "Total events", value: fmt(records), icon: Layers, href: "/events" },
-        { label: "Anchored on Cardano", value: fmt(anchored), icon: CardanoIcon, href: "/anchors" },
+        { label: "Latest block", value: fmt(block), icon: Box, href: block ? `/block/${block}` : "/blocks", cardano: false },
+        { label: "Total events", value: fmt(records), icon: Layers, href: "/events", cardano: false },
+        // red means Cardano: this figure's dots turn red under the cursor, sweeping column by column
+        { label: "Anchored on Cardano", value: fmt(anchored), icon: CardanoIcon, href: "/anchors", cardano: true },
     ];
     return (
         <section aria-label="Network figures" className="grid grid-cols-1 sm:grid-cols-3">
-            {cards.map(({ label, value, icon: Icon, href }, i) => (
+            {cards.map(({ label, value, icon: Icon, href, cardano }, i) => (
                 <Link key={label} href={href}
                     className={`group flex flex-col items-center gap-4 px-4 py-8 text-center sm:py-0 ${i > 0 ? "border-t border-white/10 sm:border-l sm:border-t-0" : ""}`}>
-                    <DotNum value={value} className="transition-colors duration-200 group-hover:text-[#c9cfff]" />
+                    {cardano ? <DotNum value={value} sweep className="group-hover:text-[#ff2a2a] group-focus-visible:text-[#ff2a2a]" /> : <DotNum value={value} className="transition-colors duration-200 group-hover:text-[#c9cfff]" />}
                     <span className="inline-flex items-center gap-2 text-[11px] leading-4 uppercase tracking-[0.16em] text-white/70 transition-colors duration-200 group-hover:text-white">
                         <Icon className="h-[13px] w-[13px] text-blue-text" aria-hidden />{label}
                     </span>

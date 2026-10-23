@@ -34,7 +34,7 @@ export function RecordsTable({ rows, cols = ALL, caption }: { rows: MainnetRecor
                         const anchored = r.batch_index != null || !!r.cardano_tx_hash;
                         return (
                             <tr key={r.payload_id}>
-                                {has("block") && <td><Link href={`/block/${r.block_number}`} className="z blk transition-colors hover:text-blue-text">{r.block_number}</Link></td>}
+                                {has("block") && <td><Link href={`/block/${r.block_number}`} className="z blk transition-colors hover:text-red-text">{r.block_number}</Link></td>}
                                 {has("event") && <td><Link href={recordHref(id, r.version)} className="row-link mono text-white/85" title={id}>{shortId(id)}</Link></td>}
                                 {has("sector") && <td><span className="chip chip-sector">{sector(r.record_type)}</span></td>}
                                 {has("version") && <td className="num hidden sm:table-cell">v{r.version ?? "—"}</td>}
@@ -44,7 +44,7 @@ export function RecordsTable({ rows, cols = ALL, caption }: { rows: MainnetRecor
                                         {anchored ? (
                                             <span className="inline-flex items-center gap-3">
                                                 <Status tone="positive">Anchored</Status>
-                                                {r.batch_index != null && <Link href={`/anchor/${r.batch_index}`} className="z num hidden text-white/45 transition-colors hover:text-blue-text lg:inline">#{fmtInt(r.batch_index)}</Link>}
+                                                {r.batch_index != null && <Link href={`/anchor/${r.batch_index}`} className="z num hidden text-white/45 transition-colors hover:text-red-text lg:inline">#{fmtInt(r.batch_index)}</Link>}
                                             </span>
                                         ) : <Status>Pending</Status>}
                                     </td>

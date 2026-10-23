@@ -177,18 +177,23 @@
   /* block number as in the original: a small dim # and the height in white */
   .blk { display: inline-flex; align-items: baseline; gap: 6px; font-size: 14px; color: #fff; font-variant-numeric: tabular-nums; }
   .blk::before { content: "#"; font-size: 10px; color: var(--muted); }
+  .row-link { transition: color 180ms ease; }
   .row-link::after { content: ""; position: absolute; inset: 0; z-index: 1; }
   .table .z { position: relative; z-index: 2; }
   /* the original's square chevron at the end of each row */
   .row-go { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; margin-left: auto; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.03); color: rgba(255, 255, 255, 0.35); transition: color 200ms ease, border-color 200ms ease, transform 240ms var(--ease-out); }
   @media (hover: hover) and (pointer: fine) {
-    .table tbody tr:hover .row-go { color: var(--blue-text); border-color: var(--blue-line); transform: translateX(2px); }
+    .table tbody tr:hover .row-go { color: var(--red-text); border-color: rgba(255, 42, 42, 0.55); transform: translateX(2px); }
+    .table tbody tr:hover .row-link { color: var(--red-text); }
     .row-copy { opacity: 0; transition: opacity 160ms ease; }
     .table tbody tr:hover .row-copy, .row-copy:focus-visible { opacity: 1; }
   }
 
-  .link { color: var(--blue-text); transition: color 150ms ease; }
-  .link:hover { color: #fff; }
+  /* Red means Cardano: Cardano links are red at rest; every blue link flips to red under the cursor */
+  .link { color: var(--blue-text); transition: color 180ms ease; }
+  .link:hover { color: var(--red-text); }
+  .link-red { color: var(--red-text); transition: color 180ms ease; }
+  .link-red:hover { color: #fff; }
 
   /* ---------- Chips: the original outlined badges ---------- */
   .chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 4px; font-size: 10px; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; color: rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.12); }
@@ -207,6 +212,8 @@
   .btn:active { transform: scale(0.97); }
   .btn-blue { background: var(--blue); border-color: var(--blue); color: #fff; }
   .btn-blue:hover { background: #1a30ff; border-color: #1a30ff; box-shadow: 0 10px 28px -10px rgba(0, 24, 254, 0.9); }
+  .btn-red { color: var(--red-text); border-color: rgba(255, 42, 42, 0.4); }
+  .btn-red:hover { color: #fff; border-color: #ff2a2a; background-color: rgba(255, 0, 0, 0.08); }
   .btn-text { background: none; border-color: transparent; color: var(--muted); -webkit-backdrop-filter: none; backdrop-filter: none; }
   .btn-text:hover { border-color: transparent; color: #fff; }
   .btn-white { background: #fff; color: #000; border-color: #fff; }

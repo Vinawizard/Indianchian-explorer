@@ -96,7 +96,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                         {anchored && (
                             <div className="flex flex-wrap gap-2">
                                 <a href={`${VERIFY_API}/api/mainnet/records/${rid}/proof?version=${r.version}`} target="_blank" rel="noopener noreferrer" className="btn !h-9">Verify proof<ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></a>
-                                {r.cardano_tx_hash && <a href={cardanoscanTx(network, r.cardano_tx_hash)} target="_blank" rel="noopener noreferrer" className="btn !h-9">Cardanoscan<ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></a>}
+                                {r.cardano_tx_hash && <a href={cardanoscanTx(network, r.cardano_tx_hash)} target="_blank" rel="noopener noreferrer" className="btn btn-red !h-9">Cardanoscan<ArrowUpRight className="h-3.5 w-3.5" aria-hidden /></a>}
                             </div>
                         )}
                     </div>
@@ -104,7 +104,7 @@ export default async function RecordPage({ params }: { params: Promise<{ id: str
                         <KV rows={[
                             { label: "Batch", value: r.batch_index != null ? <Link href={`/anchor/${r.batch_index}`} className="num link">#{fmtInt(r.batch_index)}</Link> : "—" },
                             { label: "Merkle root", value: <Hash value={r.merkle_root ?? batch?.merkle_root} full /> },
-                            { label: "Cardano tx", value: r.cardano_tx_hash ? <Hash value={r.cardano_tx_hash} href={cardanoscanTx(network, r.cardano_tx_hash)} external full /> : "—" },
+                            { label: "Cardano tx", value: r.cardano_tx_hash ? <Hash value={r.cardano_tx_hash} href={cardanoscanTx(network, r.cardano_tx_hash)} external full red /> : "—" },
                             { label: "Anchored at", value: <span className="num">{utc(batch?.confirmed_at)}</span> },
                         ]} />
                     ) : (

@@ -58,7 +58,7 @@ export default async function AnchorPage({ params }: { params: Promise<{ index: 
             <section className="card" aria-labelledby="batch">
                 <div className="card-head"><div><h2 id="batch" className="section-title">Anchor transaction</h2><p className="card-sub">Cardano mainnet · metadata label 1804</p></div></div>
                 <KV rows={[
-                    { label: "Cardano transaction", value: batch.cardano_tx_hash ? <Hash value={batch.cardano_tx_hash} href={cardanoscanTx(network, batch.cardano_tx_hash)} external full /> : "—" },
+                    { label: "Cardano transaction", value: batch.cardano_tx_hash ? <Hash value={batch.cardano_tx_hash} href={cardanoscanTx(network, batch.cardano_tx_hash)} external full red /> : "—" },
                     { label: "Anchored at", value: <span className="num">{utc(batch.confirmed_at)}</span> },
                     ...(batch.cardano_block_number ? [{ label: "Cardano block", value: <span className="num">{fmtInt(batch.cardano_block_number)}</span> }] : []),
                     { label: "Merkle root", value: <Hash value={batch.merkle_root} full /> },
