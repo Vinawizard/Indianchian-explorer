@@ -71,7 +71,7 @@ export function LiveFeed({ blocks: initialBlocks, finalized: initialFinalized, r
             <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-5 px-5 py-6 sm:px-8 sm:py-8">
                 <div>
                     <h2 id="feed"><DotTitle text="On chain now" /></h2>
-                    <p className="card-sub !mt-3">Updates every ~6 seconds with network consensus</p>
+                    <p className="card-sub !mt-3">{tab === "blocks" ? "A new block every ~6 seconds" : tab === "events" ? "Newest records on IndianChain" : "Newest batches sealed on Cardano"}</p>
                 </div>
                 <Segmented label="Feed" size="sm" value={tab} onChange={setTab}
                     options={[{ value: "blocks", label: "Blocks" }, { value: "events", label: "Events" }, { value: "anchors", label: "Anchors" }]} />

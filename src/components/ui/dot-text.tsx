@@ -51,8 +51,8 @@ export function DotTitle({ text, className = "" }: { text: string; className?: s
     return (
         <>
             <span className="sr-only">{text}</span>
-            <span aria-hidden className={`flex flex-wrap gap-x-4 gap-y-3 text-white/90 ${className}`}>
-                {text.split(" ").map((w, i) => <DotText key={i} text={w} cell={4} fine />)}
+            <span aria-hidden className={`flex flex-wrap gap-x-3 gap-y-2.5 text-white/90 ${className}`}>
+                {text.split(" ").map((w, i) => <DotText key={i} text={w} cell="s" fine />)}
             </span>
         </>
     );
