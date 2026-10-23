@@ -29,10 +29,11 @@ Trivolve backdrop) and the details (contrast, hover, motion).
 
 No green or amber. Status is a chip: blue with a check when done, quiet grey with a clock while waiting.
 
-**Red means Cardano.** IndianChain is blue; red marks where a record meets Cardano: Cardano
-transaction hashes and links (red at rest, `#ff5c5c`, 6.9:1), the Cardano mark (always `#ff2a2a`),
-the Cardanoscan button. Under the cursor every blue link, a hovered row's link and its chevron turn
-red, and the hero's "Anchored on Cardano" figure turns red one dot column at a time. Chips stay blue.
+**Red is the hover colour (and Cardano's).** At rest red appears only on the Cardano transaction
+hash of a detail page and the Cardanoscan button. Under the cursor: blue links, a hovered row's link
+and chevron, Cardano hashes in lists (quiet white at rest), the Cardano mark (blue at rest, like the
+other icons) and the hero figures, which turn red one dot column at a time with their icons.
+Chips stay blue.
 
 ## Surfaces
 

@@ -53,7 +53,7 @@ export default async function AnchorsPage({ searchParams }: { searchParams: Prom
                                                 {b.l2_to_block != null && b.l2_to_block !== b.l2_from_block && <> – <Link href={`/block/${b.l2_to_block}`} className="z transition-colors hover:text-red-text">#{b.l2_to_block}</Link></>}
                                             </td>
                                             <td className="mono hidden text-white/50 xl:table-cell" title={b.merkle_root}>{shortHash(b.merkle_root, 10, 6)}</td>
-                                            <td className="hidden md:table-cell">{b.cardano_tx_hash ? <a href={cardanoscanTx(network, b.cardano_tx_hash)} target="_blank" rel="noopener noreferrer" className="z mono link-red" title={b.cardano_tx_hash}>{shortHash(b.cardano_tx_hash, 10, 8)}</a> : <span className="text-white/30">—</span>}</td>
+                                            <td className="hidden md:table-cell">{b.cardano_tx_hash ? <a href={cardanoscanTx(network, b.cardano_tx_hash)} target="_blank" rel="noopener noreferrer" className="z mono link-cardano" title={b.cardano_tx_hash}>{shortHash(b.cardano_tx_hash, 10, 8)}</a> : <span className="text-white/30">—</span>}</td>
                                             <td><span title={utc(b.confirmed_at)}><TimeAgo iso={b.confirmed_at} /></span></td>
                                             <td className="hidden sm:table-cell"><Status tone="positive">Confirmed</Status></td>
                                             <td className="r"><span className="row-go" aria-hidden><ChevronRight className="h-4 w-4" /></span></td>

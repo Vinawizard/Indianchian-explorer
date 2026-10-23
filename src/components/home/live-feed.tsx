@@ -126,7 +126,7 @@ export function LiveFeed({ blocks: initialBlocks, finalized: initialFinalized, r
                                     <tr key={a.batch_index}>
                                         <td><Link href={`/anchor/${a.batch_index}`} className="row-link blk">{fmt(a.batch_index)}</Link></td>
                                         <td className="hidden md:table-cell">
-                                            {a.cardano_tx_hash ? <a href={cardanoscanTx(network, a.cardano_tx_hash)} target="_blank" rel="noopener noreferrer" className="z mono link-red" title={a.cardano_tx_hash}>{shortHash(a.cardano_tx_hash, 14, 10)}</a> : "—"}
+                                            {a.cardano_tx_hash ? <a href={cardanoscanTx(network, a.cardano_tx_hash)} target="_blank" rel="noopener noreferrer" className="z mono link-cardano" title={a.cardano_tx_hash}>{shortHash(a.cardano_tx_hash, 14, 10)}</a> : "—"}
                                         </td>
                                         <td className="num text-[14px] text-white">{fmt(a.record_count)}</td>
                                         <td className="hidden sm:table-cell"><TimeAgo iso={a.confirmed_at} /></td>

@@ -194,6 +194,9 @@
   .link:hover { color: var(--red-text); }
   .link-red { color: var(--red-text); transition: color 180ms ease; }
   .link-red:hover { color: #fff; }
+  /* Cardano hashes in lists: quiet at rest, red under the cursor */
+  .link-cardano { color: rgba(255, 255, 255, 0.7); transition: color 180ms ease; }
+  .link-cardano:hover, .link-cardano:focus-visible { color: var(--red-text); }
 
   /* ---------- Chips: the original outlined badges ---------- */
   .chip { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 10px; border-radius: 4px; font-size: 10px; font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; white-space: nowrap; color: rgba(255, 255, 255, 0.6); background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.12); }
@@ -262,3 +265,8 @@
     .glass, .btn, .field { background: #0b0b10; }
   }
 }
+
+/* The Cardano mark and the hero's label icons turn red with their link. Unlayered on purpose: it has
+   to win over the icon's colour utility (utilities sit in a later layer than components). */
+.cardano-mark, .hover-red-icon { transition: color 180ms ease; }
+a:hover .cardano-mark, a:focus-visible .cardano-mark, .group:hover .hover-red-icon, .group:focus-visible .hover-red-icon { color: #ff2a2a; }
