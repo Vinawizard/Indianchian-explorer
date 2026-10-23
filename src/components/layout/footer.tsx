@@ -1,6 +1,8 @@
 import Image from "next/image";
-import Link from "next/link";
+import { Globe } from "lucide-react";
+import { siX } from "simple-icons";
 
+/** The original footer: wordmark and line on the left; Trivolve's X account and website, then the copyright. */
 export function Footer() {
     return (
         <footer className="mt-24 border-t border-white/5">
@@ -9,12 +11,17 @@ export function Footer() {
                     <Image src="/trivolve-logo.png" alt="Trivolve Tech" width={98} height={32} className="h-8 w-auto self-start" />
                     <p className="label">Building the decentralized future</p>
                 </div>
-                <div className="flex flex-col gap-3 sm:items-end">
-                    <nav aria-label="Footer" className="flex flex-wrap gap-x-6 gap-y-2 text-[10px] uppercase tracking-[0.1em] text-muted">
-                        <Link href="/events" className="hover:text-white">Events</Link>
-                        <Link href="/anchors" className="hover:text-white">Anchors</Link>
-                        <a href="https://ic-node.trivolvetech.com/integration-api/docs" target="_blank" rel="noopener noreferrer" className="hover:text-white">API</a>
-                    </nav>
+                <div className="flex flex-col gap-4 sm:items-end">
+                    <div className="flex items-center gap-6">
+                        <a href="https://x.com/trivolvetech" target="_blank" rel="noopener noreferrer" aria-label="Trivolve Tech on X"
+                            className="text-muted transition-colors duration-200 hover:text-red-text">
+                            <svg viewBox="0 0 24 24" fill="currentColor" className="h-[18px] w-[18px]" aria-hidden><path d={siX.path} /></svg>
+                        </a>
+                        <a href="https://trivolvetech.com/" target="_blank" rel="noopener noreferrer" aria-label="Trivolve Tech website"
+                            className="text-muted transition-colors duration-200 hover:text-red-text">
+                            <Globe className="h-5 w-5" aria-hidden />
+                        </a>
+                    </div>
                     <p className="label">© 2026 Trivolve Tech. All rights reserved.</p>
                 </div>
             </div>
