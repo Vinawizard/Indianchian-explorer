@@ -5,6 +5,7 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { PreviewNotice } from "@/components/layout/preview-notice";
 import { Spotlight } from "@/components/ui/spotlight";
+import { Aurora } from "@/components/home/aurora";
 
 // Text is the platform UI sans, as the original explorer rendered (see globals.css).
 // Trivolve's dot-matrix voice for the IndianChain wordmark only (trivolvetech.com uses OffBit Dot; Doto is the open-licence match).
@@ -22,8 +23,8 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         // Font variables live on <html> so every token that references them resolves.
         <html lang="en" className={`dark ${doto.variable}`}>
             <body className="min-h-screen flex flex-col">
-                {/* the Trivolve light behind every page (still; the landing page adds the moving one) */}
-                <div className="backdrop" aria-hidden />
+                {/* the Trivolve light behind every page, moving slowly (CSS only; still with reduced motion) */}
+                <Aurora />
                 <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 btn btn-white">
                     Skip to content
                 </a>

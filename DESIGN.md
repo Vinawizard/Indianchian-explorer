@@ -42,11 +42,10 @@ Chips stay blue.
   Measured: the glass is darker than the page beside it (0.5x luminance; it was 1.6x, a grey film
   from the blurred plus marks), and the cursor glint is a third of what it was. Radius 16px.
 - Plus marks at 6% white; still glows blue 0.22 / red 0.12 on inner pages.
-- Backdrop: one fixed layer behind every page (`.backdrop`): black, a still Trivolve blue glow
-  top-left and red bottom-right, the plus-sign grid. Boxes never carry their own gradient.
-- Landing page only (`.aurora`): the same light moving, four transform-only CSS loops (26-34 s).
-  Measured with Playwright on the backdrop alone across the loop: brightest hero point (p99)
-  luminance 0.012, so the `#888` labels stay at 4.78:1 or better and white text at 16.9:1.
+- Backdrop: one fixed layer behind every page (`.aurora`): black, Trivolve blue and red light drifting
+  on four transform-only CSS loops (24-31 s), the plus-sign grid on top; still with reduced motion.
+  Kept dark: measured on the backdrop alone across the loop, brightest point (p99) 0.0021 luminance
+  (the old landing light was 0.0119), `#888` labels 5.69:1. Boxes never carry their own gradient.
 - `.panel`: the card's rim with nothing inside, fully see-through; used for the landing hero.
 
 ## Tables
@@ -71,8 +70,8 @@ white, agri blue, credit red). No legend and no printed totals; the original too
 
 ## Landing page
 
-One see-through hero (wordmark, search, the three figures), then the two charts, then the live
-feed. Every section below the hero is a card with the same head: title, tracked subtitle, switch.
+One see-through hero (wordmark, search, the three figures), then ON CHAIN NOW (blocks, events,
+anchors; the subtitle says what the open tab shows), then the two charts. Every section below the hero is a card with the same head: title, tracked subtitle, switch.
 
 ## Words
 

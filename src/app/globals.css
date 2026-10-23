@@ -73,29 +73,17 @@
 }
 
 /*
- * The Trivolve light behind every page: still, blue from the top-left and red from the bottom-right,
- * with the plus grid. Kept dim so labels hold 4.5:1 over its brightest point.
- */
-.backdrop { position: fixed; inset: 0; z-index: -1; pointer-events: none;
-  background:
-    var(--plus),
-    radial-gradient(900px 600px at 8% -6%, rgba(0, 24, 254, 0.22), transparent 62%),
-    radial-gradient(760px 520px at 100% 104%, rgba(255, 0, 0, 0.12), transparent 60%),
-    #000;
-  background-size: 136px 136px, auto, auto, auto; }
-
-/*
- * The landing page only: the same light, moving. Blue, black and red drift on transform-only CSS
- * loops (26-34 s). Measured with Playwright on the backdrop alone so the #888 labels stay at or
- * above 4.5:1 at every point of the loop.
+ * The Trivolve light behind every page, moving: blue, black and red drift on transform-only CSS
+ * loops (24-31 s). Kept as dark as the old still backdrop (measured with Playwright on the
+ * backdrop alone across the loop), so boxes and labels read the same on every page.
  */
 .aurora { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; background: #000; }
 .aurora::after { content: ""; position: absolute; inset: 0; background-image: var(--plus); background-size: 136px 136px; }
 .aurora i { position: absolute; border-radius: 50%; will-change: transform; }
-.aurora .a1 { width: 78vmax; height: 78vmax; left: -30vmax; top: -42vmax; background: radial-gradient(closest-side, rgba(0, 24, 254, 0.46), rgba(0, 24, 254, 0.14) 55%, transparent); animation: drift1 28s ease-in-out infinite alternate; }
-.aurora .a2 { width: 74vmax; height: 74vmax; right: -30vmax; bottom: -44vmax; background: radial-gradient(closest-side, rgba(255, 0, 0, 0.28), rgba(255, 0, 0, 0.09) 55%, transparent); animation: drift2 32s ease-in-out infinite alternate; }
-.aurora .a3 { width: 52vmax; height: 52vmax; left: 46vw; top: -6vh; background: radial-gradient(closest-side, rgba(36, 56, 255, 0.16), transparent); animation: drift3 36s ease-in-out infinite alternate; }
-.aurora .a4 { width: 46vmax; height: 46vmax; left: -8vw; bottom: -14vh; background: radial-gradient(closest-side, rgba(255, 24, 24, 0.09), transparent); animation: drift4 30s ease-in-out infinite alternate; }
+.aurora .a1 { width: 78vmax; height: 78vmax; left: -30vmax; top: -42vmax; background: radial-gradient(closest-side, rgba(0, 24, 254, 0.17), rgba(0, 24, 254, 0.05) 55%, transparent); animation: drift1 24s ease-in-out infinite alternate; }
+.aurora .a2 { width: 74vmax; height: 74vmax; right: -30vmax; bottom: -44vmax; background: radial-gradient(closest-side, rgba(255, 0, 0, 0.10), rgba(255, 0, 0, 0.035) 55%, transparent); animation: drift2 27s ease-in-out infinite alternate; }
+.aurora .a3 { width: 52vmax; height: 52vmax; left: 46vw; top: -6vh; background: radial-gradient(closest-side, rgba(36, 56, 255, 0.055), transparent); animation: drift3 31s ease-in-out infinite alternate; }
+.aurora .a4 { width: 46vmax; height: 46vmax; left: -8vw; bottom: -14vh; background: radial-gradient(closest-side, rgba(255, 24, 24, 0.035), transparent); animation: drift4 26s ease-in-out infinite alternate; }
 @keyframes drift1 { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(22vw, 14vh, 0) scale(1.08); } 100% { transform: translate3d(8vw, 30vh, 0) scale(0.94); } }
 @keyframes drift2 { 0% { transform: translate3d(0, 0, 0) scale(1); } 50% { transform: translate3d(-24vw, -12vh, 0) scale(1.1); } 100% { transform: translate3d(-6vw, -30vh, 0) scale(0.95); } }
 @keyframes drift3 { 0% { transform: translate3d(0, 0, 0); } 50% { transform: translate3d(-30vw, 26vh, 0); } 100% { transform: translate3d(10vw, 44vh, 0); } }

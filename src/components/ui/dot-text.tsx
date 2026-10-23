@@ -43,16 +43,16 @@ export function DotText({ text, cell = 4, className = "", label, descender, fine
 }
 
 /**
- * A section title in the dot matrix: one DotText per word on the 4px grid in fine (60%) dots, so
- * titles stay lighter than the headline figures; wraps between words (a 16px word gap is 4 cells).
+ * A section title in the dot matrix: one DotText per word on the small grid (--cell-s) in fine (60%)
+ * dots, so titles sit well below the headline figures; wraps between words (a 12px gap, about 4 cells).
  * The words stay readable to assistive tech through the visually hidden copy.
  */
 export function DotTitle({ text, className = "" }: { text: string; className?: string }) {
     return (
         <>
             <span className="sr-only">{text}</span>
-            <span aria-hidden className={`flex flex-wrap gap-x-4 gap-y-3 text-white/90 ${className}`}>
-                {text.split(" ").map((w, i) => <DotText key={i} text={w} cell={4} fine />)}
+            <span aria-hidden className={`flex flex-wrap gap-x-3 gap-y-2.5 text-white/90 ${className}`}>
+                {text.split(" ").map((w, i) => <DotText key={i} text={w} cell="s" fine />)}
             </span>
         </>
     );
